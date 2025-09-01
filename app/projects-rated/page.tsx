@@ -371,13 +371,13 @@ export default function ProjectsRatedPage() {
                       <img
                         src={
                           project.website_screenshot_url || 
-                          `https://via.placeholder.com/400x600/1a1c1f/666666?text=${encodeURIComponent(project.name || project.symbol)}`
+                          `https://placehold.co/400x600/1a1c1f/666666?text=${encodeURIComponent(project.name || project.symbol)}`
                         }
                         alt={`${project.name || project.symbol} screenshot`}
                         className="w-full h-auto object-top"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
-                          target.src = `https://via.placeholder.com/400x600/1a1c1f/666666?text=${encodeURIComponent(project.name || project.symbol)}`;
+                          target.src = `https://placehold.co/400x600/1a1c1f/666666?text=${encodeURIComponent(project.name || project.symbol)}`;
                         }}
                       />
                     </div>
