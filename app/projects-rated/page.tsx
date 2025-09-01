@@ -437,9 +437,9 @@ export default function ProjectsRatedPage() {
                   </div>
                   
                   {/* Quick Take from analysis */}
-                  {project.website_stage1_analysis?.quick_take && (
+                  {(project.website_stage1_analysis as any)?.quick_take && (
                     <p className="text-[#888] text-sm mb-4 line-clamp-2">
-                      {project.website_stage1_analysis.quick_take}
+                      {(project.website_stage1_analysis as any).quick_take}
                     </p>
                   )}
                   
