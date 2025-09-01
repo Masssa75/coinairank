@@ -214,7 +214,7 @@ export function WebsiteAnalysisTooltip({ fullAnalysis, children }: WebsiteAnalys
                   <span className="text-[#888] font-bold text-xs uppercase tracking-wider">🎯 Why This Tier?</span>
                 </div>
                 <div className="text-[11px] text-[#999] leading-relaxed italic">
-                  "{type_reasoning.split('.')[0].trim()}"
+                  &ldquo;{type_reasoning.split('.')[0].trim()}&rdquo;
                 </div>
               </div>
             )}

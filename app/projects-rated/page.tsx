@@ -15,7 +15,7 @@ interface CryptoProject {
   website_screenshot_url: string | null;
   website_stage1_score: number;
   website_stage1_tier: string;
-  website_stage1_analysis: any;
+  website_stage1_analysis: Record<string, unknown>;
   website_stage1_analyzed_at: string;
   current_liquidity_usd: number;
   current_market_cap: number;
@@ -85,7 +85,7 @@ export default function ProjectsRatedPage() {
     return new Set();
   });
   
-  const observer = useRef<IntersectionObserver>();
+  const observer = useRef<IntersectionObserver | null>(null);
   const lastProjectRef = useCallback((node: HTMLDivElement | null) => {
     if (loading) return;
     if (observer.current) observer.current.disconnect();
