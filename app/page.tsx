@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { WebsiteAnalysisTooltip } from '@/components/WebsiteAnalysisTooltip';
 import FilterSidebar from '@/components/FilterSidebar';
 import { useDebounce } from '@/lib/useDebounce';
+import { Settings, Search, Download, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface CryptoProject {
   id: number;
@@ -296,56 +297,91 @@ export default function ProjectsRatedPage() {
       
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
+        {/* New Header Bar */}
+        <header className="sticky top-0 z-50 bg-[#0f0f0f] border-b border-[#2a2d31] px-6 h-14 flex items-center gap-4">
+          {/* Logo */}
+          <div className="min-w-[140px]">
+            <span className="text-xl font-semibold tracking-tight text-white">CoinAiRank</span>
+          </div>
+
+          {/* Icon group */}
+          <div className="flex gap-1 ml-4">
+            {/* Settings Icon */}
+            <button 
+              className="p-1.5 rounded hover:bg-[#1a1c1f] transition-colors"
+              title="Column Settings"
+            >
+              <Settings className="w-4 h-4 text-[#666] hover:text-[#00ff88]" />
+            </button>
+            
+            {/* Search Icon */}
+            <button 
+              className="p-1.5 rounded hover:bg-[#1a1c1f] transition-colors"
+              title="Search"
+              onClick={() => {
+                // Toggle search input visibility (to be implemented)
+              }}
+            >
+              <Search className="w-4 h-4 text-[#666] hover:text-[#00ff88]" />
+            </button>
+          </div>
+
+          {/* Spacer */}
+          <div className="flex-1"></div>
+
+          {/* Sort Controls */}
+          <div className="flex items-center gap-2">
+            <span className="text-[#666] text-[13px] font-medium">Sort by:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="w-[180px] px-3 py-1.5 bg-[#1a1c1f] border border-[#2a2d31] text-[#ccc] rounded-md text-sm cursor-pointer appearance-none pr-8"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 8px center',
+                backgroundSize: '16px'
+              }}
+            >
+              <option value="created_at">Date Called</option>
+              <option value="website_stage1_score">AI Score</option>
+              <option value="current_market_cap">Market Cap</option>
+              <option value="current_liquidity_usd">Liquidity</option>
+              <option value="roi_percent">ROI %</option>
+            </select>
+            <button
+              onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+              className="p-1.5 bg-[#1a1c1f] border border-[#2a2d31] rounded-md hover:bg-[#222426] transition-colors"
+              title={sortOrder === 'desc' ? 'Sort descending' : 'Sort ascending'}
+            >
+              {sortOrder === 'desc' ? (
+                <ChevronDown className="w-4 h-4 text-[#666]" />
+              ) : (
+                <ChevronUp className="w-4 h-4 text-[#666]" />
+              )}
+            </button>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <button className="px-4 py-1.5 bg-transparent border border-[#2a2d31] text-white rounded-md hover:bg-[#1a1c1f] transition-colors text-sm">
+              Submit Token
+            </button>
+            <button className="px-4 py-1.5 bg-[#f59e0b] text-black rounded-md hover:bg-[#d97706] transition-colors text-sm font-medium">
+              Connect Wallet
+            </button>
+          </div>
+
+          {/* Download Icon */}
+          <button 
+            className="p-1.5 rounded hover:bg-[#1a1c1f] transition-colors"
+            title="Export Data"
+          >
+            <Download className="w-4 h-4 text-[#666] hover:text-[#00ff88]" />
+          </button>
+        </header>
+
         <div className="p-6">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-2 text-white">🏆 CoinAIRank</h1>
-            <p className="text-lg text-[#888]">AI-Powered Crypto Quality Rankings</p>
-          </div>
-
-          {/* Top Controls Bar */}
-          <div className="max-w-7xl mx-auto mb-6 bg-[#111214] border border-[#2a2d31] rounded-xl p-4">
-            <div className="flex flex-wrap gap-4 items-center justify-between">
-              {/* Search */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Search symbol or name..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-[#1a1c1f] text-white border border-[#2a2d31] rounded-lg px-3 py-1 text-sm hover:border-[#333] focus:outline-none focus:border-[#00ff88] w-48"
-                />
-              </div>
-
-              {/* Sort By */}
-              <div className="flex items-center gap-2">
-                <label className="text-[#888] text-sm">Sort by:</label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-[#1a1c1f] text-white border border-[#2a2d31] rounded-lg px-3 py-1 text-sm hover:border-[#333] focus:outline-none focus:border-[#00ff88]"
-                >
-                  <option value="website_stage1_score">Score</option>
-                  <option value="current_liquidity_usd">Liquidity</option>
-                  <option value="current_market_cap">Market Cap</option>
-                  <option value="roi_percent">ROI %</option>
-                  <option value="created_at">Date Added</option>
-                  <option value="website_stage1_analyzed_at">Analysis Date</option>
-                </select>
-                <button
-                  onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-                  className="bg-[#1a1c1f] text-white border border-[#2a2d31] rounded-lg px-3 py-1 text-sm hover:bg-[#252729] hover:border-[#333]"
-                >
-                  {sortOrder === 'desc' ? '↓' : '↑'}
-                </button>
-              </div>
-
-              {/* Project Count */}
-              <div className="text-[#666] text-sm">
-                Showing {projects.length} projects
-              </div>
-            </div>
-          </div>
 
           {/* Project Grid */}
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
