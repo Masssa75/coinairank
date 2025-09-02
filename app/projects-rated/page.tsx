@@ -234,7 +234,7 @@ export default function ProjectsRatedPage() {
   }, [page]);
 
   // Format functions
-  const formatMarketCap = (value: number | null) => {
+  const formatMarketCap = (value: number | null | undefined) => {
     if (!value) return 'N/A';
     if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
     if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
@@ -328,7 +328,7 @@ export default function ProjectsRatedPage() {
                   <option value="website_stage1_score">Score</option>
                   <option value="current_liquidity_usd">Liquidity</option>
                   <option value="current_market_cap">Market Cap</option>
-                  <option value="current_roi_percent">ROI %</option>
+                  <option value="roi_percent">ROI %</option>
                   <option value="created_at">Date Added</option>
                   <option value="website_stage1_analyzed_at">Analysis Date</option>
                 </select>
