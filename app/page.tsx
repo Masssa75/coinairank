@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { WebsiteAnalysisTooltip } from '@/components/WebsiteAnalysisTooltip';
 import FilterSidebar from '@/components/FilterSidebar';
 import { useDebounce } from '@/lib/useDebounce';
-import { Settings, Search, Download, ChevronDown, ChevronUp } from 'lucide-react';
+import { Settings, Search, Menu, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface CryptoProject {
   id: number;
@@ -372,12 +372,12 @@ export default function ProjectsRatedPage() {
             </button>
           </div>
 
-          {/* Download Icon */}
+          {/* Hamburger Menu Icon */}
           <button 
             className="p-1.5 rounded hover:bg-[#1a1c1f] transition-colors"
-            title="Export Data"
+            title="Menu"
           >
-            <Download className="w-4 h-4 text-[#666] hover:text-[#00ff88]" />
+            <Menu className="w-4 h-4 text-[#666] hover:text-[#00ff88]" />
           </button>
         </header>
 
