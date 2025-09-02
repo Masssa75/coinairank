@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { createPortal } from 'react-dom';
 
 interface WebsiteAnalysisTooltipProps {
   fullAnalysis: {
@@ -22,9 +23,14 @@ interface WebsiteAnalysisTooltipProps {
 
 export function WebsiteAnalysisTooltip({ fullAnalysis, children }: WebsiteAnalysisTooltipProps) {
   const [showTooltip, setShowTooltip] = React.useState(false);
-  const [tooltipPosition, setTooltipPosition] = React.useState<'above' | 'below'>('above');
+  const [tooltipPosition, setTooltipPosition] = React.useState<{ x: number; y: number; placement: 'above' | 'below' } | null>(null);
   const tooltipRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (!fullAnalysis) {
     return <>{children}</>;
@@ -139,45 +145,74 @@ export function WebsiteAnalysisTooltip({ fullAnalysis, children }: WebsiteAnalys
   const quickTakeDisplay = getQuickTake();
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
-    setShowTooltip(true);
+    if (!containerRef.current) return;
     
-    // Check if there's enough space above
-    const rect = e.currentTarget.getBoundingClientRect();
+    const rect = containerRef.current.getBoundingClientRect();
+    const tooltipHeight = 350; // Estimated height
+    const tooltipWidth = 450; // Max width
+    
+    // Calculate position
+    let x = rect.left + rect.width / 2;
+    let y: number;
+    let placement: 'above' | 'below';
+    
+    // Check vertical space
     const spaceAbove = rect.top;
-    const tooltipHeight = 300; // Estimated height
+    const spaceBelow = window.innerHeight - rect.bottom;
     
-    // If not enough space above, position below
-    if (spaceAbove < tooltipHeight) {
-      setTooltipPosition('below');
+    if (spaceAbove >= tooltipHeight || spaceAbove > spaceBelow) {
+      // Position above
+      y = rect.top;
+      placement = 'above';
     } else {
-      setTooltipPosition('above');
+      // Position below
+      y = rect.bottom;
+      placement = 'below';
     }
+    
+    // Check horizontal boundaries
+    const halfWidth = tooltipWidth / 2;
+    if (x - halfWidth < 10) {
+      x = halfWidth + 10; // Adjust for left edge
+    } else if (x + halfWidth > window.innerWidth - 10) {
+      x = window.innerWidth - halfWidth - 10; // Adjust for right edge
+    }
+    
+    setTooltipPosition({ x, y, placement });
+    setShowTooltip(true);
+  };
+
+  const handleMouseLeave = () => {
+    setShowTooltip(false);
+    setTooltipPosition(null);
   };
 
   return (
-    <div 
-      ref={containerRef}
-      className="relative inline-block"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={() => setShowTooltip(false)}
-    >
-      {children}
+    <>
+      <div 
+        ref={containerRef}
+        className="inline-block"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        {children}
+      </div>
       
-      {showTooltip && (
+      {mounted && showTooltip && tooltipPosition && createPortal(
         <div 
           ref={tooltipRef}
-          className={`absolute z-[99999] left-1/2 transform -translate-x-1/2 ${
-            tooltipPosition === 'above' 
-              ? 'bottom-full mb-2' 
-              : 'top-full mt-2'
-          }`}
+          className="fixed z-[999999] pointer-events-none"
           style={{ 
-            pointerEvents: 'none',
-            maxHeight: '80vh',
-            overflowY: 'auto'
+            left: `${tooltipPosition.x}px`,
+            top: tooltipPosition.placement === 'above' 
+              ? `${tooltipPosition.y}px` 
+              : `${tooltipPosition.y}px`,
+            transform: tooltipPosition.placement === 'above'
+              ? 'translate(-50%, -100%) translateY(-8px)'
+              : 'translate(-50%, 8px)',
           }}
         >
-          <div className="bg-[#1a1c1f] rounded-lg shadow-xl border border-[#333] p-4 min-w-[350px] max-w-[450px]">
+          <div className="bg-[#1a1c1f] rounded-lg shadow-2xl border border-[#333] p-4 min-w-[350px] max-w-[450px] max-h-[80vh] overflow-y-auto">
             
             {/* Quick Take Section */}
             {quickTakeDisplay && (
@@ -253,14 +288,15 @@ export function WebsiteAnalysisTooltip({ fullAnalysis, children }: WebsiteAnalys
 
             {/* Arrow pointing to element */}
             <div className={`absolute left-1/2 transform -translate-x-1/2 w-0 h-0 ${
-              tooltipPosition === 'above'
+              tooltipPosition.placement === 'above'
                 ? '-bottom-2 border-l-[8px] border-l-transparent border-t-[8px] border-t-[#1a1c1f] border-r-[8px] border-r-transparent'
                 : '-top-2 border-l-[8px] border-l-transparent border-b-[8px] border-b-[#1a1c1f] border-r-[8px] border-r-transparent'
             }`}>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 }
