@@ -389,7 +389,9 @@ export default function ProjectsRatedPage() {
                     <div>
                       <h3 className="text-xl font-bold text-white flex items-center gap-2">
                         {project.symbol}
-                        {project.name && project.name !== project.symbol && (
+                        {project.name && 
+                         project.name !== project.symbol && 
+                         !project.name.includes('/') && (
                           <span className="text-sm text-[#666] font-normal">({project.name})</span>
                         )}
                       </h3>
