@@ -22,6 +22,9 @@ interface WebsiteAnalysisTooltipProps {
 
 export function WebsiteAnalysisTooltip({ fullAnalysis, children }: WebsiteAnalysisTooltipProps) {
   const [showTooltip, setShowTooltip] = React.useState(false);
+  const [tooltipPosition, setTooltipPosition] = React.useState<'above' | 'below'>('above');
+  const tooltipRef = React.useRef<HTMLDivElement>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   if (!fullAnalysis) {
     return <>{children}</>;
@@ -135,16 +138,45 @@ export function WebsiteAnalysisTooltip({ fullAnalysis, children }: WebsiteAnalys
 
   const quickTakeDisplay = getQuickTake();
 
+  const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+    setShowTooltip(true);
+    
+    // Check if there's enough space above
+    const rect = e.currentTarget.getBoundingClientRect();
+    const spaceAbove = rect.top;
+    const tooltipHeight = 300; // Estimated height
+    
+    // If not enough space above, position below
+    if (spaceAbove < tooltipHeight) {
+      setTooltipPosition('below');
+    } else {
+      setTooltipPosition('above');
+    }
+  };
+
   return (
     <div 
+      ref={containerRef}
       className="relative inline-block"
-      onMouseEnter={() => setShowTooltip(true)}
+      onMouseEnter={handleMouseEnter}
       onMouseLeave={() => setShowTooltip(false)}
     >
       {children}
       
       {showTooltip && (
-        <div className="absolute z-[9999] bottom-full left-1/2 transform -translate-x-1/2 mb-2">
+        <div 
+          ref={tooltipRef}
+          className={`absolute z-[99999] left-1/2 transform -translate-x-1/2 ${
+            tooltipPosition === 'above' 
+              ? 'bottom-full mb-2' 
+              : 'top-full mt-2'
+          }`}
+          style={{ 
+            pointerEvents: 'none',
+            maxHeight: '80vh',
+            overflowY: 'auto'
+          }}
+        >
           <div className="bg-[#1a1c1f] rounded-lg shadow-xl border border-[#333] p-4 min-w-[350px] max-w-[450px]">
             
             {/* Quick Take Section */}
@@ -219,11 +251,12 @@ export function WebsiteAnalysisTooltip({ fullAnalysis, children }: WebsiteAnalys
               </div>
             )}
 
-            {/* Arrow pointing down */}
-            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-0 h-0 
-              border-l-[8px] border-l-transparent
-              border-t-[8px] border-t-[#1a1c1f]
-              border-r-[8px] border-r-transparent">
+            {/* Arrow pointing to element */}
+            <div className={`absolute left-1/2 transform -translate-x-1/2 w-0 h-0 ${
+              tooltipPosition === 'above'
+                ? '-bottom-2 border-l-[8px] border-l-transparent border-t-[8px] border-t-[#1a1c1f] border-r-[8px] border-r-transparent'
+                : '-top-2 border-l-[8px] border-l-transparent border-b-[8px] border-b-[#1a1c1f] border-r-[8px] border-r-transparent'
+            }`}>
             </div>
           </div>
         </div>
