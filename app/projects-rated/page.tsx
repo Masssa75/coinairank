@@ -17,10 +17,12 @@ interface CryptoProject {
   website_stage1_tier: string;
   website_stage1_analysis: Record<string, unknown>;
   website_stage1_analyzed_at: string;
-  current_liquidity_usd: number;
-  current_market_cap: number;
-  current_price_usd: number;
-  current_roi_percent: number;
+  current_liquidity_usd: number | null;
+  current_market_cap: number | null;
+  current_price_usd: number | null;
+  roi_percent: number | null;  // Changed from current_roi_percent
+  initial_liquidity_usd?: number | null;  // Added fallback field
+  initial_market_cap?: number | null;  // Added fallback field
   is_imposter?: boolean;  // Optional - CAR doesn't have these yet
   is_rugged?: boolean;
   is_dead?: boolean;
@@ -452,12 +454,14 @@ export default function ProjectsRatedPage() {
                     </div>
                     <div className="text-center p-2 bg-[#1a1c1f] rounded-lg border border-[#2a2d31]">
                       <p className="text-xs text-[#666]">Liquidity</p>
-                      <p className="text-sm font-semibold text-white">{formatMarketCap(project.current_liquidity_usd)}</p>
+                      <p className="text-sm font-semibold text-white">
+                        {formatMarketCap(project.current_liquidity_usd || project.initial_liquidity_usd)}
+                      </p>
                     </div>
                     <div className="text-center p-2 bg-[#1a1c1f] rounded-lg border border-[#2a2d31]">
                       <p className="text-xs text-[#666]">ROI</p>
-                      <p className={`text-sm font-semibold ${project.current_roi_percent && project.current_roi_percent > 0 ? 'text-[#00ff88]' : project.current_roi_percent && project.current_roi_percent < 0 ? 'text-[#ff4444]' : 'text-[#888]'}`}>
-                        {project.current_roi_percent ? `${project.current_roi_percent > 0 ? '+' : ''}${project.current_roi_percent.toFixed(0)}%` : 'N/A'}
+                      <p className={`text-sm font-semibold ${project.roi_percent && project.roi_percent > 0 ? 'text-[#00ff88]' : project.roi_percent && project.roi_percent < 0 ? 'text-[#ff4444]' : 'text-[#888]'}`}>
+                        {project.roi_percent ? `${project.roi_percent > 0 ? '+' : ''}${project.roi_percent.toFixed(0)}%` : 'N/A'}
                       </p>
                     </div>
                   </div>
