@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { WebsiteAnalysisTooltip } from '@/components/WebsiteAnalysisTooltip';
 import FilterSidebar from '@/components/FilterSidebar';
+import { AddTokenButton } from '@/components/AddTokenButton';
 import { useDebounce } from '@/lib/useDebounce';
 
 interface CryptoProject {
@@ -340,10 +341,17 @@ export default function ProjectsRatedPage() {
                 </button>
               </div>
 
-              {/* Project Count */}
-              <div className="text-[#666] text-sm">
-                Showing {projects.length} projects
-              </div>
+              {/* Project Count & Add Token Button */}
+              <div className="flex items-center gap-4">
+                <div className="text-[#666] text-sm">
+                  Showing {projects.length} projects
+                </div>
+                <AddTokenButton onSuccess={() => {
+                  // Refresh the page to show the new token
+                  setPage(1);
+                  setProjects([]);
+                  fetchProjects();
+                }} />
             </div>
           </div>
 

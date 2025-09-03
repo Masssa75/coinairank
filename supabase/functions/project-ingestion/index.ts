@@ -97,10 +97,12 @@ function normalizeNetwork(network: string): string {
     'bsc': 'bsc',
     'binance': 'bsc',
     'base': 'base',
+    'pulsechain': 'pulsechain',
+    'pulse': 'pulsechain',
   };
   const normalized = mapping[network.toLowerCase()] || network;
   
-  const validNetworks = ['ethereum', 'solana', 'bsc', 'base'];
+  const validNetworks = ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'];
   if (!validNetworks.includes(normalized)) {
     throw new Error(`Invalid network: ${network}. Must be one of: ${validNetworks.join(', ')}`);
   }

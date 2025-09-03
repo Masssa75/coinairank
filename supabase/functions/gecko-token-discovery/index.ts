@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // Simplified polling function for token_discovery table
 async function pollGeckoTerminal(supabase: any) {
-  const networks = ['solana', 'eth', 'base', 'bsc'];
+  const networks = ['solana', 'eth', 'base', 'bsc', 'pulsechain'];
   let totalNewTokens = 0;
   
   for (const network of networks) {
@@ -52,7 +52,7 @@ async function pollGeckoTerminal(supabase: any) {
             // Complete data for token_discovery table with all required fields
             const tokenData = {
               contract_address: tokenAddress,
-              network: network === 'eth' ? 'ethereum' : network,
+              network: network === 'eth' ? 'ethereum' : network === 'pulsechain' ? 'pulsechain' : network,
               symbol: attrs.name?.split(' / ')[0] || null,
               name: attrs.name || null,
               pool_address: attrs.address || null,
