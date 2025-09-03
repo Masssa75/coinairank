@@ -82,7 +82,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error reading AI prompts:', error);
     return NextResponse.json(
-      { error: 'Failed to read AI prompts', details: error.message },
+      { error: 'Failed to read AI prompts', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
