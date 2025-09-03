@@ -22,15 +22,48 @@ const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_KEY!, {
   }
 });
 
-// Function to scrape website using ScraperAPI
+// Function to scrape website - uses simple fetch first, falls back to ScraperAPI if needed
 async function scrapeWebsite(url: string) {
   try {
     console.log(`Scraping website: ${url}`);
     
-    // Always use JavaScript rendering with wait time for modern SPAs
+    // Try simple fetch first (faster, free, often sufficient)
+    console.log('Trying simple fetch first...');
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'DNT': '1',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1'
+        },
+        signal: AbortSignal.timeout(15000) // 15 second timeout
+      });
+
+      if (response.ok) {
+        const html = await response.text();
+        const textContent = html.replace(/<[^>]+>/g, '').trim();
+        
+        // Check if we got meaningful content
+        if (textContent.length >= 500) {
+          console.log(`Simple fetch success: ${html.length} chars of HTML`);
+          return html;
+        }
+        console.log(`Simple fetch returned minimal content (${textContent.length} chars), trying ScraperAPI...`);
+      } else {
+        console.log(`Simple fetch failed with status ${response.status}, trying ScraperAPI...`);
+      }
+    } catch (simpleError) {
+      console.log(`Simple fetch error: ${simpleError}, trying ScraperAPI...`);
+    }
+    
+    // Fall back to ScraperAPI for JavaScript-heavy sites or when simple fetch fails
+    console.log('Falling back to ScraperAPI with JavaScript rendering...');
     const renderUrl = `http://api.scraperapi.com?api_key=${SCRAPERAPI_KEY}&url=${encodeURIComponent(url)}&render=true&wait=3000`;
     
-    console.log('Fetching with JavaScript rendering and 3s wait...');
     const response = await fetch(renderUrl, {
       method: 'GET',
       headers: {
@@ -65,7 +98,7 @@ async function scrapeWebsite(url: string) {
       }
     }
     
-    console.log(`Successfully scraped ${html.length} chars of HTML`);
+    console.log(`Successfully scraped ${html.length} chars of HTML via ScraperAPI`);
     return html;
   } catch (error) {
     console.error(`Error scraping website: ${error}`);
@@ -73,7 +106,7 @@ async function scrapeWebsite(url: string) {
   }
 }
 
-// Function to parse HTML and extract content
+// Function to parse HTML and extract content with enhanced detection
 function parseHtmlContent(html: string) {
   // Extract text content (remove scripts and styles first)
   const cleanHtml = html
@@ -85,6 +118,42 @@ function parseHtmlContent(html: string) {
     .replace(/\s+/g, ' ') // Normalize whitespace
     .trim()
     .substring(0, 15000); // Limit to 15k chars
+  
+  // Enhanced feature detection for better analysis
+  const features = {
+    hasGitHub: false,
+    hasDocs: false,
+    hasWhitepaper: false,
+    hasTeam: false,
+    hasTokenomics: false,
+    hasRoadmap: false,
+    hasTwitter: false,
+    hasTelegram: false,
+    hasDiscord: false
+  };
+  
+  // Enhanced detection patterns
+  const patterns = {
+    github: [/github\.com/gi, /href=["'][^"']*github[^"']*["']/gi, />\s*github\s*</gi],
+    docs: [/docs\./gi, /documentation/gi, /\/docs(?:\/|"|')/gi, /href=["'][^"']*docs[^"']*["']/gi, />\s*docs\s*</gi, />\s*documentation\s*</gi],
+    whitepaper: [/whitepaper/gi, /white-paper/gi, /litepaper/gi, /href=["'][^"']*(?:white|lite)paper[^"']*["']/gi],
+    team: [/\/team(?:\/|"|'|\s|$)/gi, /href=["'][^"']*team[^"']*["']/gi, />\s*team\s*</gi, />\s*our team\s*</gi, />\s*about us\s*</gi],
+    tokenomics: [/tokenomics/gi, /token economics/gi, />\s*tokenomics\s*</gi],
+    roadmap: [/roadmap/gi, />\s*roadmap\s*</gi, /href=["'][^"']*roadmap[^"']*["']/gi],
+    twitter: [/twitter\.com/gi, /x\.com/gi],
+    telegram: [/t\.me/gi, /telegram/gi],
+    discord: [/discord\.com/gi, /discord\.gg/gi]
+  };
+  
+  // Check each pattern
+  for (const [key, patternList] of Object.entries(patterns)) {
+    for (const pattern of patternList) {
+      if (pattern.test(html)) {
+        features[`has${key.charAt(0).toUpperCase() + key.slice(1)}`] = true;
+        break;
+      }
+    }
+  }
   
   // Extract ALL links with their text context
   const linkRegex = /<a[^>]*href=["']([^"']+)["'][^>]*>([^<]*)<\/a>/gi;
@@ -100,18 +169,28 @@ function parseHtmlContent(html: string) {
     if (!uniqueUrls.has(url) && !url.startsWith('#')) {
       uniqueUrls.add(url);
       
-      // Categorize the link type
+      // Enhanced categorization with better patterns
       let type = 'other';
-      if (/docs|documentation|whitepaper|guide|tutorial|developer|build|resources|learn/i.test(url + ' ' + text)) {
+      if (/docs|documentation|whitepaper|guide|tutorial|developer|build|resources|learn|api/i.test(url + ' ' + text)) {
         type = 'documentation';
+        features.hasDocs = true;
       } else if (url.includes('github.com') || url.includes('gitlab.com')) {
         type = 'github';
+        features.hasGitHub = true;
       } else if (/twitter|x\.com|telegram|discord|medium|reddit|linkedin/i.test(url)) {
         type = 'social';
       } else if (/about|team|partners|investors/i.test(url + ' ' + text)) {
         type = 'about';
+        if (/team/i.test(url + ' ' + text)) features.hasTeam = true;
       } else if (/blog|news|updates|announcements/i.test(url + ' ' + text)) {
         type = 'blog';
+      } else if (/whitepaper|litepaper/i.test(url + ' ' + text)) {
+        type = 'documentation';
+        features.hasWhitepaper = true;
+      } else if (/roadmap/i.test(url + ' ' + text)) {
+        features.hasRoadmap = true;
+      } else if (/tokenomics/i.test(url + ' ' + text)) {
+        features.hasTokenomics = true;
       }
       
       linksWithContext.push({ url, text: text || 'No text', type });
@@ -186,102 +265,98 @@ function parseHtmlContent(html: string) {
   };
 }
 
-// Function to analyze with AI (Updated for 100-point system)
-async function analyzeWithAI(parsedContent: any, ticker: string) {
-  // Create a summary of links with their context
-  const linkSummary = parsedContent.links_with_context?.slice(0, 30).map((l: any) => 
-    `[${l.type}] ${l.text}: ${l.url}`
-  ).join('\n') || 'No links found';
-  
-  // Create a summary of headers
-  const headerSummary = parsedContent.headers?.slice(0, 20).map((h: any) => 
-    `${'  '.repeat(h.level - 1)}H${h.level}: ${h.text}`
-  ).join('\n') || 'No headers found';
-  
-  const prompt = `Analyze this cryptocurrency project website using ADAPTIVE SCORING based on token type.
+// Function to analyze with AI using raw HTML - Full Freedom Approach
+async function analyzeWithAI(html: string, ticker: string) {
+  const prompt = `Analyze this crypto project's HTML and provide a comprehensive report. Don't hold back - tell me EVERYTHING you discover.
 
 Project: ${ticker}
 
-META INFORMATION:
-- Description: ${parsedContent.meta_tags?.description || 'None'}
-- OG Title: ${parsedContent.meta_tags?.og_title || 'None'}
-- OG Description: ${parsedContent.meta_tags?.og_description || 'None'}
+HTML (${html.length} characters):
+${html}
 
-WEBSITE STRUCTURE (Headers):
-${headerSummary}
+Provide a thorough analysis covering:
+1. What this project REALLY is (not just claims)
+2. All hidden details in the code
+3. Business model and revenue streams
+4. Technical implementation quality
+5. Red flags and concerns
+6. Positive signals
+7. What the code reveals about the team
+8. Anything unusual, suspicious, or noteworthy
 
-NAVIGATION LINKS (with context):
-${linkSummary}
+Extract ALL resources needed for Stage 2 verification:
+- Smart contract addresses (with network)
+- GitHub repositories
+- Team member profiles (LinkedIn, Twitter)
+- Documentation links (whitepaper, GitBook, docs)
+- Audit reports
+- Social channels
 
-BUTTON NAVIGATION:
-${parsedContent.button_texts?.join(', ') || 'None found'}
+Determine if this is meme or utility, score it 0-100, and decide tier:
+- 0-29: "TRASH" (Poor quality, likely scam)
+- 30-59: "BASIC" (Some effort, missing key elements)
+- 60-84: "SOLID" (Good quality, professional)
+- 85-100: "ALPHA" (Exceptional)
 
-WEBSITE CONTENT (${parsedContent.text_length} chars):
-${parsedContent.text_content}
-
-IMPORTANT: Look at ALL the links above - many documentation links might be at /developers, /build, /resources, etc. not just /docs.
-Check the link text and context carefully before determining if documentation exists.
-
-STEP 1 - TOKEN TYPE CLASSIFICATION:
-First classify this token as either:
-- "meme": Community-driven, humor/viral focus, animal/cartoon themes, "to the moon" rhetoric, cultural references, primarily speculation/entertainment
-- "utility": Clear use case, solving real problems, technical infrastructure, business model, professional presentation, actual product/service
-
-STEP 2 - ADAPTIVE SCORING (0-14 points each category, 0-98 total possible):
-
-IF MEME TOKEN - Score these 7 categories:
-1. community_strength (0-14): Social media presence, community links, engagement indicators, active following
-2. brand_identity (0-14): Memorable concept, clear theme/character, viral potential, cultural relevance
-3. website_quality (0-14): Professional design, working features, visual appeal, user experience
-4. authenticity (0-14): Original concept vs copycat, unique value proposition, creative execution
-5. transparency (0-14): Clear tokenomics, supply info, no hidden mechanics, honest presentation  
-6. safety_signals (0-14): Contract verification mentioned, security measures, liquidity info, trust indicators
-7. accessibility (0-14): Team communication, community access, clear social links, responsive presence
-
-IF UTILITY TOKEN - Score these 7 categories:
-1. technical_infrastructure (0-14): GitHub repos, APIs, developer resources, technical depth
-2. business_utility (0-14): Real use case, problem-solving, market need, practical application
-3. documentation_quality (0-14): Whitepapers, technical docs, guides, comprehensive information
-4. community_social (0-14): Active community, social presence, user engagement, ecosystem
-5. security_trust (0-14): Audits, security info, transparency measures, risk mitigation
-6. team_transparency (0-14): Team info, backgrounds, LinkedIn, credentials, accountability
-7. website_presentation (0-14): Professional design, working features, technical presentation
-
-Also identify:
-- Exceptional signals (major partnerships, high revenue, large user base, unique achievements)
-- Critical missing elements (what's lacking for this token type)
-- Should this proceed to deeper Stage 2 analysis?
-
-TIER CLASSIFICATION (Based on 0-100 scale):
-- 0-29: "TRASH" (Poor quality, likely scam or very low effort)
-- 30-59: "BASIC" (Some effort, but missing key elements for its type)
-- 60-84: "SOLID" (Good quality, professional, most important elements present)
-- 85-100: "ALPHA" (Exceptional, all elements perfect for its type)
-
-Note: Round total score up to max 100 if it exceeds 98.
-
-Return JSON only:
+Return comprehensive JSON:
 {
-  "category_scores": {
-    "category1_name": 0-14,
-    "category2_name": 0-14,
-    "category3_name": 0-14,
-    "category4_name": 0-14,
-    "category5_name": 0-14,
-    "category6_name": 0-14,
-    "category7_name": 0-14
-  },
-  "total_score": 0-100,
-  "tier": "TRASH/BASIC/SOLID/ALPHA",
   "token_type": "meme/utility",
-  "exceptional_signals": ["signal1", "signal2"],
-  "missing_elements": ["element1", "element2"],
-  "proceed_to_stage_2": true/false,
-  "stage_2_links": ["url1", "url2", "url3"],
-  "quick_take": "VERY concise summary (max 60 chars) following format: '[Key positive], but [key negatives]' Examples: '$700k institutional trades, but no team info', 'Working DEX platform, but anonymous team', 'NFT marketplace with users, but no audits', 'Payment system, but no docs or GitHub'. If only negative: 'No real content, just placeholder'. If only positive: 'Audited DeFi platform with documentation'",
-  "quick_assessment": "Detailed 2-3 sentence assessment explaining the score in context of token type",
-  "reasoning": "Brief explanation of tier assignment",
-  "type_reasoning": "Why classified as meme or utility with key indicators"
+  "score": 0-100,
+  "tier": "TRASH/BASIC/SOLID/ALPHA",
+  
+  "tooltip": {
+    "one_liner": "60 char max summary",
+    "pros": ["top 5 positives for tooltip"],
+    "cons": ["top 3 negatives for tooltip"]
+  },
+  
+  "full_analysis": {
+    "report": "Complete narrative analysis (be thorough)",
+    "hidden_discoveries": ["all hidden/unusual findings"],
+    "red_flags": ["all concerns found"],
+    "green_flags": ["all positive signals"],
+    "revenue_model": "how they really make money",
+    "technical_assessment": "code quality and implementation",
+    "most_revealing": "the single most important discovery"
+  },
+  
+  "stage_2_recommended": true/false,
+  "stage_2_reason": "what needs verification",
+  "stage_2_resources": {
+    "contract_addresses": [
+      {
+        "address": "full address",
+        "network": "ethereum/base/solana/etc",
+        "type": "token/liquidity/staking"
+      }
+    ],
+    "github_repos": ["urls"],
+    "team_profiles": [
+      {
+        "name": "name if found",
+        "role": "role",
+        "linkedin": "url if found",
+        "twitter": "url if found"
+      }
+    ],
+    "documentation": {
+      "whitepaper": "url if found",
+      "gitbook": "url if found",
+      "technical_docs": "url if found"
+    },
+    "audits": [
+      {
+        "auditor": "company name",
+        "url": "audit link",
+        "report": "report url if available"
+      }
+    ],
+    "social_channels": {
+      "twitter": "url",
+      "telegram": "url",
+      "discord": "url"
+    }
+  }
 }`;
 
   try {
@@ -301,8 +376,8 @@ Return JSON only:
             content: prompt
           }
         ],
-        temperature: 0.3,
-        max_tokens: 1000,
+        temperature: 0.4,
+        max_tokens: 3000,
         response_format: { type: "json_object" }
       })
     });
@@ -316,26 +391,40 @@ Return JSON only:
     const data = await response.json();
     const contentStr = data.choices[0].message.content;
     
-    // Parse the JSON response
+    console.log(`AI Response first 200 chars: ${contentStr.substring(0, 200)}`);
+    
+    // Parse the JSON response with better error handling
     let result;
     try {
       result = JSON.parse(contentStr);
-    } catch {
-      // If that fails, try removing markdown code blocks
-      const cleanedContent = contentStr.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      result = JSON.parse(cleanedContent);
+    } catch (e) {
+      console.log('First parse failed, trying to clean content...');
+      // Try removing markdown code blocks and any leading text
+      let cleanedContent = contentStr;
+      
+      // Remove markdown code blocks
+      cleanedContent = cleanedContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      
+      // If it starts with non-JSON text, find the first { 
+      const jsonStart = cleanedContent.indexOf('{');
+      if (jsonStart > 0) {
+        console.log(`Found JSON starting at position ${jsonStart}`);
+        cleanedContent = cleanedContent.substring(jsonStart);
+      }
+      
+      try {
+        result = JSON.parse(cleanedContent);
+      } catch (e2) {
+        console.error('Failed to parse AI response even after cleaning:', e2);
+        console.error('Full content:', contentStr);
+        throw new Error(`Failed to parse AI response: ${e2.message}`);
+      }
     }
     
-    // Ensure score is capped at 100
-    if (result.total_score > 98) {
-      result.total_score = 100;
+    // The AI now returns the tier directly, but ensure score is capped
+    if (result.score > 100) {
+      result.score = 100;
     }
-    
-    // Calculate tier based on 100-point scale
-    if (result.total_score >= 85) result.tier = 'ALPHA';
-    else if (result.total_score >= 60) result.tier = 'SOLID';
-    else if (result.total_score >= 30) result.tier = 'BASIC';
-    else result.tier = 'TRASH';
     
     return result;
   } catch (error) {
@@ -374,28 +463,40 @@ serve(async (req) => {
     if (websiteUrl.includes('instagram.com')) {
       console.log(`Instagram URL detected - returning mock analysis for ${symbol}`);
       
-      // Create mock analysis that will be stored in database
+      // Create mock analysis with new comprehensive structure
       const mockAnalysis = {
-        total_score: 15,
+        score: 15,
         tier: 'BASIC',
         token_type: 'meme',
-        category_scores: {
-          community_strength: 3,
-          brand_identity: 5,
-          website_quality: 0,
-          authenticity: 2,
-          transparency: 0,
-          safety_signals: 0,
-          accessibility: 5
+        
+        tooltip: {
+          one_liner: 'Instagram-only presence, analysis blocked',
+          pros: ['Has social media presence'],
+          cons: ['Instagram blocks analysis', 'No website or documentation', 'Cannot verify legitimacy']
         },
-        exceptional_signals: ['Instagram social media presence'],
-        missing_elements: ['Cannot analyze Instagram content due to platform restrictions'],
-        quick_take: 'Instagram-based token - limited analysis available',
-        quick_assessment: 'This token uses Instagram as its primary web presence. Instagram blocks automated analysis, so we can only provide limited assessment based on the platform type. The token appears to be meme-focused given the Instagram format.',
-        reasoning: 'Instagram URLs cannot be scraped due to platform restrictions (403 Forbidden). Assigned minimal BASIC tier score as we cannot verify actual content, functionality, or legitimacy.',
-        type_reasoning: 'Classified as meme token based on Instagram social media format, which typically indicates community-driven meme projects rather than technical utility tokens.',
-        proceed_to_stage_2: false,
-        stage_2_links: []
+        
+        full_analysis: {
+          report: 'This token uses Instagram as its primary web presence. Instagram blocks automated analysis (403 Forbidden), preventing comprehensive evaluation. Based on the platform choice alone, this appears to be a meme token focused on social media engagement rather than technical utility.',
+          hidden_discoveries: ['Instagram-only presence suggests minimal technical development'],
+          red_flags: ['No traditional website', 'Cannot verify claims', 'Instagram blocks analysis'],
+          green_flags: ['Has some social media presence'],
+          revenue_model: 'Unknown - cannot analyze Instagram content',
+          technical_assessment: 'No technical infrastructure visible',
+          most_revealing: 'Instagram-only presence indicates low technical investment'
+        },
+        
+        stage_2_recommended: false,
+        stage_2_reason: 'No verifiable resources available',
+        stage_2_resources: {
+          contract_addresses: [],
+          github_repos: [],
+          team_profiles: [],
+          documentation: {},
+          audits: [],
+          social_channels: {
+            instagram: websiteUrl
+          }
+        }
       };
 
       // Update database if projectId provided
@@ -407,7 +508,7 @@ serve(async (req) => {
           const { error } = await supabase
             .from('crypto_projects_rated')
             .update({
-              website_stage1_score: mockAnalysis.total_score,
+              website_stage1_score: mockAnalysis.score,
               website_stage1_tier: mockAnalysis.tier,
               token_type: mockAnalysis.token_type,
               website_stage1_analyzed_at: new Date().toISOString(),
@@ -429,18 +530,14 @@ serve(async (req) => {
           success: true,
           symbol,
           websiteUrl,
-          score: mockAnalysis.total_score,
+          score: mockAnalysis.score,
           tier: mockAnalysis.tier,
           token_type: mockAnalysis.token_type,
-          category_scores: mockAnalysis.category_scores,
-          exceptional_signals: mockAnalysis.exceptional_signals,
-          missing_elements: mockAnalysis.missing_elements,
-          quick_take: mockAnalysis.quick_take,
-          quick_assessment: mockAnalysis.quick_assessment,
-          reasoning: mockAnalysis.reasoning,
-          type_reasoning: mockAnalysis.type_reasoning,
-          proceed_to_stage_2: mockAnalysis.proceed_to_stage_2,
-          stage_2_links: mockAnalysis.stage_2_links,
+          tooltip: mockAnalysis.tooltip,
+          full_analysis: mockAnalysis.full_analysis,
+          stage_2_recommended: mockAnalysis.stage_2_recommended,
+          stage_2_reason: mockAnalysis.stage_2_reason,
+          stage_2_resources: mockAnalysis.stage_2_resources,
           database_update: {
             attempted: !!projectId,
             success: updateSuccess,
@@ -464,15 +561,11 @@ serve(async (req) => {
 
     // Step 1: Scrape website
     const html = await scrapeWebsite(websiteUrl);
+    console.log(`Scraped ${html.length} chars of HTML`);
     
-    // Step 2: Parse content
-    const parsedContent = parseHtmlContent(html);
-    console.log(`Parsed ${parsedContent.text_length} chars of text from ${parsedContent.content_length} chars of HTML`);
-    console.log(`Found ${parsedContent.links_with_context?.length || 0} links, ${parsedContent.headers?.length || 0} headers`);
-    
-    // Step 3: Analyze with AI
-    const analysis = await analyzeWithAI(parsedContent, symbol);
-    console.log(`Analysis complete: Score ${analysis.total_score}/100 (${analysis.tier})`);
+    // Step 2: Analyze with AI (using raw HTML)
+    const analysis = await analyzeWithAI(html, symbol);
+    console.log(`Analysis complete: Score ${analysis.score}/100 (${analysis.tier}`);
     
     // Step 4: Update database if projectId provided
     let updateSuccess = false;
@@ -482,35 +575,20 @@ serve(async (req) => {
       console.log(`Updating crypto_projects_rated for ${symbol} with ID ${projectId}`);
       
       try {
-        // Create comprehensive analysis object for JSONB column
+        // Store the complete analysis object
         const fullAnalysis = {
-          category_scores: analysis.category_scores,
-          exceptional_signals: analysis.exceptional_signals || [],
-          missing_elements: analysis.missing_elements || [],
-          quick_take: analysis.quick_take || '',
-          quick_assessment: analysis.quick_assessment || analysis.reasoning,
-          proceed_to_stage_2: analysis.proceed_to_stage_2,
-          stage_2_links: analysis.stage_2_links || [],
-          parsed_content: {
-            text_length: parsedContent.text_length,
-            content_length: parsedContent.content_length,
-            links_count: parsedContent.links_with_context?.length || 0,
-            headers_count: parsedContent.headers?.length || 0,
-            has_documentation: parsedContent.has_documentation,
-            has_github: parsedContent.has_github,
-            has_social: parsedContent.has_social,
-            meta_tags: parsedContent.meta_tags
-          },
-          navigation_links: parsedContent.navigation,
-          type_reasoning: analysis.type_reasoning,
+          ...analysis,
+          html_length: html.length,
           analyzed_at: new Date().toISOString()
         };
         
-        // Prepare update payload for crypto_projects_rated
+        // Prepare update payload for crypto_projects_rated with new columns
         const updatePayload = {
-          website_stage1_score: analysis.total_score,
+          website_stage1_score: analysis.score,
           website_stage1_tier: analysis.tier,
-          website_stage1_analysis: fullAnalysis,
+          website_stage1_analysis: fullAnalysis,  // Full comprehensive JSON (everything)
+          website_stage1_tooltip: analysis.tooltip,  // Just tooltip for fast loading
+          website_stage2_resources: analysis.stage_2_resources,  // Just resources for Stage 2
           website_stage1_analyzed_at: new Date().toISOString(),
           token_type: analysis.token_type
         };
@@ -540,36 +618,27 @@ serve(async (req) => {
       console.log('No projectId provided, skipping database update');
     }
     
-    // Return analysis results
+    // Return comprehensive analysis results
     return new Response(
       JSON.stringify({
         success: true,
         symbol,
         websiteUrl,
-        score: analysis.total_score,
+        score: analysis.score,
         tier: analysis.tier,
         token_type: analysis.token_type,
-        category_scores: analysis.category_scores,
-        exceptional_signals: analysis.exceptional_signals,
-        missing_elements: analysis.missing_elements || [],
-        quick_take: analysis.quick_take || '',
-        quick_assessment: analysis.quick_assessment,
-        reasoning: analysis.reasoning,
-        type_reasoning: analysis.type_reasoning,
-        proceed_to_stage_2: analysis.proceed_to_stage_2,
-        stage_2_links: analysis.stage_2_links || [],
+        tooltip: analysis.tooltip,
+        full_analysis: analysis.full_analysis,
+        stage_2_recommended: analysis.stage_2_recommended,
+        stage_2_reason: analysis.stage_2_reason,
+        stage_2_resources: analysis.stage_2_resources,
         database_update: {
           attempted: !!projectId,
           success: updateSuccess,
           error: updateError ? updateError.message : null
         },
         content_stats: {
-          content_length: parsedContent.content_length,
-          text_length: parsedContent.text_length,
-          total_links: parsedContent.links_with_context?.length || 0,
-          has_documentation: parsedContent.has_documentation,
-          has_github: parsedContent.has_github,
-          has_social: parsedContent.has_social
+          html_length: html.length
         }
       }),
       {

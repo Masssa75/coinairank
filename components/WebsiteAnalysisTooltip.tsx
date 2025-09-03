@@ -17,11 +17,22 @@ interface WebsiteAnalysisTooltipProps {
       links_with_context?: Array<{url: string, text: string, type: string}>;
       headers?: Array<{level: number, text: string}>;
     };
+    full_analysis?: {
+      report?: string;
+      hidden_discoveries?: string[];
+      red_flags?: string[];
+      green_flags?: string[];
+    };
+  } | null;
+  tooltip?: {
+    one_liner: string;
+    pros: string[];
+    cons: string[];
   } | null;
   children: React.ReactNode;
 }
 
-export function WebsiteAnalysisTooltip({ fullAnalysis, children }: WebsiteAnalysisTooltipProps) {
+export function WebsiteAnalysisTooltip({ fullAnalysis, tooltip, children }: WebsiteAnalysisTooltipProps) {
   const [showTooltip, setShowTooltip] = React.useState(false);
   const [tooltipPosition, setTooltipPosition] = React.useState<{ x: number; y: number; placement: 'above' | 'below' } | null>(null);
   const tooltipRef = React.useRef<HTMLDivElement>(null);
@@ -32,27 +43,35 @@ export function WebsiteAnalysisTooltip({ fullAnalysis, children }: WebsiteAnalys
     setMounted(true);
   }, []);
 
-  if (!fullAnalysis) {
+  // Use new tooltip data if available, fallback to fullAnalysis
+  if (!tooltip && !fullAnalysis) {
     return <>{children}</>;
   }
 
+  // Extract data from new tooltip structure or fallback to old
+  const pros = tooltip?.pros || fullAnalysis?.exceptional_signals || fullAnalysis?.full_analysis?.green_flags || [];
+  const cons = tooltip?.cons || fullAnalysis?.missing_elements || fullAnalysis?.full_analysis?.red_flags || [];
+  const oneLiner = tooltip?.one_liner || fullAnalysis?.quick_take || '';
+  
   const { 
-    exceptional_signals = [], 
-    missing_elements = [], 
-    quick_take,
     quick_assessment,
     type_reasoning
-  } = fullAnalysis;
+  } = fullAnalysis || {};
 
   // Don't show tooltip if no data
-  if (!quick_take && !quick_assessment && exceptional_signals.length === 0 && missing_elements.length === 0) {
+  if (!oneLiner && !quick_assessment && pros.length === 0 && cons.length === 0) {
     return <>{children}</>;
   }
 
-  // Use AI-generated quick_take if available, otherwise fall back to pattern matching
+  // Use AI-generated one_liner or quick_take if available, otherwise fall back to pattern matching
   const getQuickTake = () => {
-    // First, use the AI-generated quick_take if available
-    if (quick_take) {
+    // First, use the new one_liner if available
+    if (oneLiner) {
+      return `<span class="text-[#ddd]">${oneLiner}</span>`;
+    }
+    // Fallback to old quick_take format
+    if (fullAnalysis?.quick_take) {
+      const quick_take = fullAnalysis.quick_take;
       // Format the quick_take with colored spans
       const parts = quick_take.split(', but ');
       if (parts.length === 2) {
@@ -218,28 +237,28 @@ export function WebsiteAnalysisTooltip({ fullAnalysis, children }: WebsiteAnalys
             {quickTakeDisplay && (
               <div className="mb-3 pb-3 border-b border-[#2a2d31]">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[#888] font-bold text-xs uppercase tracking-wider">💡 Quick Take</span>
+                  <span className="text-[#888] font-bold text-xs uppercase tracking-wider">Summary</span>
                 </div>
                 <div className="text-xs text-[#ddd] leading-relaxed" dangerouslySetInnerHTML={{ __html: quickTakeDisplay }} />
               </div>
             )}
 
-            {/* Found vs Missing Grid */}
+            {/* Pros and Cons Grid */}
             <div className="grid grid-cols-2 gap-3">
-              {/* FOUND Section */}
-              {exceptional_signals.length > 0 && (
+              {/* PROS Section */}
+              {pros.length > 0 && (
                 <div>
                   <div className="flex items-center gap-1 mb-2">
-                    <span className="text-[#00ff88] text-xs font-bold">✓ FOUND</span>
+                    <span className="text-[#00ff88] text-xs font-bold">✓ PROS</span>
                   </div>
                   <ul className="space-y-1">
-                    {exceptional_signals.slice(0, 3).map((signal, idx) => {
-                      // Shorten signals if too long
-                      const shortSignal = signal.length > 40 ? signal.substring(0, 37) + '...' : signal;
+                    {pros.slice(0, 5).map((pro, idx) => {
+                      // Shorten if too long
+                      const shortPro = pro.length > 50 ? pro.substring(0, 47) + '...' : pro;
                       return (
                         <li key={idx} className="text-[11px] text-[#aaa] flex items-start">
                           <span className="text-[#00ff88] mr-1.5">•</span>
-                          <span>{shortSignal}</span>
+                          <span>{shortPro}</span>
                         </li>
                       );
                     })}
@@ -247,25 +266,25 @@ export function WebsiteAnalysisTooltip({ fullAnalysis, children }: WebsiteAnalys
                 </div>
               )}
 
-              {/* MISSING Section */}
-              {missing_elements.length > 0 && (
+              {/* CONS Section */}
+              {cons.length > 0 && (
                 <div>
                   <div className="flex items-center gap-1 mb-2">
-                    <span className="text-[#ff4444] text-xs font-bold">✗ MISSING</span>
+                    <span className="text-[#ff4444] text-xs font-bold">✗ CONS</span>
                   </div>
                   <ul className="space-y-1">
-                    {missing_elements.slice(0, 3).map((element, idx) => {
+                    {cons.slice(0, 3).map((con, idx) => {
                       // Clean up and shorten
-                      let cleanElement = element;
-                      if (cleanElement.toLowerCase().startsWith('no ')) {
-                        cleanElement = cleanElement.substring(3);
+                      let cleanCon = con;
+                      if (cleanCon.toLowerCase().startsWith('no ')) {
+                        cleanCon = cleanCon.substring(3);
                       }
-                      const shortElement = cleanElement.length > 40 ? cleanElement.substring(0, 37) + '...' : cleanElement;
+                      const shortCon = cleanCon.length > 50 ? cleanCon.substring(0, 47) + '...' : cleanCon;
                       
                       return (
                         <li key={idx} className="text-[11px] text-[#aaa] flex items-start">
                           <span className="text-[#ff4444] mr-1.5">•</span>
-                          <span>{shortElement}</span>
+                          <span>{shortCon}</span>
                         </li>
                       );
                     })}

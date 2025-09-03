@@ -20,6 +20,12 @@ interface CryptoProject {
   website_stage1_score: number;
   website_stage1_tier: string;
   website_stage1_analysis: Record<string, unknown>;
+  website_stage1_tooltip?: {
+    one_liner: string;
+    pros: string[];
+    cons: string[];
+  };
+  website_stage2_resources?: Record<string, unknown>;
   website_stage1_analyzed_at: string;
   current_liquidity_usd: number | null;
   current_market_cap: number | null;
@@ -38,6 +44,7 @@ interface CryptoProject {
   x_analysis_score?: number;
   x_analysis_tier?: string;
   analysis_token_type?: string; // For token type filtering
+  token_type?: string; // Add token_type field
 }
 
 interface FilterState {
@@ -509,10 +516,11 @@ export default function ProjectsRatedPage() {
           {/* Project Grid */}
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {projects.map((project, index) => (
-              <div
+              <Link 
+                href={`/project/${project.symbol}`}
                 key={project.id}
                 ref={index === projects.length - 1 ? lastProjectRef : null}
-                className="bg-[#111214] rounded-2xl border border-[#2a2d31] hover:border-[#00ff88] transition-all hover:-translate-y-1 relative overflow-hidden"
+                className="bg-[#111214] rounded-2xl border border-[#2a2d31] hover:border-[#00ff88] transition-all hover:-translate-y-1 relative overflow-hidden cursor-pointer group block"
               >
                 {/* Preview Area */}
                 <div className="relative h-[420px] bg-[#0a0b0d] overflow-hidden">
@@ -582,6 +590,7 @@ export default function ProjectsRatedPage() {
                       {project.website_stage1_tier && (
                         <WebsiteAnalysisTooltip 
                           fullAnalysis={project.website_stage1_analysis}
+                          tooltip={project.website_stage1_tooltip}
                         >
                           <span 
                             className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"
@@ -631,7 +640,8 @@ export default function ProjectsRatedPage() {
                       href={project.website_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 bg-[#00ff88] text-black text-center py-2 rounded-lg hover:bg-[#00cc66] transition-colors text-sm font-semibold"
+                      className="flex-1 bg-[#00ff88] text-black text-center py-2 rounded-lg hover:bg-[#00cc66] transition-colors text-sm font-semibold relative z-20"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       Visit Website ↗
                     </a>
@@ -640,7 +650,8 @@ export default function ProjectsRatedPage() {
                         href={`https://dexscreener.com/${project.network}/${project.contract_address}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 bg-[#1a1c1f] text-[#888] py-2 rounded-lg hover:bg-[#252729] hover:text-white transition-colors text-center text-sm border border-[#2a2d31]"
+                        className="flex-1 bg-[#1a1c1f] text-[#888] py-2 rounded-lg hover:bg-[#252729] hover:text-white transition-colors text-center text-sm border border-[#2a2d31] relative z-20"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         Chart 📊
                       </a>
@@ -648,7 +659,7 @@ export default function ProjectsRatedPage() {
                   </div>
 
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
 
