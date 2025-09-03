@@ -144,7 +144,6 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
     setSelectedNetworks(['ethereum', 'solana', 'bsc', 'base'])
     setExcludeRugs(true)
     setExcludeImposters(true)
-    setMinXScore(1)
     setMinWebsiteScore(1)
     
     // Reset all sections to collapsed (except token type)
