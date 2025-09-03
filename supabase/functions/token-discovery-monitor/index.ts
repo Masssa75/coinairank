@@ -8,11 +8,11 @@ const corsHeaders = {
 
 // Configuration for how many pages each chain currently fetches
 const CURRENT_CONFIG = {
-  'solana': 3,
+  'solana': 5,
   'eth': 2,
   'base': 2,
   'bsc': 1,
-  'pulsechain': 2
+  'pulsechain': 3
 };
 
 // Send Telegram notification
