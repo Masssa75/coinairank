@@ -27,6 +27,12 @@ interface ProjectData {
     cons: string[];
   };
   website_stage2_resources?: any;
+  website_stage1_token_usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+    model: string;
+  };
   token_type?: string;
   current_liquidity_usd: number | null;
   current_market_cap: number | null;
@@ -37,6 +43,22 @@ interface ProjectData {
 export default function ProjectDetailPage({ params }: { params: { symbol: string } }) {
   const [project, setProject] = useState<ProjectData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check admin status
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const response = await fetch('/api/admin/auth');
+        const data = await response.json();
+        setIsAdmin(data.authenticated);
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        setIsAdmin(false);
+      }
+    }
+    checkAuth();
+  }, []);
 
   useEffect(() => {
     async function fetchProject() {
@@ -134,6 +156,18 @@ export default function ProjectDetailPage({ params }: { params: { symbol: string
             <span className="text-2xl font-bold text-[#00ff88]">
               {project.website_stage1_score}/100
             </span>
+            {/* Token Usage for Admin */}
+            {isAdmin && project.website_stage1_token_usage && (
+              <div className="ml-4 px-3 py-1 bg-[#1a1b1e] border border-[#2a2d31] rounded">
+                <span className="text-xs text-[#666] block">AI Tokens Used</span>
+                <span className="text-sm text-[#00ff88] font-mono">
+                  {project.website_stage1_token_usage.total_tokens.toLocaleString()}
+                </span>
+                <span className="text-xs text-[#666] ml-1">
+                  ({project.website_stage1_token_usage.prompt_tokens.toLocaleString()} + {project.website_stage1_token_usage.completion_tokens.toLocaleString()})
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </header>

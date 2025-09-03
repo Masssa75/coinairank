@@ -415,7 +415,18 @@ Return comprehensive JSON:
     const data = await response.json();
     const contentStr = data.choices[0].message.content;
     
+    // Extract token usage information if available
+    const tokenUsage = data.usage ? {
+      prompt_tokens: data.usage.prompt_tokens || 0,
+      completion_tokens: data.usage.completion_tokens || 0,
+      total_tokens: data.usage.total_tokens || 0,
+      model: 'kimi-k1'
+    } : null;
+    
     console.log(`AI Response first 200 chars: ${contentStr.substring(0, 200)}`);
+    if (tokenUsage) {
+      console.log(`Token usage: ${tokenUsage.total_tokens} total (${tokenUsage.prompt_tokens} prompt + ${tokenUsage.completion_tokens} completion)`);
+    }
     
     // Parse the JSON response with better error handling
     let result;
@@ -448,6 +459,11 @@ Return comprehensive JSON:
     // The AI now returns the tier directly, but ensure score is capped
     if (result.score > 100) {
       result.score = 100;
+    }
+    
+    // Add token usage to result if available
+    if (tokenUsage) {
+      result.token_usage = tokenUsage;
     }
     
     return result;
@@ -706,6 +722,7 @@ serve(async (req) => {
           website_stage1_tooltip: analysis.tooltip,  // Just tooltip for fast loading
           website_stage2_resources: analysis.stage_2_resources,  // Just resources for Stage 2
           website_stage1_analyzed_at: new Date().toISOString(),
+          website_stage1_token_usage: analysis.token_usage || null,  // Store token usage if available
           token_type: analysis.token_type
         };
         
@@ -748,6 +765,7 @@ serve(async (req) => {
         stage_2_recommended: analysis.stage_2_recommended,
         stage_2_reason: analysis.stage_2_reason,
         stage_2_resources: analysis.stage_2_resources,
+        token_usage: analysis.token_usage || null,  // Include token usage in response
         database_update: {
           attempted: !!projectId,
           success: updateSuccess,
