@@ -51,10 +51,8 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
         return;
       }
 
-      // Success!
-      const successMsg = data.hasWebsite 
-        ? `✅ ${data.symbol} added successfully! Market Cap: $${(data.marketCap || 0).toLocaleString()}`
-        : `✅ ${data.symbol} added successfully! Website discovery in progress...`;
+      // Success! Use the message from the API or construct one
+      const successMsg = data.message || `✅ ${data.symbol} added successfully!`;
       
       setSuccessMessage(successMsg);
       setContractAddress('');

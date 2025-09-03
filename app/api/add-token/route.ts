@@ -234,13 +234,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Token added successfully!',
+      message: tokenData.website 
+        ? 'Token added successfully! Website analysis in progress (may take 1-2 minutes).' 
+        : 'Token added successfully!',
       tokenId: ingestionResult.project_id,
       symbol: ingestionResult.symbol,
       hasWebsite: !!tokenData.website,
       liquidity: tokenData.liquidity,
       priceUsd: ingestionResult.price_usd,
-      marketCap: ingestionResult.market_cap
+      marketCap: ingestionResult.market_cap,
+      analysisStatus: tokenData.website ? 'pending' : 'not_applicable'
     });
 
   } catch (error) {

@@ -286,12 +286,15 @@ serve(async (req) => {
       
       // If it exists but hasn't been analyzed, trigger analysis
       if (!existing.website_stage1_score && (body.trigger_analysis !== false)) {
-        await triggerWebsiteAnalysis(
+        // Don't await - let analysis happen in background to avoid timeout
+        triggerWebsiteAnalysis(
           existing.id, 
           body.contract_address, 
           body.website_url, 
           existing.symbol || body.symbol || 'UNKNOWN'
-        );
+        ).catch(error => {
+          console.error('Background website analysis failed for existing project:', error);
+        });
       }
       
       return new Response(
@@ -465,12 +468,15 @@ serve(async (req) => {
     
     // Trigger website analysis if requested (default: true) and we have a valid website
     if (body.trigger_analysis !== false && projectData.website_url && projectData.website_url !== 'pending') {
-      await triggerWebsiteAnalysis(
+      // Don't await - let analysis happen in background to avoid timeout
+      triggerWebsiteAnalysis(
         newProject.id,
         body.contract_address,
         projectData.website_url,
         newProject.symbol
-      );
+      ).catch(error => {
+        console.error('Background website analysis failed:', error);
+      });
     }
     
     return new Response(
