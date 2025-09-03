@@ -352,6 +352,7 @@ export default function ProjectsRatedPage() {
                   setProjects([]);
                   fetchProjects();
                 }} />
+              </div>
             </div>
           </div>
 
