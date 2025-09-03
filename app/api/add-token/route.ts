@@ -97,7 +97,9 @@ async function fetchTokenDataFromDexScreener(contractAddress: string, network: s
     
     // Also check websites array
     if (!tokenData.website && bestPair.info?.websites?.length > 0) {
-      tokenData.website = bestPair.info.websites[0];
+      // Extract just the URL from the website object
+      const websiteObj = bestPair.info.websites[0];
+      tokenData.website = typeof websiteObj === 'string' ? websiteObj : websiteObj.url;
     }
     
     return tokenData;
