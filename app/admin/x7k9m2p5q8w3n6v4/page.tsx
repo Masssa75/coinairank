@@ -41,7 +41,7 @@ export default function AdminDashboard() {
       const data = await response.json();
       setPromptsData(data);
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'Failed to fetch prompts');
       console.error('Error fetching prompts:', err);
     } finally {
       setLoading(false);
