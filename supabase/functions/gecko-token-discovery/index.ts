@@ -12,12 +12,12 @@ async function pollGeckoTerminal(supabase: any) {
   let totalNewTokens = 0;
   
   for (const network of networks) {
-    // Fetch 1-5 pages based on network activity
+    // Fetch pages based on 2-minute coverage needs (more frequent runs)
     let pagesToFetch = 1;
-    if (network === 'solana') pagesToFetch = 5;  // Very high volume
-    else if (network === 'eth') pagesToFetch = 2;  // Medium volume
-    else if (network === 'base') pagesToFetch = 2;  // Medium volume
-    else if (network === 'pulsechain') pagesToFetch = 3;  // Medium-high volume
+    if (network === 'solana') pagesToFetch = 3;  // ~28 pools per 2 min
+    else if (network === 'eth') pagesToFetch = 1;  // Lower volume
+    else if (network === 'base') pagesToFetch = 1;  // Lower volume
+    // BSC and Pulsechain use default of 1 page
     
     for (let page = 1; page <= pagesToFetch; page++) {
       try {

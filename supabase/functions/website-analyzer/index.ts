@@ -370,6 +370,98 @@ serve(async (req) => {
     console.log(`Analyzing website for ${symbol}: ${websiteUrl}`);
     console.log(`Project ID: ${projectId}, Source: ${source || 'unknown'}`);
 
+    // Check for Instagram URLs - they can't be scraped due to 403 blocking
+    if (websiteUrl.includes('instagram.com')) {
+      console.log(`Instagram URL detected - returning mock analysis for ${symbol}`);
+      
+      // Create mock analysis that will be stored in database
+      const mockAnalysis = {
+        total_score: 15,
+        tier: 'BASIC',
+        token_type: 'meme',
+        category_scores: {
+          community_strength: 3,
+          brand_identity: 5,
+          website_quality: 0,
+          authenticity: 2,
+          transparency: 0,
+          safety_signals: 0,
+          accessibility: 5
+        },
+        exceptional_signals: ['Instagram social media presence'],
+        missing_elements: ['Cannot analyze Instagram content due to platform restrictions'],
+        quick_take: 'Instagram-based token - limited analysis available',
+        quick_assessment: 'This token uses Instagram as its primary web presence. Instagram blocks automated analysis, so we can only provide limited assessment based on the platform type. The token appears to be meme-focused given the Instagram format.',
+        reasoning: 'Instagram URLs cannot be scraped due to platform restrictions (403 Forbidden). Assigned minimal BASIC tier score as we cannot verify actual content, functionality, or legitimacy.',
+        type_reasoning: 'Classified as meme token based on Instagram social media format, which typically indicates community-driven meme projects rather than technical utility tokens.',
+        proceed_to_stage_2: false,
+        stage_2_links: []
+      };
+
+      // Update database if projectId provided
+      let updateSuccess = false;
+      let updateError = null;
+      
+      if (projectId) {
+        try {
+          const { error } = await supabase
+            .from('crypto_projects_rated')
+            .update({
+              website_stage1_score: mockAnalysis.total_score,
+              website_stage1_tier: mockAnalysis.tier,
+              token_type: mockAnalysis.token_type,
+              website_stage1_analyzed_at: new Date().toISOString(),
+              website_stage1_analysis: mockAnalysis
+            })
+            .eq('id', projectId);
+            
+          if (error) throw error;
+          updateSuccess = true;
+          console.log(`✅ Updated project ${projectId} with Instagram mock analysis`);
+        } catch (err) {
+          updateError = err;
+          console.error(`Failed to update project ${projectId}:`, err);
+        }
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          symbol,
+          websiteUrl,
+          score: mockAnalysis.total_score,
+          tier: mockAnalysis.tier,
+          token_type: mockAnalysis.token_type,
+          category_scores: mockAnalysis.category_scores,
+          exceptional_signals: mockAnalysis.exceptional_signals,
+          missing_elements: mockAnalysis.missing_elements,
+          quick_take: mockAnalysis.quick_take,
+          quick_assessment: mockAnalysis.quick_assessment,
+          reasoning: mockAnalysis.reasoning,
+          type_reasoning: mockAnalysis.type_reasoning,
+          proceed_to_stage_2: mockAnalysis.proceed_to_stage_2,
+          stage_2_links: mockAnalysis.stage_2_links,
+          database_update: {
+            attempted: !!projectId,
+            success: updateSuccess,
+            error: updateError ? updateError.message : null
+          },
+          content_stats: {
+            content_length: 0,
+            text_length: 0,
+            total_links: 0,
+            has_documentation: false,
+            has_github: false,
+            has_social: true
+          }
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200
+        }
+      );
+    }
+
     // Step 1: Scrape website
     const html = await scrapeWebsite(websiteUrl);
     

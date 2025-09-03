@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
     const searchQuery = searchParams.get('search') || '';
     const minLiquidity = parseFloat(searchParams.get('minLiquidity') || '0');
     const maxLiquidity = parseFloat(searchParams.get('maxLiquidity') || '1000000000');
+    const tokenType = searchParams.get('tokenType');
     
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
     
@@ -62,6 +63,11 @@ export async function GET(request: NextRequest) {
     // Apply search filter
     if (searchQuery) {
       query = query.or(`symbol.ilike.%${searchQuery}%,name.ilike.%${searchQuery}%`);
+    }
+    
+    // Apply token type filter
+    if (tokenType && tokenType !== 'all') {
+      query = query.eq('token_type', tokenType);
     }
     
     // Apply sorting

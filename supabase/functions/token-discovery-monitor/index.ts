@@ -7,12 +7,13 @@ const corsHeaders = {
 };
 
 // Configuration for how many pages each chain currently fetches
+// Based on 5-minute discovery interval
 const CURRENT_CONFIG = {
-  'solana': 5,
-  'eth': 2,
-  'base': 2,
-  'bsc': 1,
-  'pulsechain': 3
+  'solana': 5,      // ~100 new pools per 5 minutes
+  'eth': 2,         // ~40 new pools per 5 minutes
+  'base': 2,        // ~40 new pools per 5 minutes  
+  'bsc': 1,         // ~20 new pools per 5 minutes
+  'pulsechain': 1   // ~1 new pool per 5 minutes
 };
 
 // Send Telegram notification
@@ -92,7 +93,7 @@ async function checkNetworkCoverage(
       const relationships = pool.relationships || {};
       const baseToken = relationships.base_token?.data || {};
       const baseTokenId = baseToken.id || '';
-      const tokenAddress = baseTokenId.split('_').pop()?.toLowerCase() || '';
+      const tokenAddress = baseTokenId.split('_').pop() || '';
       
       if (!tokenAddress) continue;
       
