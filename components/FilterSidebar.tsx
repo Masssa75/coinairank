@@ -34,7 +34,6 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
       networks: ['ethereum', 'solana', 'bsc', 'base'],
       excludeRugs: true,
       excludeImposters: true,
-      minXScore: 1,
       minWebsiteScore: 1
     }
   }
@@ -96,10 +95,6 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
     return initial.excludeImposters !== undefined ? initial.excludeImposters : true
   })
   const [isScoresCollapsed, setIsScoresCollapsed] = useState(sectionStates.scores)
-  const [minXScore, setMinXScore] = useState<number>(() => {
-    const initial = getInitialFilterState()
-    return initial.minXScore || 1
-  })
   const [minWebsiteScore, setMinWebsiteScore] = useState<number>(() => {
     const initial = getInitialFilterState()
     return initial.minWebsiteScore || 1
@@ -140,7 +135,6 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
       networks: ['ethereum', 'solana', 'bsc', 'base'],
       excludeRugs: true,
       excludeImposters: true,
-      minXScore: 1,
       minWebsiteScore: 1
     }
     
