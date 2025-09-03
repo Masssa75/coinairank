@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { WebsiteAnalysisTooltip } from '@/components/WebsiteAnalysisTooltip';
 import FilterSidebar from '@/components/FilterSidebar';
+import { AddTokenModal } from '@/components/AddTokenModal';
 import { useDebounce } from '@/lib/useDebounce';
 import { Settings, Search, Menu, ChevronDown, ChevronUp, Shield, FileCode2, LogOut } from 'lucide-react';
 import Link from 'next/link';
@@ -59,6 +60,7 @@ export default function ProjectsRatedPage() {
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [searchQuery, setSearchQuery] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAddTokenModalOpen, setIsAddTokenModalOpen] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [filters, setFilters] = useState<FilterState>({
     tokenType: 'all',
@@ -431,8 +433,8 @@ export default function ProjectsRatedPage() {
                     <button 
                       className="w-full px-4 py-2 text-left text-white hover:bg-[#1a1c1f] transition-colors flex items-center gap-3"
                       onClick={() => {
-                        // Handle Submit Token
                         setIsMenuOpen(false);
+                        setIsAddTokenModalOpen(true);
                       }}
                     >
                       <span className="text-[#00ff88]">+</span>
@@ -673,6 +675,19 @@ export default function ProjectsRatedPage() {
           )}
         </div>
       </div>
+      
+      {/* Add Token Modal */}
+      <AddTokenModal
+        isOpen={isAddTokenModalOpen}
+        onClose={() => setIsAddTokenModalOpen(false)}
+        onSuccess={() => {
+          setIsAddTokenModalOpen(false);
+          // Refresh the projects list
+          setPage(1);
+          setProjects([]);
+          fetchProjects(1, true);
+        }}
+      />
     </div>
   );
 }
