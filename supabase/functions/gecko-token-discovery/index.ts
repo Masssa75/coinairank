@@ -17,6 +17,7 @@ async function pollGeckoTerminal(supabase: any) {
     if (network === 'solana') pagesToFetch = 3;  // High volume
     else if (network === 'eth') pagesToFetch = 2;  // Medium volume
     else if (network === 'base') pagesToFetch = 2;  // Medium volume
+    else if (network === 'pulsechain') pagesToFetch = 2;  // Medium volume
     
     for (let page = 1; page <= pagesToFetch; page++) {
       try {
