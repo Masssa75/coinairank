@@ -50,14 +50,27 @@ async function scrapeWebsite(url: string) {
         // Check if we got meaningful content
         if (textContent.length >= 500) {
           console.log(`Simple fetch success: ${html.length} chars of HTML`);
-          return html;
+          return { html, status: 'success' };
         }
         console.log(`Simple fetch returned minimal content (${textContent.length} chars), trying ScraperAPI...`);
       } else {
-        console.log(`Simple fetch failed with status ${response.status}, trying ScraperAPI...`);
+        console.log(`Simple fetch failed with status ${response.status}`);
+        // Check for specific error codes that indicate dead sites
+        if (response.status === 404 || response.status >= 500) {
+          return { html: '', status: 'dead', reason: `HTTP ${response.status}` };
+        }
+        console.log(`Trying ScraperAPI...`);
       }
-    } catch (simpleError) {
-      console.log(`Simple fetch error: ${simpleError}, trying ScraperAPI...`);
+    } catch (simpleError: any) {
+      console.log(`Simple fetch error: ${simpleError}`);
+      // Check for DNS/connection errors that indicate dead sites
+      if (simpleError.message?.includes('DNS') || 
+          simpleError.message?.includes('ENOTFOUND') ||
+          simpleError.message?.includes('ECONNREFUSED') ||
+          simpleError.message?.includes('ERR_NAME_NOT_RESOLVED')) {
+        return { html: '', status: 'dead', reason: 'DNS/Connection failed' };
+      }
+      console.log(`Trying ScraperAPI...`);
     }
     
     // Fall back to ScraperAPI for JavaScript-heavy sites or when simple fetch fails
@@ -99,10 +112,11 @@ async function scrapeWebsite(url: string) {
     }
     
     console.log(`Successfully scraped ${html.length} chars of HTML via ScraperAPI`);
-    return html;
+    return { html, status: 'success' };
   } catch (error) {
     console.error(`Error scraping website: ${error}`);
-    throw error;
+    // Return dead status for complete failures
+    return { html: '', status: 'dead', reason: `Scraping failed: ${error}` };
   }
 }
 
@@ -266,13 +280,21 @@ function parseHtmlContent(html: string) {
 }
 
 // Function to analyze with AI using raw HTML - Full Freedom Approach
-async function analyzeWithAI(html: string, ticker: string) {
+async function analyzeWithAI(html: string, ticker: string, isDead: boolean = false) {
   const prompt = `Analyze this crypto project's HTML and provide a comprehensive report. Don't hold back - tell me EVERYTHING you discover.
 
 Project: ${ticker}
 
 HTML (${html.length} characters):
 ${html}
+
+CRITICAL FIRST CHECK - Is this a real project website?
+- Is this a domain parking page (GoDaddy, Namecheap, Sedo, etc.)?
+- Is this a "coming soon" or "under construction" page?
+- Is this an error page (404, 403, 500, etc.)?
+- Does it have less than 500 chars of meaningful content?
+- Is this just a domain for sale listing?
+- Is this a blank or default server page?
 
 Provide a thorough analysis covering:
 1. What this project REALLY is (not just claims)
@@ -300,9 +322,11 @@ Determine if this is meme or utility, score it 0-100, and decide tier:
 
 Return comprehensive JSON:
 {
+  "website_status": "active/dead/blocked",
+  "dead_reason": "parking/coming_soon/error/no_content/for_sale/blank" (only if dead),
   "token_type": "meme/utility",
-  "score": 0-100,
-  "tier": "TRASH/BASIC/SOLID/ALPHA",
+  "score": 0-100 (0 if dead),
+  "tier": "TRASH/BASIC/SOLID/ALPHA/DEAD",
   
   "tooltip": {
     "one_liner": "60 char max summary",
@@ -508,6 +532,7 @@ serve(async (req) => {
           const { error } = await supabase
             .from('crypto_projects_rated')
             .update({
+              website_status: 'blocked',  // Instagram blocks scraping
               website_stage1_score: mockAnalysis.score,
               website_stage1_tier: mockAnalysis.tier,
               token_type: mockAnalysis.token_type,
@@ -560,12 +585,102 @@ serve(async (req) => {
     }
 
     // Step 1: Scrape website
-    const html = await scrapeWebsite(websiteUrl);
+    const scrapeResult = await scrapeWebsite(websiteUrl);
+    
+    // Check if site is dead
+    if (scrapeResult.status === 'dead') {
+      console.log(`Website is dead: ${scrapeResult.reason}`);
+      
+      // Update database with dead status
+      if (projectId) {
+        const { error } = await supabase
+          .from('crypto_projects_rated')
+          .update({
+            website_status: 'dead',
+            website_stage1_score: 0,
+            website_stage1_tier: 'DEAD',
+            website_stage1_analyzed_at: new Date().toISOString(),
+            website_stage1_analysis: {
+              website_status: 'dead',
+              dead_reason: scrapeResult.reason,
+              score: 0,
+              tier: 'DEAD',
+              analyzed_at: new Date().toISOString()
+            }
+          })
+          .eq('id', projectId);
+          
+        if (error) {
+          console.error(`Failed to update dead site status: ${error}`);
+        } else {
+          console.log(`✅ Marked ${symbol} as dead site`);
+        }
+      }
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          symbol,
+          websiteUrl,
+          website_status: 'dead',
+          dead_reason: scrapeResult.reason,
+          score: 0,
+          tier: 'DEAD',
+          message: `Website is not accessible: ${scrapeResult.reason}`
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200
+        }
+      );
+    }
+    
+    const html = scrapeResult.html;
     console.log(`Scraped ${html.length} chars of HTML`);
     
     // Step 2: Analyze with AI (using raw HTML)
     const analysis = await analyzeWithAI(html, symbol);
-    console.log(`Analysis complete: Score ${analysis.score}/100 (${analysis.tier}`);
+    
+    // Check if AI detected a dead/parking page
+    if (analysis.website_status === 'dead') {
+      console.log(`AI detected dead/parking page: ${analysis.dead_reason}`);
+      
+      if (projectId) {
+        const { error } = await supabase
+          .from('crypto_projects_rated')
+          .update({
+            website_status: 'dead',
+            website_stage1_score: 0,
+            website_stage1_tier: 'DEAD',
+            website_stage1_analyzed_at: new Date().toISOString(),
+            website_stage1_analysis: analysis
+          })
+          .eq('id', projectId);
+          
+        if (error) {
+          console.error(`Failed to update dead site status: ${error}`);
+        }
+      }
+      
+      return new Response(
+        JSON.stringify({
+          success: true,
+          symbol,
+          websiteUrl,
+          website_status: 'dead',
+          dead_reason: analysis.dead_reason,
+          score: 0,
+          tier: 'DEAD',
+          message: `Website is a ${analysis.dead_reason} page`
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200
+        }
+      );
+    }
+    
+    console.log(`Analysis complete: Score ${analysis.score}/100 (${analysis.tier})`);
     
     // Step 4: Update database if projectId provided
     let updateSuccess = false;
@@ -584,6 +699,7 @@ serve(async (req) => {
         
         // Prepare update payload for crypto_projects_rated with new columns
         const updatePayload = {
+          website_status: 'active',  // Mark as active since we successfully analyzed it
           website_stage1_score: analysis.score,
           website_stage1_tier: analysis.tier,
           website_stage1_analysis: fullAnalysis,  // Full comprehensive JSON (everything)

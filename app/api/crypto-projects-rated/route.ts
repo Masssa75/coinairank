@@ -47,8 +47,8 @@ export async function GET(request: NextRequest) {
       query = query.lte('current_liquidity_usd', maxLiquidity);
     }
     
-    // Filter out imposters if the column exists
-    // query = query.eq('is_imposter', false);  // Commented out as CAR doesn't have this column yet
+    // Filter out dead websites - only show active or pending (not yet checked)
+    query = query.or('website_status.eq.active,website_status.eq.pending,website_status.is.null');
     
     // Apply network filter
     if (network && network !== 'all') {
