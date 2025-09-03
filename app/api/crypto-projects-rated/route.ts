@@ -28,9 +28,15 @@ export async function GET(request: NextRequest) {
     // Build query
     let query = supabase
       .from('crypto_projects_rated')
-      .select('*', { count: 'exact' })
-      .gte('website_stage1_score', minScore)
-      .lte('website_stage1_score', maxScore);
+      .select('*', { count: 'exact' });
+    
+    // Only apply score filters if minScore > 0 (to include unanalyzed tokens with null scores)
+    if (minScore > 0) {
+      query = query.gte('website_stage1_score', minScore);
+    }
+    if (maxScore < 100) {
+      query = query.lte('website_stage1_score', maxScore);
+    }
     
     // Only apply liquidity filters if they're not the defaults
     if (minLiquidity > 0) {
@@ -69,7 +75,9 @@ export async function GET(request: NextRequest) {
     ];
     
     const sortColumn = validSortColumns.includes(sortBy) ? sortBy : 'website_stage1_score';
-    query = query.order(sortColumn, { ascending: sortOrder === 'asc', nullsFirst: false });
+    // Put nulls last when sorting by score (unanalyzed tokens go to the end)
+    const nullsFirst = sortColumn === 'website_stage1_score' ? false : sortOrder === 'desc';
+    query = query.order(sortColumn, { ascending: sortOrder === 'asc', nullsFirst });
     
     // Apply pagination
     const from = (page - 1) * limit;
