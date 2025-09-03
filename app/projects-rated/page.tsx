@@ -350,7 +350,7 @@ export default function ProjectsRatedPage() {
                   // Refresh the page to show the new token
                   setPage(1);
                   setProjects([]);
-                  fetchProjects();
+                  fetchProjects(1, true);
                 }} />
               </div>
             </div>
