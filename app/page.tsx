@@ -516,12 +516,14 @@ export default function ProjectsRatedPage() {
           {/* Project Grid */}
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {projects.map((project, index) => (
-              <Link 
-                href={`/project/${project.symbol}`}
+              <div
                 key={project.id}
                 ref={index === projects.length - 1 ? lastProjectRef : null}
-                className="bg-[#111214] rounded-2xl border border-[#2a2d31] hover:border-[#00ff88] transition-all hover:-translate-y-1 relative overflow-hidden cursor-pointer group block"
               >
+                <Link 
+                  href={`/project/${project.symbol}`}
+                  className="bg-[#111214] rounded-2xl border border-[#2a2d31] hover:border-[#00ff88] transition-all hover:-translate-y-1 relative overflow-hidden cursor-pointer group block"
+                >
                 {/* Preview Area */}
                 <div className="relative h-[420px] bg-[#0a0b0d] overflow-hidden">
                   {/* Show loading state if capturing screenshot */}
@@ -659,7 +661,8 @@ export default function ProjectsRatedPage() {
                   </div>
 
                 </div>
-              </Link>
+                </Link>
+              </div>
             ))}
           </div>
 
