@@ -4,7 +4,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { WebsiteAnalysisTooltip } from '@/components/WebsiteAnalysisTooltip';
 import FilterSidebar from '@/components/FilterSidebar';
 import { useDebounce } from '@/lib/useDebounce';
-import { Settings, Search, Menu, ChevronDown, ChevronUp } from 'lucide-react';
+import { Settings, Search, Menu, ChevronDown, ChevronUp, Shield, FileCode2, LogOut } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface CryptoProject {
   id: number;
@@ -47,7 +49,9 @@ interface FilterState {
 }
 
 export default function ProjectsRatedPage() {
-  const [projects, setProjects] = useState<CryptoProject[]>([]);
+  const router = useRouter();
+  const [projects, setProjects] = useState<CryptoProject[]>([]);  
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -55,6 +59,7 @@ export default function ProjectsRatedPage() {
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [searchQuery, setSearchQuery] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [filters, setFilters] = useState<FilterState>({
     tokenType: 'all',
     networks: ['ethereum', 'solana', 'bsc', 'base'],
@@ -90,6 +95,31 @@ export default function ProjectsRatedPage() {
   });
   
   const observer = useRef<IntersectionObserver | null>(null);
+  
+  // Check admin authentication on mount
+  useEffect(() => {
+    checkAdminAuth();
+  }, []);
+  
+  const checkAdminAuth = async () => {
+    try {
+      const response = await fetch('/api/admin/auth');
+      const data = await response.json();
+      setIsAdmin(data.authenticated);
+    } catch (err) {
+      console.error('Auth check failed:', err);
+      setIsAdmin(false);
+    } finally {
+      setCheckingAuth(false);
+    }
+  };
+  
+  const handleLogout = async () => {
+    await fetch('/api/admin/auth', { method: 'DELETE' });
+    setIsAdmin(false);
+    setIsMenuOpen(false);
+    router.refresh();
+  };
   const lastProjectRef = useCallback((node: HTMLDivElement | null) => {
     if (loading) return;
     if (observer.current) observer.current.disconnect();
@@ -301,8 +331,14 @@ export default function ProjectsRatedPage() {
         {/* New Header Bar */}
         <header className="sticky top-0 z-50 bg-[#0f0f0f] border-b border-[#2a2d31] px-6 h-14 flex items-center gap-4">
           {/* Logo */}
-          <div className="min-w-[140px]">
+          <div className="min-w-[140px] flex items-center gap-2">
             <span className="text-xl font-semibold tracking-tight text-white">CoinAiRank</span>
+            {isAdmin && (
+              <span className="px-2 py-0.5 bg-[#00ff88]/20 text-[#00ff88] text-xs font-semibold rounded flex items-center gap-1">
+                <Shield className="w-3 h-3" />
+                Admin
+              </span>
+            )}
           </div>
 
           {/* Icon group */}
@@ -329,6 +365,13 @@ export default function ProjectsRatedPage() {
 
           {/* Spacer */}
           <div className="flex-1"></div>
+          
+          {/* Admin Badge for smaller screens */}
+          {isAdmin && (
+            <div className="hidden md:block">
+              {/* Admin indicator already shown next to logo */}
+            </div>
+          )}
 
           {/* Sort Controls */}
           <div className="flex items-center gap-2">
@@ -408,6 +451,30 @@ export default function ProjectsRatedPage() {
                     </button>
                     
                     <div className="border-t border-[#2a2d31] my-2"></div>
+                    
+                    {/* Admin-only options */}
+                    {isAdmin && (
+                      <>
+                        <Link 
+                          href="/admin/prompts"
+                          className="w-full px-4 py-2 text-left text-[#00ff88] hover:bg-[#1a1c1f] transition-colors flex items-center gap-3 text-sm block"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <FileCode2 className="w-4 h-4" />
+                          AI Analysis Prompts
+                        </Link>
+                        
+                        <button 
+                          className="w-full px-4 py-2 text-left text-[#ff8844] hover:bg-[#1a1c1f] transition-colors flex items-center gap-3 text-sm"
+                          onClick={handleLogout}
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Logout Admin
+                        </button>
+                        
+                        <div className="border-t border-[#2a2d31] my-2"></div>
+                      </>
+                    )}
                     
                     <button 
                       className="w-full px-4 py-2 text-left text-[#666] hover:bg-[#1a1c1f] hover:text-white transition-colors text-sm"
