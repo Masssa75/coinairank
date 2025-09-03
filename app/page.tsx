@@ -513,10 +513,7 @@ export default function ProjectsRatedPage() {
                 key={project.id}
                 ref={index === projects.length - 1 ? lastProjectRef : null}
               >
-                <Link 
-                  href={`/project/${project.symbol}`}
-                  className="bg-[#111214] rounded-2xl border border-[#2a2d31] hover:border-[#00ff88] transition-all hover:-translate-y-1 relative overflow-hidden cursor-pointer group block"
-                >
+                <div className="bg-[#111214] rounded-2xl border border-[#2a2d31] hover:border-[#00ff88] transition-all hover:-translate-y-1 relative overflow-hidden group">
                 {/* Preview Area */}
                 <div className="relative h-[420px] bg-[#0a0b0d] overflow-hidden">
                   {/* Show loading state if capturing screenshot */}
@@ -551,14 +548,16 @@ export default function ProjectsRatedPage() {
                 <div className="p-5">
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                        {project.symbol}
-                        {project.name && 
-                         project.name !== project.symbol && 
-                         !project.name.includes('/') && (
-                          <span className="text-sm text-[#666] font-normal">({project.name})</span>
-                        )}
-                      </h3>
+                      <Link href={`/project/${project.symbol}`}>
+                        <h3 className="text-xl font-bold text-white flex items-center gap-2 hover:text-[#00ff88] transition-colors cursor-pointer">
+                          {project.symbol}
+                          {project.name && 
+                           project.name !== project.symbol && 
+                           !project.name.includes('/') && (
+                            <span className="text-sm text-[#666] font-normal">({project.name})</span>
+                          )}
+                        </h3>
+                      </Link>
                       {/* Status badges and network */}
                       <div className="flex gap-1 mt-1 items-center">
                         <span 
@@ -654,7 +653,7 @@ export default function ProjectsRatedPage() {
                   </div>
 
                 </div>
-                </Link>
+                </div>
               </div>
             ))}
           </div>
