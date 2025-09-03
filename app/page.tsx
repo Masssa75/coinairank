@@ -598,10 +598,10 @@ export default function ProjectsRatedPage() {
                     </div>
                   </div>
                   
-                  {/* Quick Take from analysis */}
-                  {(project.website_stage1_analysis as any)?.quick_take && (
+                  {/* Quick Take from analysis - Support both old and new format */}
+                  {(project.website_stage1_tooltip?.one_liner || (project.website_stage1_analysis as any)?.quick_take) && (
                     <p className="text-[#888] text-sm mb-4 line-clamp-2">
-                      {(project.website_stage1_analysis as any).quick_take}
+                      {project.website_stage1_tooltip?.one_liner || (project.website_stage1_analysis as any).quick_take}
                     </p>
                   )}
                   
