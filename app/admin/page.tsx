@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Menu, X, FileCode2, Plus, Database, Home, ChevronRight } from 'lucide-react';
+import { Menu, X, FileCode2, Plus, Database, Home, ChevronRight, Lock, LogOut } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface PromptsData {
   promptTemplate: string;
@@ -17,18 +18,75 @@ interface PromptsData {
 }
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentView, setCurrentView] = useState<'dashboard' | 'prompts' | 'submit' | 'stats'>('dashboard');
   const [promptsData, setPromptsData] = useState<PromptsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  // Check authentication on mount
+  useEffect(() => {
+    checkAuth();
+  }, []);
 
   // Fetch prompts when viewing prompts section
   useEffect(() => {
-    if (currentView === 'prompts') {
+    if (currentView === 'prompts' && isAuthenticated) {
       fetchPrompts();
     }
-  }, [currentView]);
+  }, [currentView, isAuthenticated]);
+
+  const checkAuth = async () => {
+    try {
+      const response = await fetch('/api/admin/auth');
+      const data = await response.json();
+      setIsAuthenticated(data.authenticated);
+    } catch (err) {
+      console.error('Auth check failed:', err);
+      setIsAuthenticated(false);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+    setAuthLoading(true);
+    
+    try {
+      const response = await fetch('/api/admin/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setIsAuthenticated(true);
+        setPassword('');
+      } else {
+        setAuthError(data.error || 'Invalid password');
+      }
+    } catch (err) {
+      setAuthError('Authentication failed');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await fetch('/api/admin/auth', { method: 'DELETE' });
+    setIsAuthenticated(false);
+    setCurrentView('dashboard');
+    router.refresh();
+  };
 
   const fetchPrompts = async () => {
     setLoading(true);
@@ -52,6 +110,63 @@ export default function AdminDashboard() {
     setCurrentView(view);
     setIsMenuOpen(false);
   };
+
+  // Show loading state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-[#0a0b0d] flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-[#00ff88] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // Show login form if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#0a0b0d] flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="bg-[#111214] border border-[#2a2d31] rounded-xl p-8">
+            <div className="flex items-center justify-center mb-6">
+              <Lock className="w-12 h-12 text-[#00ff88]" />
+            </div>
+            <h1 className="text-2xl font-bold text-white text-center mb-2">Admin Access</h1>
+            <p className="text-[#666] text-center mb-6">Enter password to continue</p>
+            
+            <form onSubmit={handleLogin}>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter admin password"
+                className="w-full px-4 py-3 bg-[#1a1c1f] border border-[#2a2d31] rounded-lg text-white placeholder-[#666] focus:outline-none focus:border-[#00ff88] mb-4"
+                autoFocus
+              />
+              
+              {authError && (
+                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                  <p className="text-red-500 text-sm">{authError}</p>
+                </div>
+              )}
+              
+              <button
+                type="submit"
+                disabled={authLoading || !password}
+                className="w-full py-3 bg-[#00ff88] text-black font-semibold rounded-lg hover:bg-[#00cc66] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {authLoading ? 'Authenticating...' : 'Login'}
+              </button>
+            </form>
+            
+            <div className="mt-6 text-center">
+              <Link href="/" className="text-[#666] hover:text-white transition-colors text-sm">
+                ← Back to main site
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0b0d]">
@@ -125,6 +240,14 @@ export default function AdminDashboard() {
                   </button>
                   
                   <div className="border-t border-[#2a2d31] my-2"></div>
+                  
+                  <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-3 text-left text-white hover:bg-[#1a1c1f] transition-colors flex items-center gap-3"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
                   
                   <Link 
                     href="/"
