@@ -1,0 +1,99 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - heading "CAR" [level=1] [ref=e7]
+      - paragraph [ref=e8]: High-Quality Crypto Projects
+      - button "Hide Filters" [ref=e9]:
+        - img
+    - generic [ref=e11]:
+      - heading "FILTERS" [level=2] [ref=e12]
+      - button "Reset" [ref=e13]
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - heading "Token Type" [level=3] [ref=e16]
+        - generic [ref=e17]: ▼
+      - generic [ref=e19]:
+        - generic [ref=e20]:
+          - generic [ref=e22]: ✓
+          - generic [ref=e23]: Utility Tokens
+        - generic [ref=e24]:
+          - generic [ref=e26]: ✓
+          - generic [ref=e27]: Meme Tokens
+    - generic [ref=e28]:
+      - generic [ref=e29]:
+        - heading "Rugs" [level=3] [ref=e30]
+        - generic [ref=e31]: ▼
+      - generic [ref=e33]:
+        - generic [ref=e35]: Include Rugs
+        - generic [ref=e36]: When unchecked, hides rugged or dead projects
+        - generic [ref=e38]: Include Imposters
+        - generic [ref=e39]: When unchecked, hides tokens marked as having inauthentic websites
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - heading "Networks" [level=3] [ref=e42]
+        - generic [ref=e43]: ▼
+      - generic [ref=e45]:
+        - generic [ref=e46]:
+          - generic [ref=e48]: ✓
+          - generic [ref=e49]: Ethereum
+        - generic [ref=e50]:
+          - generic [ref=e52]: ✓
+          - generic [ref=e53]: Solana
+        - generic [ref=e54]:
+          - generic [ref=e56]: ✓
+          - generic [ref=e57]: BSC
+        - generic [ref=e58]:
+          - generic [ref=e60]: ✓
+          - generic [ref=e61]: Base
+        - generic [ref=e63]: Polygon
+        - generic [ref=e65]: Arbitrum
+    - generic [ref=e66]:
+      - generic [ref=e67]:
+        - heading "Analysis Scores" [level=3] [ref=e68]
+        - generic [ref=e69]: ▼
+      - generic [ref=e71]:
+        - generic [ref=e72]:
+          - generic [ref=e73]:
+            - generic [ref=e74]: Min X Score
+            - generic [ref=e75]: "1"
+          - slider [ref=e76]: "1"
+          - generic [ref=e77]:
+            - generic [ref=e78]: "1"
+            - generic [ref=e79]: "5"
+            - generic [ref=e80]: "10"
+        - generic [ref=e81]:
+          - generic [ref=e82]:
+            - generic [ref=e83]: Min Website Score
+            - generic [ref=e84]: "1"
+          - slider [ref=e85]: "1"
+          - generic [ref=e86]:
+            - generic [ref=e87]: "1"
+            - generic [ref=e88]: "5"
+            - generic [ref=e89]: "10"
+  - generic [ref=e90]:
+    - banner [ref=e91]:
+      - generic [ref=e93]: CoinAiRank
+      - generic [ref=e94]:
+        - button "Column Settings" [ref=e95]:
+          - img [ref=e96]
+        - button "Search" [ref=e99]:
+          - img [ref=e100]
+      - generic [ref=e103]:
+        - generic [ref=e104]: "Sort by:"
+        - combobox [ref=e105]:
+          - option "Date Called" [selected]
+          - option "AI Score"
+          - option "Market Cap"
+          - option "Liquidity"
+          - option "ROI %"
+        - button "Sort descending" [ref=e106]:
+          - img [ref=e107]
+      - button "Menu" [active] [ref=e110]:
+        - img [ref=e111]
+    - generic [ref=e113]:
+      - paragraph [ref=e114]: No projects found
+      - paragraph [ref=e115]: Try adjusting your filters
+```

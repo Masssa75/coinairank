@@ -175,14 +175,23 @@ export default function ProjectsRatedPage() {
       const response = await fetch(`/api/crypto-projects-rated?${params}`);
       const data = await response.json();
 
+      console.log('API Response:', { 
+        status: response.status, 
+        dataLength: data.data?.length,
+        hasData: !!data.data,
+        pagination: data.pagination
+      });
+
       if (data.data) {
         if (reset) {
+          console.log('Setting projects (reset):', data.data.length, 'projects');
           setProjects(data.data);
         } else {
           // Filter out any duplicates when appending
           setProjects(prev => {
             const existingIds = new Set(prev.map(p => p.id));
             const newProjects = data.data.filter((p: CryptoProject) => !existingIds.has(p.id));
+            console.log('Appending projects:', newProjects.length, 'new, total will be:', prev.length + newProjects.length);
             return [...prev, ...newProjects];
           });
         }
@@ -254,6 +263,7 @@ export default function ProjectsRatedPage() {
 
   // Reset and fetch when filters change
   useEffect(() => {
+    console.log('Filters changed, resetting and fetching projects');
     setProjects([]);
     setPage(1);
     setHasMore(true);
@@ -263,9 +273,15 @@ export default function ProjectsRatedPage() {
   // Fetch more when page changes
   useEffect(() => {
     if (page > 1) {
+      console.log('Fetching page:', page);
       fetchProjects(page);
     }
   }, [page]);
+
+  // Log current projects state
+  useEffect(() => {
+    console.log('Current projects state:', projects.length, 'projects');
+  }, [projects]);
 
   // Format functions
   const formatMarketCap = (value: number | null | undefined) => {
