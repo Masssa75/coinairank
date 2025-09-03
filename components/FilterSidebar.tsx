@@ -8,7 +8,6 @@ interface FilterState {
   networks: string[]
   excludeRugs?: boolean
   excludeImposters?: boolean
-  minXScore?: number
   minWebsiteScore?: number
 }
 
@@ -445,41 +444,12 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
           onClick={() => setIsScoresCollapsed(!isScoresCollapsed)}
         >
           <h3 className={`text-[13px] uppercase tracking-[1px] font-semibold transition-colors ${!isScoresCollapsed ? 'text-[#00ff88]' : 'text-[#888]'}`}>
-            Analysis Scores
+            Website Score
           </h3>
           <ChevronDown className={`w-3 h-3 transition-all ${!isScoresCollapsed ? 'text-[#00ff88]' : 'text-[#666]'} ${isScoresCollapsed ? '-rotate-90' : ''}`} />
         </div>
         <div className={`bg-[#0a0b0d] overflow-hidden transition-all ${isScoresCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100 p-5'}`}>
           <div className="space-y-5">
-            {/* X Analysis Score */}
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="text-xs uppercase tracking-wider text-[#666]">Min X Score</label>
-                <span className="text-sm font-semibold text-white">{minXScore}</span>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="10"
-                step="1"
-                value={minXScore}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value)
-                  setMinXScore(value)
-                  setFilters(prev => ({ ...prev, minXScore: value }))
-                }}
-                className="w-full h-2 bg-[#1a1c1f] rounded-lg appearance-none cursor-pointer slider"
-                style={{
-                  background: `linear-gradient(to right, #00ff88 0%, #00ff88 ${((minXScore - 1) / 9) * 100}%, #1a1c1f ${((minXScore - 1) / 9) * 100}%, #1a1c1f 100%)`
-                }}
-              />
-              <div className="flex justify-between text-[10px] text-[#666] mt-1">
-                <span>1</span>
-                <span>5</span>
-                <span>10</span>
-              </div>
-            </div>
-
             {/* Website Analysis Score */}
             <div>
               <div className="flex justify-between items-center mb-2">

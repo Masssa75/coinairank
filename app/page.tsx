@@ -75,7 +75,6 @@ export default function ProjectsRatedPage() {
     networks: ['ethereum', 'solana', 'bsc', 'base'],
     excludeRugs: false,  // CAR doesn't have these columns yet
     excludeImposters: false,
-    minXScore: 1,
     minWebsiteScore: 1
   });
   
@@ -172,12 +171,10 @@ export default function ProjectsRatedPage() {
         params.append('includeImposters', 'true');
       }
       
-      if (debouncedFilters.minXScore && debouncedFilters.minXScore > 1) {
-        params.append('minXScore', debouncedFilters.minXScore.toString());
-      }
-      
       if (debouncedFilters.minWebsiteScore && debouncedFilters.minWebsiteScore > 1) {
-        params.append('minWebsiteScore', debouncedFilters.minWebsiteScore.toString());
+        // Convert website score from 1-10 scale to 0-100 scale for API
+        const apiScore = (debouncedFilters.minWebsiteScore - 1) * 10;
+        params.append('minScore', apiScore.toString());
       }
 
       const response = await fetch(`/api/crypto-projects-rated?${params}`);
