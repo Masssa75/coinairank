@@ -54,6 +54,7 @@ export default function ProjectsRatedPage() {
   const [sortBy, setSortBy] = useState<string>('created_at');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     tokenType: 'all',
     networks: ['ethereum', 'solana', 'bsc', 'base'],
@@ -362,23 +363,76 @@ export default function ProjectsRatedPage() {
             </button>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            <button className="px-4 py-1.5 bg-transparent border border-[#2a2d31] text-white rounded-md hover:bg-[#1a1c1f] transition-colors text-sm">
-              Submit Token
+          {/* Hamburger Menu */}
+          <div className="relative">
+            <button 
+              className="p-1.5 rounded hover:bg-[#1a1c1f] transition-colors"
+              title="Menu"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              <Menu className="w-4 h-4 text-[#666] hover:text-[#00ff88]" />
             </button>
-            <button className="px-4 py-1.5 bg-[#f59e0b] text-black rounded-md hover:bg-[#d97706] transition-colors text-sm font-medium">
-              Connect Wallet
-            </button>
+            
+            {/* Dropdown Menu */}
+            {isMenuOpen && (
+              <>
+                {/* Backdrop to close menu when clicking outside */}
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setIsMenuOpen(false)}
+                />
+                
+                {/* Menu Content */}
+                <div className="absolute right-0 mt-2 w-56 bg-[#111214] border border-[#2a2d31] rounded-lg shadow-lg z-50">
+                  <div className="py-2">
+                    <button 
+                      className="w-full px-4 py-2 text-left text-white hover:bg-[#1a1c1f] transition-colors flex items-center gap-3"
+                      onClick={() => {
+                        // Handle Submit Token
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      <span className="text-[#00ff88]">+</span>
+                      Submit Token
+                    </button>
+                    
+                    <button 
+                      className="w-full px-4 py-2 text-left text-white hover:bg-[#1a1c1f] transition-colors flex items-center gap-3"
+                      onClick={() => {
+                        // Handle Connect Wallet
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      <span className="text-[#f59e0b]">●</span>
+                      Connect Wallet
+                    </button>
+                    
+                    <div className="border-t border-[#2a2d31] my-2"></div>
+                    
+                    <button 
+                      className="w-full px-4 py-2 text-left text-[#666] hover:bg-[#1a1c1f] hover:text-white transition-colors text-sm"
+                      onClick={() => {
+                        // Handle About
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      About
+                    </button>
+                    
+                    <button 
+                      className="w-full px-4 py-2 text-left text-[#666] hover:bg-[#1a1c1f] hover:text-white transition-colors text-sm"
+                      onClick={() => {
+                        // Handle Documentation
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      Documentation
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
-
-          {/* Hamburger Menu Icon */}
-          <button 
-            className="p-1.5 rounded hover:bg-[#1a1c1f] transition-colors"
-            title="Menu"
-          >
-            <Menu className="w-4 h-4 text-[#666] hover:text-[#00ff88]" />
-          </button>
         </header>
 
         <div className="p-6">
