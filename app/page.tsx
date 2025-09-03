@@ -4,8 +4,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { WebsiteAnalysisTooltip } from '@/components/WebsiteAnalysisTooltip';
 import FilterSidebar from '@/components/FilterSidebar';
 import { AddTokenModal } from '@/components/AddTokenModal';
+import SearchInput from '@/components/SearchInput';
 import { useDebounce } from '@/lib/useDebounce';
-import { Settings, Search, Menu, ChevronDown, ChevronUp, Shield, FileCode2, LogOut } from 'lucide-react';
+import { Settings, Menu, ChevronDown, ChevronUp, Shield, FileCode2, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -360,16 +361,8 @@ export default function ProjectsRatedPage() {
               <Settings className="w-4 h-4 text-[#666] hover:text-[#00ff88]" />
             </button>
             
-            {/* Search Icon */}
-            <button 
-              className="p-1.5 rounded hover:bg-[#1a1c1f] transition-colors"
-              title="Search"
-              onClick={() => {
-                // Toggle search input visibility (to be implemented)
-              }}
-            >
-              <Search className="w-4 h-4 text-[#666] hover:text-[#00ff88]" />
-            </button>
+            {/* Search Input */}
+            <SearchInput onSearch={setSearchQuery} placeholder="Search symbol or name..." />
           </div>
 
           {/* Spacer */}
