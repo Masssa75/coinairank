@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { ChevronRight, ChevronLeft, ChevronDown, Filter, Settings, Bell, User } from 'lucide-react';
 
 interface FilterState {
   tokenType: 'all' | 'meme' | 'utility'
@@ -203,9 +204,7 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
             className="w-9 h-9 rounded-md bg-[#1a1c1f] border border-[#2a2d31] flex items-center justify-center hover:bg-[#252729] hover:border-[#00ff88] transition-all group"
             title="Expand Filters"
           >
-            <svg viewBox="0 0 24 24" className="w-5 h-5 stroke-[#666] group-hover:stroke-[#00ff88] transition-colors" fill="none" strokeWidth="2">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
+            <ChevronRight className="w-5 h-5 text-[#666] group-hover:text-[#00ff88] transition-colors" />
           </button>
           
           {/* Filter Icon */}
@@ -213,9 +212,7 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
             className="w-9 h-9 rounded-md bg-[#1a1c1f] border border-[#2a2d31] flex items-center justify-center hover:bg-[#252729] hover:border-[#00ff88] transition-all group"
             title="Filters"
           >
-            <svg viewBox="0 0 24 24" className="w-5 h-5 stroke-[#666] group-hover:stroke-[#00ff88] transition-colors" fill="none" strokeWidth="2">
-              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-            </svg>
+            <Filter className="w-5 h-5 text-[#666] group-hover:text-[#00ff88] transition-colors" />
           </button>
           
           {/* Settings Icon */}
@@ -223,10 +220,7 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
             className="w-9 h-9 rounded-md bg-[#1a1c1f] border border-[#2a2d31] flex items-center justify-center hover:bg-[#252729] hover:border-[#00ff88] transition-all group"
             title="Settings"
           >
-            <svg viewBox="0 0 24 24" className="w-5 h-5 stroke-[#666] group-hover:stroke-[#00ff88] transition-colors" fill="none" strokeWidth="2">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M18.36 18.36l4.24 4.24M20.66 12H21m-18 0h6m11.31 5.66l-4.24-4.24M7.76 7.76L3.52 3.52M6.34 12H1m4.24 5.66l4.24 4.24"></path>
-            </svg>
+            <Settings className="w-5 h-5 text-[#666] group-hover:text-[#00ff88] transition-colors" />
           </button>
           
           {/* Notifications Icon */}
@@ -234,10 +228,7 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
             className="w-9 h-9 rounded-md bg-[#1a1c1f] border border-[#2a2d31] flex items-center justify-center hover:bg-[#252729] hover:border-[#00ff88] transition-all group relative"
             title="Notifications"
           >
-            <svg viewBox="0 0 24 24" className="w-5 h-5 stroke-[#666] group-hover:stroke-[#00ff88] transition-colors" fill="none" strokeWidth="2">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-            </svg>
+            <Bell className="w-5 h-5 text-[#666] group-hover:text-[#00ff88] transition-colors" />
             {/* Notification dot - optional */}
             <span className="absolute top-1 right-1 w-2 h-2 bg-[#00ff88] rounded-full"></span>
           </button>
@@ -247,10 +238,7 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
             className="w-9 h-9 rounded-md bg-[#1a1c1f] border border-[#2a2d31] flex items-center justify-center hover:bg-[#252729] hover:border-[#00ff88] transition-all group"
             title="Account"
           >
-            <svg viewBox="0 0 24 24" className="w-5 h-5 stroke-[#666] group-hover:stroke-[#00ff88] transition-colors" fill="none" strokeWidth="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
+            <User className="w-5 h-5 text-[#666] group-hover:text-[#00ff88] transition-colors" />
           </button>
         </div>
       ) : (
@@ -269,9 +257,7 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
               className="absolute top-1/2 -translate-y-1/2 right-5 bg-[#1a1c1f] hover:bg-[#252729] rounded px-2 py-3 transition-all"
               title="Hide Filters"
             >
-              <svg viewBox="0 0 24 24" className="w-4 h-4 stroke-[#666] hover:stroke-[#00ff88] transition-colors" fill="none" strokeWidth="2">
-                <polyline points="15 18 9 12 15 6"></polyline>
-              </svg>
+              <ChevronLeft className="w-4 h-4 text-[#666] hover:text-[#00ff88] transition-colors" />
             </button>
           </div>
 
@@ -295,9 +281,7 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
           <h3 className={`text-[13px] uppercase tracking-[1px] font-semibold transition-colors ${!isTokenTypeCollapsed ? 'text-[#00ff88]' : 'text-[#888]'}`}>
             Token Type
           </h3>
-          <span className={`text-xs transition-all ${!isTokenTypeCollapsed ? 'text-[#00ff88]' : 'text-[#666]'} ${isTokenTypeCollapsed ? 'rotate-[-90deg]' : ''}`}>
-            ▼
-          </span>
+          <ChevronDown className={`w-3 h-3 transition-all ${!isTokenTypeCollapsed ? 'text-[#00ff88]' : 'text-[#666]'} ${isTokenTypeCollapsed ? '-rotate-90' : ''}`} />
         </div>
         <div className={`bg-[#0a0b0d] overflow-hidden transition-all ${isTokenTypeCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100 p-5'}`}>
           <div className="flex flex-col gap-3">
@@ -350,9 +334,7 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
           <h3 className={`text-[13px] uppercase tracking-[1px] font-semibold transition-colors ${!isRugsCollapsed ? 'text-[#00ff88]' : 'text-[#888]'}`}>
             Rugs
           </h3>
-          <span className={`text-xs transition-all ${!isRugsCollapsed ? 'text-[#00ff88]' : 'text-[#666]'} ${isRugsCollapsed ? 'rotate-[-90deg]' : ''}`}>
-            ▼
-          </span>
+          <ChevronDown className={`w-3 h-3 transition-all ${!isRugsCollapsed ? 'text-[#00ff88]' : 'text-[#666]'} ${isRugsCollapsed ? '-rotate-90' : ''}`} />
         </div>
         <div className={`bg-[#0a0b0d] overflow-hidden transition-all ${isRugsCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100 p-5'}`}>
           <div className="flex flex-col gap-3">
@@ -412,9 +394,7 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
           <h3 className={`text-[13px] uppercase tracking-[1px] font-semibold transition-colors ${!isNetworksCollapsed ? 'text-[#00ff88]' : 'text-[#888]'}`}>
             Networks
           </h3>
-          <span className={`text-xs transition-all ${!isNetworksCollapsed ? 'text-[#00ff88]' : 'text-[#666]'} ${isNetworksCollapsed ? 'rotate-[-90deg]' : ''}`}>
-            ▼
-          </span>
+          <ChevronDown className={`w-3 h-3 transition-all ${!isNetworksCollapsed ? 'text-[#00ff88]' : 'text-[#666]'} ${isNetworksCollapsed ? '-rotate-90' : ''}`} />
         </div>
         <div className={`bg-[#0a0b0d] overflow-hidden transition-all ${isNetworksCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100 p-5'}`}>
           <div className="flex flex-col gap-3">
@@ -467,9 +447,7 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
           <h3 className={`text-[13px] uppercase tracking-[1px] font-semibold transition-colors ${!isScoresCollapsed ? 'text-[#00ff88]' : 'text-[#888]'}`}>
             Analysis Scores
           </h3>
-          <span className={`text-xs transition-all ${!isScoresCollapsed ? 'text-[#00ff88]' : 'text-[#666]'} ${isScoresCollapsed ? 'rotate-[-90deg]' : ''}`}>
-            ▼
-          </span>
+          <ChevronDown className={`w-3 h-3 transition-all ${!isScoresCollapsed ? 'text-[#00ff88]' : 'text-[#666]'} ${isScoresCollapsed ? '-rotate-90' : ''}`} />
         </div>
         <div className={`bg-[#0a0b0d] overflow-hidden transition-all ${isScoresCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100 p-5'}`}>
           <div className="space-y-5">
