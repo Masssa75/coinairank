@@ -315,10 +315,10 @@ serve(async (req) => {
       }
     })
 
-    console.log(`Starting CAR ultra-tracker...`)
+    console.log(`Starting CAR ultra-tracker (active tokens only)...`)
 
-    // Get all tokens with pool addresses that need price updates
-    // Order by price_data_updated_at to prioritize tokens that haven't been updated recently
+    // Get ONLY ACTIVE tokens with pool addresses that need price updates
+    // Skip dead tokens - they'll be handled by revival-checker
     const { data: tokens, error: fetchError } = await supabase
       .from('crypto_projects_rated')
       .select(`
@@ -341,6 +341,7 @@ serve(async (req) => {
         discord_url
       `)
       .not('pool_address', 'is', null)
+      .eq('is_dead', false)  // Only process active tokens
       .order('price_data_updated_at', { ascending: true, nullsFirst: true })
       .limit(maxTokens)
     

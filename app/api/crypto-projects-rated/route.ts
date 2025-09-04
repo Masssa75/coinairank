@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
     const minLiquidity = parseFloat(searchParams.get('minLiquidity') || '0');
     const maxLiquidity = parseFloat(searchParams.get('maxLiquidity') || '1000000000');
     const tokenType = searchParams.get('tokenType');
+    const includeUnverified = searchParams.get('includeUnverified') === 'true';
     
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
     
@@ -76,6 +77,12 @@ export async function GET(request: NextRequest) {
     // Apply token type filter
     if (tokenType && tokenType !== 'all') {
       query = query.eq('token_type', tokenType);
+    }
+    
+    // Apply verified filter - by default exclude unverified tokens
+    if (!includeUnverified) {
+      // Only show tokens where contract_verification.found_on_site is true
+      query = query.eq('contract_verification->>found_on_site', 'true');
     }
     
     // Apply sorting

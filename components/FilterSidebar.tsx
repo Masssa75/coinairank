@@ -8,6 +8,7 @@ interface FilterState {
   networks: string[]
   excludeRugs?: boolean
   excludeImposters?: boolean
+  excludeUnverified?: boolean
   minWebsiteScore?: number
 }
 
@@ -35,6 +36,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
       networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'],
       excludeRugs: true,
       excludeImposters: true,
+      excludeUnverified: true,
       minWebsiteScore: 1
     }
   }
@@ -80,6 +82,10 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
   const [includeMeme, setIncludeMeme] = useState(() => {
     const initial = getInitialFilterState()
     return initial.tokenType === 'all' || initial.tokenType === 'meme'
+  })
+  const [excludeUnverified, setExcludeUnverified] = useState(() => {
+    const initial = getInitialFilterState()
+    return initial.excludeUnverified !== undefined ? initial.excludeUnverified : true
   })
   const [isNetworksCollapsed, setIsNetworksCollapsed] = useState(sectionStates.networks)
   const [selectedNetworks, setSelectedNetworks] = useState<string[]>(() => {
@@ -163,6 +169,11 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
       localStorage.removeItem('kromProjectsFilterSections')
     }
   }
+
+  // Update filters when excludeUnverified changes
+  useEffect(() => {
+    setFilters(prev => ({ ...prev, excludeUnverified }))
+  }, [excludeUnverified])
 
   const handleTokenTypeChange = (utilityChecked: boolean, memeChecked: boolean) => {
     let newType: FilterState['tokenType'] = 'all'
@@ -332,7 +343,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
           onClick={() => setIsRugsCollapsed(!isRugsCollapsed)}
         >
           <h3 className={`text-[13px] uppercase tracking-[1px] font-semibold transition-colors ${!isRugsCollapsed ? 'text-[#00ff88]' : 'text-[#888]'}`}>
-            Rugs
+            Trust & Safety
           </h3>
           <ChevronDown className={`w-3 h-3 transition-all ${!isRugsCollapsed ? 'text-[#00ff88]' : 'text-[#666]'} ${isRugsCollapsed ? '-rotate-90' : ''}`} />
         </div>
@@ -380,6 +391,29 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
             </label>
             <div className="text-xs text-[#666] mt-1">
               When unchecked, hides tokens marked as having inauthentic websites
+            </div>
+            
+            {/* Include Unverified Tokens */}
+            <label 
+              className="flex items-center gap-2.5 cursor-pointer text-sm text-[#ccc] hover:text-white transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div 
+                className={`w-5 h-5 border-2 rounded-[5px] transition-all flex items-center justify-center ${
+                  !excludeUnverified ? 'bg-[#00ff88] border-[#00ff88]' : 'border-[#333]'
+                }`}
+                onClick={() => {
+                  const newExcludeState = !excludeUnverified
+                  setExcludeUnverified(newExcludeState)
+                  setFilters(prev => ({ ...prev, excludeUnverified: newExcludeState }))
+                }}
+              >
+                {!excludeUnverified && <span className="text-black font-bold text-xs">✓</span>}
+              </div>
+              <span>Include Unverified</span>
+            </label>
+            <div className="text-xs text-[#666] mt-1">
+              When checked, also shows tokens whose contract is not found on their website
             </div>
           </div>
         </div>

@@ -59,6 +59,7 @@ interface FilterState {
   networks: string[]
   excludeRugs?: boolean
   excludeImposters?: boolean
+  excludeUnverified?: boolean
   minXScore?: number
   minWebsiteScore?: number
 }
@@ -82,6 +83,7 @@ export default function ProjectsRatedPage() {
     networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'],
     excludeRugs: false,  // CAR doesn't have these columns yet
     excludeImposters: false,
+    excludeUnverified: true,  // Show only verified tokens by default
     minWebsiteScore: 1
   });
   
@@ -176,6 +178,10 @@ export default function ProjectsRatedPage() {
       
       if (debouncedFilters.excludeImposters === false) {
         params.append('includeImposters', 'true');
+      }
+      
+      if (debouncedFilters.excludeUnverified === false) {
+        params.append('includeUnverified', 'true');
       }
       
       if (debouncedFilters.minWebsiteScore && debouncedFilters.minWebsiteScore > 1) {
