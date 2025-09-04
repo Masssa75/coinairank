@@ -37,6 +37,11 @@ interface CryptoProject {
   is_imposter?: boolean;  // Optional - CAR doesn't have these yet
   is_rugged?: boolean;
   is_dead?: boolean;
+  contract_verification?: {
+    found_on_site: boolean;
+    confidence: 'high' | 'medium' | 'low';
+    note?: string;
+  };
   twitter_url: string | null;
   telegram_url: string | null;
   created_at: string;
@@ -513,6 +518,23 @@ export default function ProjectsRatedPage() {
                 <div className="bg-[#111214] rounded-2xl border border-[#2a2d31] hover:border-[#00ff88] transition-all hover:-translate-y-1 relative overflow-hidden group">
                 {/* Preview Area */}
                 <div className="relative h-[420px] bg-[#0a0b0d] overflow-hidden">
+                  {/* Contract Verification Indicator */}
+                  {project.contract_verification && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <div 
+                        className={`w-2.5 h-2.5 rounded-full ${
+                          project.contract_verification.found_on_site ? 'bg-green-500' :
+                          project.is_imposter ? 'bg-red-500' : 
+                          'bg-orange-500'
+                        } shadow-lg`}
+                        title={
+                          project.contract_verification.found_on_site ? 'Contract verified on website' :
+                          project.is_imposter ? 'Warning: Possible imposter token' :
+                          'Contract not found on website'
+                        }
+                      />
+                    </div>
+                  )}
                   {/* Show loading state if capturing screenshot */}
                   {capturingScreenshots.has(project.id) && !project.website_screenshot_url ? (
                     <div className="w-full h-full flex flex-col items-center justify-center">

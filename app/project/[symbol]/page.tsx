@@ -38,6 +38,12 @@ interface ProjectData {
   current_market_cap: number | null;
   current_price_usd: number | null;
   roi_percent: number | null;
+  contract_verification?: {
+    found_on_site: boolean;
+    confidence: 'high' | 'medium' | 'low';
+    note?: string;
+  };
+  is_imposter?: boolean;
 }
 
 export default function ProjectDetailPage({ params }: { params: { symbol: string } }) {
@@ -141,6 +147,21 @@ export default function ProjectDetailPage({ params }: { params: { symbol: string
               {project.name && project.name !== project.symbol && (
                 <span className="text-sm text-[#666] font-normal">({project.name})</span>
               )}
+              {/* Contract Verification Indicator */}
+              {project.contract_verification && (
+                <div 
+                  className={`w-3 h-3 rounded-full ${
+                    project.contract_verification.found_on_site ? 'bg-green-500' :
+                    project.is_imposter ? 'bg-red-500' : 
+                    'bg-orange-500'
+                  }`}
+                  title={
+                    project.contract_verification.found_on_site ? 'Contract verified on website' :
+                    project.is_imposter ? 'Warning: Possible imposter token' :
+                    'Contract not found on website'
+                  }
+                />
+              )}
             </h1>
           </div>
           <div className="flex items-center gap-3">
@@ -214,6 +235,42 @@ export default function ProjectDetailPage({ params }: { params: { symbol: string
                         </li>
                       ))}
                     </ul>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Contract Verification */}
+            {project.contract_verification && (
+              <section className="bg-[#111214] rounded-xl border border-[#2a2d31] p-6">
+                <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <Shield size={20} />
+                  Contract Verification
+                </h2>
+                <div className="flex items-start gap-3">
+                  <div className={`w-5 h-5 rounded-full flex-shrink-0 mt-0.5 ${
+                    project.contract_verification.found_on_site ? 'bg-green-500' :
+                    project.is_imposter ? 'bg-red-500' : 
+                    'bg-orange-500'
+                  }`} />
+                  <div className="flex-1">
+                    <p className={`font-semibold mb-1 ${
+                      project.contract_verification.found_on_site ? 'text-green-400' :
+                      project.is_imposter ? 'text-red-400' : 
+                      'text-orange-400'
+                    }`}>
+                      {project.contract_verification.found_on_site ? 
+                        'Contract Verified' :
+                        project.is_imposter ? 
+                        'Warning: Possible Imposter Token' :
+                        'Contract Not Found on Website'}
+                    </p>
+                    {project.contract_verification.note && (
+                      <p className="text-sm text-[#aaa]">{project.contract_verification.note}</p>
+                    )}
+                    <p className="text-xs text-[#666] mt-2">
+                      Confidence: <span className="text-[#888]">{project.contract_verification.confidence}</span>
+                    </p>
                   </div>
                 </div>
               </section>

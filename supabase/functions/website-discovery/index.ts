@@ -59,6 +59,43 @@ async function sendTelegramNotification(token: any) {
   }
 }
 
+// List of trading/launch platforms that shouldn't be considered project websites
+const TRADING_PLATFORM_DOMAINS = [
+  'pump.fun',
+  'raydium.io',
+  'jup.ag',
+  'jupiter.ag',
+  'dexscreener.com',
+  'dextools.io',
+  'birdeye.so',
+  'geckoterminal.com',
+  'uniswap.org',
+  'app.uniswap.org',
+  'pancakeswap.finance',
+  'sushiswap.com',
+  'trader.joe',
+  'spookyswap.finance',
+  '1inch.io',
+  'matcha.xyz',
+  'solscan.io',
+  'etherscan.io',
+  'bscscan.com',
+  'basescan.org'
+];
+
+// Check if URL is a trading platform (not a real project website)
+function isTradingPlatform(url: string): boolean {
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname.toLowerCase().replace('www.', '');
+    return TRADING_PLATFORM_DOMAINS.some(domain => 
+      hostname === domain || hostname.endsWith(`.${domain}`)
+    );
+  } catch {
+    return false;
+  }
+}
+
 // Check DexScreener for website and social links
 async function checkDexScreener(addresses: string[]) {
   try {
@@ -156,6 +193,7 @@ serve(async (req) => {
         );
 
         let websiteUrl = null;
+        let foundTradingPlatformOnly = false;
         const now = new Date().toISOString();
         let updateData: any = {
           website_checked_at: now,
@@ -177,14 +215,19 @@ serve(async (req) => {
           const info = pair.info;
           if (!info) continue;
 
-          // Extract website
+          // Extract website (filter out trading platforms)
           const websites = info.websites || [];
-          if (websites.length > 0 && !websiteUrl) {
-            websiteUrl = websites[0].url;
-            updateData.website_url = websiteUrl;
-            updateData.website_found_at = now;
-            websitesFound++;
-            console.log(`  ✅ ${token.symbol}: Website found - ${websiteUrl}`);
+          for (const website of websites) {
+            if (website.url && !isTradingPlatform(website.url)) {
+              websiteUrl = website.url;
+              updateData.website_url = websiteUrl;
+              updateData.website_found_at = now;
+              websitesFound++;
+              console.log(`  ✅ ${token.symbol}: Website found - ${websiteUrl}`);
+              break;
+            } else if (website.url && isTradingPlatform(website.url)) {
+              console.log(`  ⚠️ ${token.symbol}: Skipping trading platform URL - ${website.url}`);
+            }
           }
 
           // Note: twitter_url, telegram_url, discord_url columns don't exist in token_discovery
