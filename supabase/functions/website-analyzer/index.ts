@@ -280,13 +280,19 @@ function parseHtmlContent(html: string) {
 }
 
 // Function to analyze with AI using raw HTML - Full Freedom Approach
-async function analyzeWithAI(html: string, ticker: string, isDead: boolean = false) {
+async function analyzeWithAI(html: string, ticker: string, contractAddress: string, network: string, isDead: boolean = false) {
   const prompt = `Analyze this crypto project's HTML and provide a comprehensive report. Don't hold back - tell me EVERYTHING you discover.
 
 Project: ${ticker}
+Contract: ${contractAddress}
+Network: ${network}
 
 HTML (${html.length} characters):
 ${html}
+
+CONTRACT VERIFICATION:
+Check if this contract address appears on the website: ${contractAddress}
+Look everywhere - text, buttons, links, explorer URLs, etc.
 
 CRITICAL FIRST CHECK - Is this a real project website?
 - Is this a domain parking page (GoDaddy, Namecheap, Sedo, etc.)?
@@ -327,6 +333,12 @@ Return comprehensive JSON:
   "token_type": "meme/utility",
   "score": 0-100 (0 if dead),
   "tier": "TRASH/BASIC/SOLID/ALPHA/DEAD",
+  
+  "contract_verification": {
+    "found_on_site": true/false,
+    "confidence": "high/medium/low",
+    "note": "any relevant observation"
+  },
   
   "tooltip": {
     "one_liner": "60 char max summary",
@@ -509,6 +521,12 @@ serve(async (req) => {
         tier: 'BASIC',
         token_type: 'meme',
         
+        contract_verification: {
+          found_on_site: false,
+          confidence: 'high',
+          note: 'Cannot verify - Instagram blocks analysis'
+        },
+        
         tooltip: {
           one_liner: 'Instagram-only presence, analysis blocked',
           pros: ['Has social media presence'],
@@ -553,7 +571,9 @@ serve(async (req) => {
               website_stage1_tier: mockAnalysis.tier,
               token_type: mockAnalysis.token_type,
               website_stage1_analyzed_at: new Date().toISOString(),
-              website_stage1_analysis: mockAnalysis
+              website_stage1_analysis: mockAnalysis,
+              contract_verification: mockAnalysis.contract_verification,
+              is_imposter: false  // Can't determine for Instagram
             })
             .eq('id', projectId);
             
@@ -574,6 +594,7 @@ serve(async (req) => {
           score: mockAnalysis.score,
           tier: mockAnalysis.tier,
           token_type: mockAnalysis.token_type,
+          contract_verification: mockAnalysis.contract_verification,
           tooltip: mockAnalysis.tooltip,
           full_analysis: mockAnalysis.full_analysis,
           stage_2_recommended: mockAnalysis.stage_2_recommended,
@@ -655,7 +676,7 @@ serve(async (req) => {
     console.log(`Scraped ${html.length} chars of HTML`);
     
     // Step 2: Analyze with AI (using raw HTML)
-    const analysis = await analyzeWithAI(html, symbol);
+    const analysis = await analyzeWithAI(html, symbol, contractAddress || '', 'base');
     
     // Check if AI detected a dead/parking page
     if (analysis.website_status === 'dead') {
@@ -723,7 +744,10 @@ serve(async (req) => {
           website_stage2_resources: analysis.stage_2_resources,  // Just resources for Stage 2
           website_stage1_analyzed_at: new Date().toISOString(),
           website_stage1_token_usage: analysis.token_usage || null,  // Store token usage if available
-          token_type: analysis.token_type
+          token_type: analysis.token_type,
+          contract_verification: analysis.contract_verification || null,  // Store CA verification
+          is_imposter: analysis.contract_verification?.found_on_site === false && 
+                       analysis.contract_verification?.confidence === 'high'  // Set imposter flag
         };
         
         console.log('Update payload ready, executing...');
@@ -760,6 +784,7 @@ serve(async (req) => {
         score: analysis.score,
         tier: analysis.tier,
         token_type: analysis.token_type,
+        contract_verification: analysis.contract_verification,
         tooltip: analysis.tooltip,
         full_analysis: analysis.full_analysis,
         stage_2_recommended: analysis.stage_2_recommended,
