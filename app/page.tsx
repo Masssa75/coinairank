@@ -343,7 +343,9 @@ export default function ProjectsRatedPage() {
         <header className="sticky top-0 z-50 bg-[#0f0f0f] border-b border-[#2a2d31] px-6 h-14 flex items-center gap-4">
           {/* Logo */}
           <div className="min-w-[140px] flex items-center gap-2">
-            <span className="text-xl font-semibold tracking-tight text-white">CoinAiRank</span>
+            <Link href="/" className="text-xl font-semibold tracking-tight text-white hover:text-[#00ff88] transition-colors">
+              CoinAiRank
+            </Link>
             {isAdmin && (
               <span className="px-2 py-0.5 bg-[#00ff88]/20 text-[#00ff88] text-xs font-semibold rounded flex items-center gap-1">
                 <Shield className="w-3 h-3" />

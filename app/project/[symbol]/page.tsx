@@ -136,6 +136,13 @@ export default function ProjectDetailPage({ params }: { params: { symbol: string
           <div className="flex items-center gap-4">
             <Link 
               href="/" 
+              className="text-xl font-semibold tracking-tight text-white hover:text-[#00ff88] transition-colors mr-2"
+            >
+              CoinAiRank
+            </Link>
+            <span className="text-[#444]">|</span>
+            <Link 
+              href="/" 
               className="flex items-center gap-2 text-[#888] hover:text-white transition-colors"
             >
               <ArrowLeft size={20} />
