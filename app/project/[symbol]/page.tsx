@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { ArrowLeft, ExternalLink, Github, Twitter, FileText, Shield, AlertCircle, CheckCircle2, DollarSign, Code, TrendingUp } from 'lucide-react';
+import { ContractVerificationTooltip } from '@/components/ContractVerificationTooltip';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -149,25 +150,26 @@ export default function ProjectDetailPage({ params }: { params: { symbol: string
               <span>Back to Projects</span>
             </Link>
             <span className="text-[#444]">|</span>
-            <h1 className="text-xl font-bold text-white flex items-center gap-2">
-              {project.symbol}
-              {project.name && project.name !== project.symbol && (
-                <span className="text-sm text-[#666] font-normal">({project.name})</span>
-              )}
-              {/* Contract Verification Indicator */}
-              {project.contract_verification && (
-                <div 
-                  className={`w-3 h-3 rounded-full ${
-                    project.contract_verification.found_on_site ? 'bg-green-500' :
-                    project.is_imposter ? 'bg-red-500' : 
-                    'bg-orange-500'
-                  }`}
-                  title={
-                    project.contract_verification.found_on_site ? 'Contract verified on website' :
-                    project.is_imposter ? 'Warning: Possible imposter token' :
-                    'Contract not found on website'
-                  }
-                />
+            <h1 className="text-xl font-bold text-white">
+              {project.contract_verification ? (
+                <ContractVerificationTooltip
+                  verification={project.contract_verification}
+                  isImposter={project.is_imposter}
+                >
+                  <span className="flex items-center gap-2">
+                    {project.symbol}
+                    {project.name && project.name !== project.symbol && (
+                      <span className="text-sm text-[#666] font-normal">({project.name})</span>
+                    )}
+                  </span>
+                </ContractVerificationTooltip>
+              ) : (
+                <span className="flex items-center gap-2">
+                  {project.symbol}
+                  {project.name && project.name !== project.symbol && (
+                    <span className="text-sm text-[#666] font-normal">({project.name})</span>
+                  )}
+                </span>
               )}
             </h1>
           </div>

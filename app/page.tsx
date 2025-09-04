@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { WebsiteAnalysisTooltip } from '@/components/WebsiteAnalysisTooltip';
+import { ContractVerificationTooltip } from '@/components/ContractVerificationTooltip';
 import FilterSidebar from '@/components/FilterSidebar';
 import { AddTokenModal } from '@/components/AddTokenModal';
 import SearchInput from '@/components/SearchInput';
@@ -553,12 +554,30 @@ export default function ProjectsRatedPage() {
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <Link href={`/project/${project.symbol}`}>
-                        <h3 className="text-xl font-bold text-white flex items-center gap-2 hover:text-[#00ff88] transition-colors cursor-pointer">
-                          {project.symbol}
-                          {project.name && 
-                           project.name !== project.symbol && 
-                           !project.name.includes('/') && (
-                            <span className="text-sm text-[#666] font-normal">({project.name})</span>
+                        <h3 className="text-xl font-bold text-white hover:text-[#00ff88] transition-colors cursor-pointer">
+                          {project.contract_verification ? (
+                            <ContractVerificationTooltip
+                              verification={project.contract_verification}
+                              isImposter={project.is_imposter}
+                            >
+                              <span className="flex items-center gap-2">
+                                {project.symbol}
+                                {project.name && 
+                                 project.name !== project.symbol && 
+                                 !project.name.includes('/') && (
+                                  <span className="text-sm text-[#666] font-normal">({project.name})</span>
+                                )}
+                              </span>
+                            </ContractVerificationTooltip>
+                          ) : (
+                            <span className="flex items-center gap-2">
+                              {project.symbol}
+                              {project.name && 
+                               project.name !== project.symbol && 
+                               !project.name.includes('/') && (
+                                <span className="text-sm text-[#666] font-normal">({project.name})</span>
+                              )}
+                            </span>
                           )}
                         </h3>
                       </Link>
@@ -582,38 +601,22 @@ export default function ProjectsRatedPage() {
                       </div>
                     </div>
                     <div className="text-right relative z-10">
-                      <div className="flex items-center justify-end gap-1.5">
-                        {project.website_stage1_tier && (
-                          <WebsiteAnalysisTooltip 
-                            fullAnalysis={project.website_stage1_analysis}
-                            tooltip={project.website_stage1_tooltip}
+                      {project.website_stage1_tier && (
+                        <WebsiteAnalysisTooltip 
+                          fullAnalysis={project.website_stage1_analysis}
+                          tooltip={project.website_stage1_tooltip}
+                        >
+                          <span 
+                            className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"
+                            style={{ 
+                              backgroundColor: getTierColor(project.website_stage1_tier).bg,
+                              color: getTierColor(project.website_stage1_tier).text
+                            }}
                           >
-                            <span 
-                              className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"
-                              style={{ 
-                                backgroundColor: getTierColor(project.website_stage1_tier).bg,
-                                color: getTierColor(project.website_stage1_tier).text
-                              }}
-                            >
-                              {project.website_stage1_tier}
-                            </span>
-                          </WebsiteAnalysisTooltip>
-                        )}
-                        {project.contract_verification && (
-                          <div 
-                            className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-                              project.contract_verification.found_on_site ? 'bg-green-500' :
-                              project.is_imposter ? 'bg-red-500' : 
-                              'bg-orange-500'
-                            } shadow-lg`}
-                            title={
-                              project.contract_verification.found_on_site ? 'Contract verified on website' :
-                              project.is_imposter ? 'Warning: Possible imposter token' :
-                              'Contract not found on website'
-                            }
-                          />
-                        )}
-                      </div>
+                            {project.website_stage1_tier}
+                          </span>
+                        </WebsiteAnalysisTooltip>
+                      )}
                       <p className="text-xs text-[#666] mt-1">{formatDate(project.created_at)}</p>
                     </div>
                   </div>
