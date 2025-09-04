@@ -511,14 +511,13 @@ export default function ProjectsRatedPage() {
         <div className="p-6">
 
           {/* Project Grid */}
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
             {projects.map((project, index) => (
               <div
                 key={project.id}
                 ref={index === projects.length - 1 ? lastProjectRef : null}
-                className="min-w-[280px]"
               >
-                <div className="bg-[#111214] rounded-2xl border border-[#2a2d31] hover:border-[#00ff88] transition-all hover:-translate-y-1 relative overflow-hidden group">
+                <div className="bg-[#111214] rounded-2xl border border-[#2a2d31] hover:border-[#00ff88] transition-all hover:-translate-y-1 relative overflow-hidden group min-w-0">
                 {/* Preview Area */}
                 <div className="relative h-[420px] bg-[#0a0b0d] overflow-hidden">
                   {/* Show loading state if capturing screenshot */}
