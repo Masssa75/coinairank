@@ -380,6 +380,12 @@ serve(async (req) => {
           // ROI starts at 0% (price hasn't changed yet)
           roi_percent: 0,
           
+          // ATH values (at ingestion, current price IS the ATH)
+          ath_price: currentPrice,
+          ath_market_cap: marketCap,
+          ath_roi_percent: 0, // ROI is 0 at ingestion
+          ath_timestamp: new Date().toISOString(),
+          
           // Track when price data was fetched
           price_data_updated_at: new Date().toISOString(),
         };
@@ -426,6 +432,11 @@ serve(async (req) => {
           current_market_cap: 0,
           current_liquidity_usd: 0,
           current_volume_24h: 0,
+          roi_percent: 0,
+          ath_price: 0,
+          ath_market_cap: 0,
+          ath_roi_percent: 0,
+          ath_timestamp: new Date().toISOString(),
         };
       }
     } else {
@@ -440,6 +451,11 @@ serve(async (req) => {
         current_market_cap: 0,
         current_liquidity_usd: 0,
         current_volume_24h: 0,
+        roi_percent: 0,
+        ath_price: 0,
+        ath_market_cap: 0,
+        ath_roi_percent: 0,
+        ath_timestamp: new Date().toISOString(),
       };
     }
     

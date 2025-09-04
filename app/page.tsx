@@ -513,27 +513,11 @@ export default function ProjectsRatedPage() {
               <div
                 key={project.id}
                 ref={index === projects.length - 1 ? lastProjectRef : null}
+                className="min-w-[280px]"
               >
                 <div className="bg-[#111214] rounded-2xl border border-[#2a2d31] hover:border-[#00ff88] transition-all hover:-translate-y-1 relative overflow-hidden group">
                 {/* Preview Area */}
                 <div className="relative h-[420px] bg-[#0a0b0d] overflow-hidden">
-                  {/* Contract Verification Indicator */}
-                  {project.contract_verification && (
-                    <div className="absolute top-2 right-2 z-10">
-                      <div 
-                        className={`w-2.5 h-2.5 rounded-full ${
-                          project.contract_verification.found_on_site ? 'bg-green-500' :
-                          project.is_imposter ? 'bg-red-500' : 
-                          'bg-orange-500'
-                        } shadow-lg`}
-                        title={
-                          project.contract_verification.found_on_site ? 'Contract verified on website' :
-                          project.is_imposter ? 'Warning: Possible imposter token' :
-                          'Contract not found on website'
-                        }
-                      />
-                    </div>
-                  )}
                   {/* Show loading state if capturing screenshot */}
                   {capturingScreenshots.has(project.id) && !project.website_screenshot_url ? (
                     <div className="w-full h-full flex flex-col items-center justify-center">
@@ -587,9 +571,6 @@ export default function ProjectsRatedPage() {
                         >
                           {project.network}
                         </span>
-                        {project.is_imposter && (
-                          <span className="px-2 py-0.5 rounded text-xs bg-red-500/20 text-red-500">IMPOSTER</span>
-                        )}
                         {project.is_rugged && (
                           <span className="px-2 py-0.5 rounded text-xs bg-orange-500/20 text-orange-500">RUGGED</span>
                         )}
@@ -599,22 +580,38 @@ export default function ProjectsRatedPage() {
                       </div>
                     </div>
                     <div className="text-right relative z-10">
-                      {project.website_stage1_tier && (
-                        <WebsiteAnalysisTooltip 
-                          fullAnalysis={project.website_stage1_analysis}
-                          tooltip={project.website_stage1_tooltip}
-                        >
-                          <span 
-                            className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"
-                            style={{ 
-                              backgroundColor: getTierColor(project.website_stage1_tier).bg,
-                              color: getTierColor(project.website_stage1_tier).text
-                            }}
+                      <div className="flex items-center justify-end gap-1.5">
+                        {project.website_stage1_tier && (
+                          <WebsiteAnalysisTooltip 
+                            fullAnalysis={project.website_stage1_analysis}
+                            tooltip={project.website_stage1_tooltip}
                           >
-                            {project.website_stage1_tier}
-                          </span>
-                        </WebsiteAnalysisTooltip>
-                      )}
+                            <span 
+                              className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"
+                              style={{ 
+                                backgroundColor: getTierColor(project.website_stage1_tier).bg,
+                                color: getTierColor(project.website_stage1_tier).text
+                              }}
+                            >
+                              {project.website_stage1_tier}
+                            </span>
+                          </WebsiteAnalysisTooltip>
+                        )}
+                        {project.contract_verification && (
+                          <div 
+                            className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                              project.contract_verification.found_on_site ? 'bg-green-500' :
+                              project.is_imposter ? 'bg-red-500' : 
+                              'bg-orange-500'
+                            } shadow-lg`}
+                            title={
+                              project.contract_verification.found_on_site ? 'Contract verified on website' :
+                              project.is_imposter ? 'Warning: Possible imposter token' :
+                              'Contract not found on website'
+                            }
+                          />
+                        )}
+                      </div>
                       <p className="text-xs text-[#666] mt-1">{formatDate(project.created_at)}</p>
                     </div>
                   </div>
