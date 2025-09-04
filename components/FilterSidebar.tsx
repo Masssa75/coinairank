@@ -343,7 +343,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
           onClick={() => setIsRugsCollapsed(!isRugsCollapsed)}
         >
           <h3 className={`text-[13px] uppercase tracking-[1px] font-semibold transition-colors ${!isRugsCollapsed ? 'text-[#00ff88]' : 'text-[#888]'}`}>
-            Trust & Safety
+            Safety
           </h3>
           <ChevronDown className={`w-3 h-3 transition-all ${!isRugsCollapsed ? 'text-[#00ff88]' : 'text-[#666]'} ${isRugsCollapsed ? '-rotate-90' : ''}`} />
         </div>
