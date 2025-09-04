@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
     const minScore = parseFloat(searchParams.get('minScore') || '0');
     const maxScore = parseFloat(searchParams.get('maxScore') || '100');  // CAR uses 0-100 scale
     const network = searchParams.get('network');
+    const networks = searchParams.get('networks'); // Support comma-separated list
     const tier = searchParams.get('tier');
     const searchQuery = searchParams.get('search') || '';
     const minLiquidity = parseFloat(searchParams.get('minLiquidity') || '0');
@@ -50,8 +51,15 @@ export async function GET(request: NextRequest) {
     // Filter out dead websites - only show active or pending (not yet checked)
     query = query.or('website_status.eq.active,website_status.eq.pending,website_status.is.null');
     
-    // Apply network filter
-    if (network && network !== 'all') {
+    // Apply network filter - support both single and multiple networks
+    if (networks) {
+      // Multiple networks via comma-separated string
+      const networkList = networks.split(',').filter(n => n.trim());
+      if (networkList.length > 0) {
+        query = query.in('network', networkList);
+      }
+    } else if (network && network !== 'all') {
+      // Single network (legacy support)
       query = query.eq('network', network);
     }
     

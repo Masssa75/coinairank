@@ -77,7 +77,7 @@ export default function ProjectsRatedPage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [filters, setFilters] = useState<FilterState>({
     tokenType: 'all',
-    networks: ['ethereum', 'solana', 'bsc', 'base'],
+    networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'],
     excludeRugs: false,  // CAR doesn't have these columns yet
     excludeImposters: false,
     minWebsiteScore: 1
@@ -323,8 +323,7 @@ export default function ProjectsRatedPage() {
       solana: { bg: '#14f19522', text: '#14f195' },
       bsc: { bg: '#f0b90b22', text: '#f0b90b' },
       base: { bg: '#0052ff22', text: '#0052ff' },
-      polygon: { bg: '#8247e522', text: '#8247e5' },
-      arbitrum: { bg: '#28a0f022', text: '#28a0f0' }
+      pulsechain: { bg: '#ff00ff22', text: '#ff00ff' }
     };
     return colors[network.toLowerCase()] || { bg: '#88888822', text: '#888' };
   };

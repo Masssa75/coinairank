@@ -61,26 +61,8 @@ async function sendTelegramNotification(token: any) {
 
 // List of trading/launch platforms that shouldn't be considered project websites
 const TRADING_PLATFORM_DOMAINS = [
-  'pump.fun',
-  'raydium.io',
-  'jup.ag',
-  'jupiter.ag',
-  'dexscreener.com',
-  'dextools.io',
-  'birdeye.so',
-  'geckoterminal.com',
-  'uniswap.org',
-  'app.uniswap.org',
-  'pancakeswap.finance',
-  'sushiswap.com',
-  'trader.joe',
-  'spookyswap.finance',
-  '1inch.io',
-  'matcha.xyz',
-  'solscan.io',
-  'etherscan.io',
-  'bscscan.com',
-  'basescan.org'
+  'pump.fun'
+  // Add more domains here as needed
 ];
 
 // Check if URL is a trading platform (not a real project website)
@@ -193,7 +175,6 @@ serve(async (req) => {
         );
 
         let websiteUrl = null;
-        let foundTradingPlatformOnly = false;
         const now = new Date().toISOString();
         let updateData: any = {
           website_checked_at: now,

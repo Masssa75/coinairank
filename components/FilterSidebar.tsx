@@ -28,10 +28,10 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
         }
       }
     }
-    // Default state
+    // Default state - include all available networks
     return {
       tokenType: 'all',
-      networks: ['ethereum', 'solana', 'bsc', 'base'],
+      networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'],
       excludeRugs: true,
       excludeImposters: true,
       minWebsiteScore: 1
@@ -83,7 +83,7 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
   const [isNetworksCollapsed, setIsNetworksCollapsed] = useState(sectionStates.networks)
   const [selectedNetworks, setSelectedNetworks] = useState<string[]>(() => {
     const initial = getInitialFilterState()
-    return initial.networks || ['ethereum', 'solana', 'bsc', 'base']
+    return initial.networks || ['ethereum', 'solana', 'bsc', 'base', 'pulsechain']
   })
   const [isRugsCollapsed, setIsRugsCollapsed] = useState(sectionStates.rugs)
   const [excludeRugs, setExcludeRugs] = useState(() => {
@@ -132,7 +132,7 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
   const resetAllFilters = () => {
     const defaultState = {
       tokenType: 'all' as const,
-      networks: ['ethereum', 'solana', 'bsc', 'base'],
+      networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'],
       excludeRugs: true,
       excludeImposters: true,
       minWebsiteScore: 1
@@ -141,7 +141,7 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
     // Update all individual states
     setIncludeUtility(true)
     setIncludeMeme(true)
-    setSelectedNetworks(['ethereum', 'solana', 'bsc', 'base'])
+    setSelectedNetworks(['ethereum', 'solana', 'bsc', 'base', 'pulsechain'])
     setExcludeRugs(true)
     setExcludeImposters(true)
     setMinWebsiteScore(1)
@@ -395,8 +395,7 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
               { id: 'solana', label: 'Solana', color: '#00ffa3' },
               { id: 'bsc', label: 'BSC', color: '#ffcc00' },
               { id: 'base', label: 'Base', color: '#0052ff' },
-              { id: 'polygon', label: 'Polygon', color: '#8247e5' },
-              { id: 'arbitrum', label: 'Arbitrum', color: '#28a0f0' }
+              { id: 'pulsechain', label: 'PulseChain', color: '#ff00ff' }
             ].map(network => (
               <label 
                 key={network.id}
