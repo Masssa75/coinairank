@@ -75,6 +75,7 @@ export default function ProjectsRatedPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAddTokenModalOpen, setIsAddTokenModalOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [filters, setFilters] = useState<FilterState>({
     tokenType: 'all',
@@ -336,7 +337,10 @@ export default function ProjectsRatedPage() {
   return (
     <div className="fixed inset-0 flex bg-[#0a0b0d]">
       {/* Filter Sidebar */}
-      <FilterSidebar onFiltersChange={handleFiltersChange} />
+      <FilterSidebar 
+        onFiltersChange={handleFiltersChange}
+        onSidebarToggle={(isCollapsed) => setIsSidebarCollapsed(isCollapsed)}
+      />
       
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
@@ -510,8 +514,10 @@ export default function ProjectsRatedPage() {
 
         <div className="p-6">
 
-          {/* Project Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+          {/* Project Grid - Dynamic columns based on sidebar state */}
+          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 ${
+            isSidebarCollapsed ? 'xl:grid-cols-4' : '2xl:grid-cols-4'
+          }`}>
             {projects.map((project, index) => (
               <div
                 key={project.id}

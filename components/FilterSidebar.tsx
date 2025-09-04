@@ -13,9 +13,10 @@ interface FilterState {
 
 interface FilterSidebarProps {
   onFiltersChange: (filters: FilterState) => void;
+  onSidebarToggle?: (isCollapsed: boolean) => void;
 }
 
-export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
+export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: FilterSidebarProps) {
   // Load saved filter state from localStorage
   const getInitialFilterState = (): FilterState => {
     if (typeof window !== 'undefined') {
@@ -126,7 +127,8 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
     if (typeof window !== 'undefined') {
       localStorage.setItem('kromSidebarCollapsed', String(isSidebarCollapsed))
     }
-  }, [isSidebarCollapsed])
+    onSidebarToggle?.(isSidebarCollapsed)
+  }, [isSidebarCollapsed, onSidebarToggle])
 
   // Reset all filters and collapse all sections
   const resetAllFilters = () => {
@@ -192,7 +194,10 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
         <div className="flex flex-col items-center py-4 gap-3">
           {/* Toggle/Expand Button */}
           <button
-            onClick={() => setIsSidebarCollapsed(false)}
+            onClick={() => {
+              setIsSidebarCollapsed(false);
+              onSidebarToggle?.(false);
+            }}
             className="w-9 h-9 rounded-md bg-[#1a1c1f] border border-[#2a2d31] flex items-center justify-center hover:bg-[#252729] hover:border-[#00ff88] transition-all group"
             title="Expand Filters"
           >
@@ -245,7 +250,10 @@ export default function FilterSidebar({ onFiltersChange }: FilterSidebarProps) {
             
             {/* Collapse Button - Inside the header */}
             <button
-              onClick={() => setIsSidebarCollapsed(true)}
+              onClick={() => {
+                setIsSidebarCollapsed(true);
+                onSidebarToggle?.(true);
+              }}
               className="absolute top-1/2 -translate-y-1/2 right-5 bg-[#1a1c1f] hover:bg-[#252729] rounded px-2 py-3 transition-all"
               title="Hide Filters"
             >
