@@ -30,45 +30,35 @@ export async function GET() {
     
     const promptTemplate = promptMatch[1];
     
-    // Also extract the scoring logic and tier classifications
+    // Extract current signal-based scoring from the prompt
+    const tier1SignalsMatch = promptTemplate.match(/🎯 TIER 1 SIGNALS.*?:([\s\S]*?)🔍 DEEP DIVE/);
+    const scoringScaleMatch = promptTemplate.match(/CRITICAL - Score based on SUCCESS LIKELIHOOD INDICATORS:([\s\S]*?)Project:/);
+    const tierClassMatch = promptTemplate.match(/"tier": "TRASH\(.*?\)/);
+    
     const scoringInfo = {
-      memeTokenCategories: [
-        'community_strength (0-14): Social media presence, community links, engagement indicators',
-        'brand_identity (0-14): Memorable concept, clear theme/character, viral potential',
-        'website_quality (0-14): Professional design, working features, visual appeal',
-        'authenticity (0-14): Original concept vs copycat, unique value proposition',
-        'transparency (0-14): Clear tokenomics, supply info, no hidden mechanics',
-        'safety_signals (0-14): Contract verification, security measures, liquidity info',
-        'accessibility (0-14): Team communication, community access, clear social links'
-      ],
-      utilityTokenCategories: [
-        'technical_infrastructure (0-14): GitHub repos, APIs, developer resources',
-        'business_utility (0-14): Real use case, problem-solving, market need',
-        'documentation_quality (0-14): Whitepapers, technical docs, guides',
-        'community_social (0-14): Active community, social presence, user engagement',
-        'security_trust (0-14): Audits, security info, transparency measures',
-        'team_transparency (0-14): Team info, backgrounds, LinkedIn, credentials',
-        'website_presentation (0-14): Professional design, working features'
-      ],
+      tier1Signals: tier1SignalsMatch ? tier1SignalsMatch[1].trim().split('\n').filter(line => line.trim().startsWith('-')).map(line => line.trim()) : [],
+      scoringScale: scoringScaleMatch ? scoringScaleMatch[1].trim().split('\n').filter(line => line.trim().startsWith('-')).map(line => line.trim()) : [],
       tierClassifications: [
-        '0-29: "TRASH" (Poor quality, likely scam or very low effort)',
-        '30-59: "BASIC" (Some effort, but missing key elements)',
-        '60-84: "SOLID" (Good quality, professional, most elements present)',
-        '85-100: "ALPHA" (Exceptional, all elements perfect for its type)'
+        'TRASH (0-29): Poor quality, likely scam or very low effort',
+        'BASIC (30-59): Some effort, but missing key elements', 
+        'SOLID (60-84): Good quality, professional, most elements present',
+        'ALPHA (85-100): Exceptional success indicators, moon potential',
+        'DEAD: Website not accessible or parking page'
       ]
     };
     
     // Extract the parseHtmlContent function to show what data is extracted
     const parseLogicMatch = fileContent.match(/function parseHtmlContent[\s\S]*?return \{[\s\S]*?\};/);
     
-    // Extract key configuration
+    // Extract key configuration from actual edge function
     const config = {
       scraperApiUsed: fileContent.includes('SCRAPERAPI_KEY'),
-      aiModel: fileContent.includes('moonshotai/kimi-k2') ? 'moonshotai/kimi-k2' : 'unknown',
+      aiModel: fileContent.includes('moonshotai/kimi-k2') ? 'moonshotai/kimi-k2' : (fileContent.includes('moonshotai/kimi-k1') ? 'moonshotai/kimi-k1' : 'unknown'),
       renderWaitTime: '3000ms (with 5000ms retry)',
       maxTextContent: '15000 characters',
-      temperature: '0.3',
-      maxTokens: '1000'
+      temperature: fileContent.includes('temperature: 0.4') ? '0.4' : '0.3',
+      maxTokens: fileContent.includes('max_tokens: 3000') ? '3000' : '1000',
+      responseFormat: fileContent.includes('response_format: { type: "json_object" }') ? 'JSON Object' : 'Text'
     };
     
     return NextResponse.json({

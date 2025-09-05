@@ -281,15 +281,15 @@ function parseHtmlContent(html: string) {
 
 // Function to analyze with AI using signal-based scoring
 async function analyzeWithAI(html: string, ticker: string, contractAddress: string, network: string, isDead: boolean = false) {
-  const prompt = `You are a legendary crypto analyst who found Kaspa at $0.0001, PEPE on day 1, and Render before anyone knew about distributed GPU computing. Your job is to find the next 100x opportunity by detecting signals others miss.
+  const prompt = `You are an expert crypto analyst specializing in identifying high-potential projects through website analysis.
 
 HUNT FOR ALPHA in this HTML. Look for:
 
 🎯 TIER 1 SIGNALS (Any ONE of these = potential moon mission):
-- Backed by Kakao, Samsung, Google, Microsoft, Meta, Apple, Amazon
-- Funded by a16z, Paradigm, Binance Labs, Coinbase Ventures, Pantera
-- Team from successful exits (sold company for $100M+)
-- Celebrity/Trump/Elon/major influencer involvement
+- Backing from major tech corporations or conglomerates
+- Investment from tier-1 venture capital firms
+- Team with documented successful exits
+- High-profile celebrity or influencer involvement
 - Solving problem for billion-dollar market
 - Patent-pending or proprietary technology
 - Government contracts or partnerships
@@ -298,7 +298,7 @@ HUNT FOR ALPHA in this HTML. Look for:
 🔍 DEEP DIVE into the HTML:
 - Check ALL text, links, images, meta tags, hidden content
 - Look for company names, investor logos, partnership mentions
-- Find team backgrounds, LinkedIn profiles, past successes
+- Find team backgrounds, professional profiles, past successes
 - Identify technical innovations or unique approaches
 - Spot viral potential or meme-ability
 - Detect institutional interest signals
@@ -308,15 +308,14 @@ HUNT FOR ALPHA in this HTML. Look for:
 - No real team information
 - Copy-pasted content
 - Fake partnerships
-- Unrealistic claims without proof
-- No GitHub/technical substance
+- No technical documentation or code repositories
 
-CRITICAL - USE THIS EXACT SCORING SCALE:
-- 1/1000 rarity (0.1% of projects) → 90-100 points
-- 1/100 rarity (1% of projects) → 70-85 points  
-- 5/100 rarity (5% of projects) → 50-65 points
-- 50/100 rarity (50% of projects) → 20-30 points
-- 90/100 rarity (90% of projects) → 5-10 points
+CRITICAL - Score based on SUCCESS LIKELIHOOD INDICATORS:
+- Extremely predictive of success → 90-100 points
+- Strongly predictive → 70-85 points  
+- Moderately predictive → 50-65 points
+- Weakly predictive → 20-40 points
+- Not predictive → 0-15 points
 
 Project: ${ticker}
 Network: ${network}
@@ -326,9 +325,9 @@ HTML Content (ANALYZE EVERYTHING):
 ${html}
 
 For EACH signal you find:
-1. First estimate: How many out of 100 crypto projects have this?
-2. Then apply the scale above to get the score
-3. Be honest - if 50% of projects have something, it CANNOT score above 30
+1. Ask: Does this predict future success?
+2. Consider: Could a bad project easily get this signal?
+3. Apply score based on historical success correlation
 
 CONTRACT VERIFICATION:
 Search for this exact contract address: ${contractAddress}
@@ -337,11 +336,11 @@ Check everywhere - text, buttons, links, explorer URLs, hidden elements.
 EXTRACT RESOURCES:
 Find ALL resources for Stage 2 verification:
 - Smart contract addresses (with network and type)
-- GitHub repositories
-- Team member profiles (name, role, LinkedIn, Twitter)
-- Documentation (whitepaper, GitBook, docs)
-- Audit reports (auditor, URL, report)
-- Social channels (Twitter, Telegram, Discord)
+- Code repositories
+- Team member profiles (name, role, professional links)
+- Documentation (technical docs, whitepapers)
+- Audit reports (firm, URL, findings)
+- Social channels (all platforms)
 
 DETERMINE TYPE:
 Is this a meme token (focus on community/viral) or utility token (real use case)?
@@ -367,9 +366,9 @@ Return detailed JSON:
     {
       "signal": "specific discovery",
       "importance": "why this matters",
-      "rarity_estimate": "X/100 or X/1000 projects have this",
+      "success_indicator": "how strongly this predicts breakout potential",
       "strength_score": 0-100,
-      "score_reasoning": "why this score based on the rarity scale",
+      "score_reasoning": "why this score based on success correlation",
       "similar_to": "successful project this reminds you of"
     }
   ],
@@ -384,7 +383,7 @@ Return detailed JSON:
   
   "strongest_signal": {
     "signal": "the single best thing you found",
-    "rarity": "X/100 or X/1000",
+    "success_predictor": "why this indicates future potential",
     "score": 0-100
   },
   

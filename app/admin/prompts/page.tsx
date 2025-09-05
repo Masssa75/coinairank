@@ -8,8 +8,8 @@ import Link from 'next/link';
 interface PromptsData {
   promptTemplate: string;
   scoringInfo: {
-    memeTokenCategories: string[];
-    utilityTokenCategories: string[];
+    tier1Signals: string[];
+    scoringScale: string[];
     tierClassifications: string[];
   };
   config: Record<string, any>;
@@ -169,28 +169,28 @@ export default function AdminPromptsPage() {
               </div>
             </div>
 
-            {/* Scoring Categories */}
+            {/* Signal-Based Analysis */}
             <div className="bg-[#111214] border border-[#2a2d31] rounded-xl p-6">
               <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
                 <span className="w-2 h-2 bg-[#ffcc00] rounded-full"></span>
-                Scoring Categories
+                Signal-Based Analysis Framework
               </h2>
               
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-[#00ff88] font-semibold mb-2">Meme Token Categories</h3>
+                  <h3 className="text-[#00ff88] font-semibold mb-2">🎯 Tier 1 Signals (Moon Potential)</h3>
                   <ul className="space-y-1">
-                    {promptsData.scoringInfo.memeTokenCategories.map((cat, i) => (
-                      <li key={i} className="text-[#888] text-sm font-mono pl-4">• {cat}</li>
+                    {promptsData.scoringInfo.tier1Signals.map((signal, i) => (
+                      <li key={i} className="text-[#888] text-sm font-mono pl-4">{signal}</li>
                     ))}
                   </ul>
                 </div>
                 
                 <div>
-                  <h3 className="text-[#00ff88] font-semibold mb-2">Utility Token Categories</h3>
+                  <h3 className="text-[#ff8800] font-semibold mb-2">📊 Success Likelihood Indicators</h3>
                   <ul className="space-y-1">
-                    {promptsData.scoringInfo.utilityTokenCategories.map((cat, i) => (
-                      <li key={i} className="text-[#888] text-sm font-mono pl-4">• {cat}</li>
+                    {promptsData.scoringInfo.scoringScale.map((scale, i) => (
+                      <li key={i} className="text-[#888] text-sm font-mono pl-4">{scale}</li>
                     ))}
                   </ul>
                 </div>
