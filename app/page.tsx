@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { WebsiteAnalysisTooltip } from '@/components/WebsiteAnalysisTooltip';
+import { SignalBasedTooltip } from '@/components/SignalBasedTooltip';
 import { ContractVerificationTooltip } from '@/components/ContractVerificationTooltip';
 import FilterSidebar from '@/components/FilterSidebar';
 import { AddTokenModal } from '@/components/AddTokenModal';
@@ -21,7 +22,7 @@ interface CryptoProject {
   website_screenshot_url: string | null;
   website_stage1_score: number;
   website_stage1_tier: string;
-  website_stage1_analysis: Record<string, unknown>;
+  website_stage1_analysis: any;
   website_stage1_tooltip?: {
     one_liner: string;
     pros: string[];
@@ -613,20 +614,43 @@ export default function ProjectsRatedPage() {
                     </div>
                     <div className="text-right relative z-10">
                       {project.website_stage1_tier && (
-                        <WebsiteAnalysisTooltip 
-                          fullAnalysis={project.website_stage1_analysis}
-                          tooltip={project.website_stage1_tooltip}
-                        >
-                          <span 
-                            className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"
-                            style={{ 
-                              backgroundColor: getTierColor(project.website_stage1_tier).bg,
-                              color: getTierColor(project.website_stage1_tier).text
-                            }}
-                          >
-                            {project.website_stage1_tier}
-                          </span>
-                        </WebsiteAnalysisTooltip>
+                        <>
+                          {/* Use SignalBasedTooltip if signals are available */}
+                          {project.website_stage1_analysis?.signals_found ? (
+                            <SignalBasedTooltip
+                              projectDescription={project.website_stage1_analysis?.project_description}
+                              signals={project.website_stage1_analysis?.signals_found}
+                              redFlags={project.website_stage1_analysis?.red_flags}
+                              strongestSignal={project.website_stage1_analysis?.strongest_signal}
+                              tooltip={project.website_stage1_tooltip}
+                            >
+                              <span 
+                                className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"
+                                style={{ 
+                                  backgroundColor: getTierColor(project.website_stage1_tier).bg,
+                                  color: getTierColor(project.website_stage1_tier).text
+                                }}
+                              >
+                                {project.website_stage1_tier}
+                              </span>
+                            </SignalBasedTooltip>
+                          ) : (
+                            <WebsiteAnalysisTooltip 
+                              fullAnalysis={project.website_stage1_analysis}
+                              tooltip={project.website_stage1_tooltip}
+                            >
+                              <span 
+                                className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"
+                                style={{ 
+                                  backgroundColor: getTierColor(project.website_stage1_tier).bg,
+                                  color: getTierColor(project.website_stage1_tier).text
+                                }}
+                              >
+                                {project.website_stage1_tier}
+                              </span>
+                            </WebsiteAnalysisTooltip>
+                          )}
+                        </>
                       )}
                       <p className="text-xs text-[#666] mt-1">{formatDate(project.created_at)}</p>
                     </div>

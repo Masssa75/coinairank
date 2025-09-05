@@ -279,85 +279,124 @@ function parseHtmlContent(html: string) {
   };
 }
 
-// Function to analyze with AI using raw HTML - Full Freedom Approach
+// Function to analyze with AI using signal-based scoring
 async function analyzeWithAI(html: string, ticker: string, contractAddress: string, network: string, isDead: boolean = false) {
-  const prompt = `Analyze this crypto project's HTML and provide a comprehensive report. Don't hold back - tell me EVERYTHING you discover.
+  const prompt = `You are a legendary crypto analyst who found Kaspa at $0.0001, PEPE on day 1, and Render before anyone knew about distributed GPU computing. Your job is to find the next 100x opportunity by detecting signals others miss.
+
+HUNT FOR ALPHA in this HTML. Look for:
+
+🎯 TIER 1 SIGNALS (Any ONE of these = potential moon mission):
+- Backed by Kakao, Samsung, Google, Microsoft, Meta, Apple, Amazon
+- Funded by a16z, Paradigm, Binance Labs, Coinbase Ventures, Pantera
+- Team from successful exits (sold company for $100M+)
+- Celebrity/Trump/Elon/major influencer involvement
+- Solving problem for billion-dollar market
+- Patent-pending or proprietary technology
+- Government contracts or partnerships
+- Exchange listings or partnerships confirmed
+
+🔍 DEEP DIVE into the HTML:
+- Check ALL text, links, images, meta tags, hidden content
+- Look for company names, investor logos, partnership mentions
+- Find team backgrounds, LinkedIn profiles, past successes
+- Identify technical innovations or unique approaches
+- Spot viral potential or meme-ability
+- Detect institutional interest signals
+
+❌ RED FLAGS to spot:
+- Generic template website
+- No real team information
+- Copy-pasted content
+- Fake partnerships
+- Unrealistic claims without proof
+- No GitHub/technical substance
+
+CRITICAL - USE THIS EXACT SCORING SCALE:
+- 1/1000 rarity (0.1% of projects) → 90-100 points
+- 1/100 rarity (1% of projects) → 70-85 points  
+- 5/100 rarity (5% of projects) → 50-65 points
+- 50/100 rarity (50% of projects) → 20-30 points
+- 90/100 rarity (90% of projects) → 5-10 points
 
 Project: ${ticker}
-Contract: ${contractAddress}
 Network: ${network}
+Current Price: unknown
 
-HTML (${html.length} characters):
+HTML Content (ANALYZE EVERYTHING):
 ${html}
 
+For EACH signal you find:
+1. First estimate: How many out of 100 crypto projects have this?
+2. Then apply the scale above to get the score
+3. Be honest - if 50% of projects have something, it CANNOT score above 30
+
 CONTRACT VERIFICATION:
-Check if this contract address appears on the website: ${contractAddress}
-Look everywhere - text, buttons, links, explorer URLs, etc.
+Search for this exact contract address: ${contractAddress}
+Check everywhere - text, buttons, links, explorer URLs, hidden elements.
 
-CRITICAL FIRST CHECK - Is this a real project website?
-- Is this a domain parking page (GoDaddy, Namecheap, Sedo, etc.)?
-- Is this a "coming soon" or "under construction" page?
-- Is this an error page (404, 403, 500, etc.)?
-- Does it have less than 500 chars of meaningful content?
-- Is this just a domain for sale listing?
-- Is this a blank or default server page?
-
-Provide a thorough analysis covering:
-1. What this project REALLY is (not just claims)
-2. All hidden details in the code
-3. Business model and revenue streams
-4. Technical implementation quality
-5. Red flags and concerns
-6. Positive signals
-7. What the code reveals about the team
-8. Anything unusual, suspicious, or noteworthy
-
-Extract ALL resources needed for Stage 2 verification:
-- Smart contract addresses (with network)
+EXTRACT RESOURCES:
+Find ALL resources for Stage 2 verification:
+- Smart contract addresses (with network and type)
 - GitHub repositories
-- Team member profiles (LinkedIn, Twitter)
-- Documentation links (whitepaper, GitBook, docs)
-- Audit reports
-- Social channels
+- Team member profiles (name, role, LinkedIn, Twitter)
+- Documentation (whitepaper, GitBook, docs)
+- Audit reports (auditor, URL, report)
+- Social channels (Twitter, Telegram, Discord)
 
-Determine if this is meme or utility, score it 0-100, and decide tier:
-- 0-29: "TRASH" (Poor quality, likely scam)
-- 30-59: "BASIC" (Some effort, missing key elements)
-- 60-84: "SOLID" (Good quality, professional)
-- 85-100: "ALPHA" (Exceptional)
+DETERMINE TYPE:
+Is this a meme token (focus on community/viral) or utility token (real use case)?
 
-Return comprehensive JSON:
+CREATE DESCRIPTION:
+Write a clear 100-character description of what this project actually does.
+
+Return detailed JSON:
 {
   "website_status": "active/dead/blocked",
-  "dead_reason": "parking/coming_soon/error/no_content/for_sale/blank" (only if dead),
+  
+  "project_description": "Clear 100-char description of what this project actually does",
+  
   "token_type": "meme/utility",
-  "score": 0-100 (0 if dead),
-  "tier": "TRASH/BASIC/SOLID/ALPHA/DEAD",
   
   "contract_verification": {
     "found_on_site": true/false,
     "confidence": "high/medium/low",
-    "note": "any relevant observation"
+    "note": "where/how found or why not found"
   },
+  
+  "signals_found": [
+    {
+      "signal": "specific discovery",
+      "importance": "why this matters",
+      "rarity_estimate": "X/100 or X/1000 projects have this",
+      "strength_score": 0-100,
+      "score_reasoning": "why this score based on the rarity scale",
+      "similar_to": "successful project this reminds you of"
+    }
+  ],
+  
+  "red_flags": [
+    {
+      "flag": "specific concern found",
+      "severity": "high/medium/low",
+      "evidence": "what proves this"
+    }
+  ],
+  
+  "strongest_signal": {
+    "signal": "the single best thing you found",
+    "rarity": "X/100 or X/1000",
+    "score": 0-100
+  },
+  
+  "final_score": 0-100 (MUST BE EXACTLY THE SAME AS strongest_signal.score),
+  "tier": "TRASH(0-29)/BASIC(30-59)/SOLID(60-84)/ALPHA(85-100)/DEAD",
   
   "tooltip": {
-    "one_liner": "60 char max summary",
-    "pros": ["top 5 positives for tooltip"],
-    "cons": ["top 3 negatives for tooltip"]
+    "one_liner": "60 char max - what makes this unique",
+    "top_signals": ["up to 3 best discoveries, brief"],
+    "main_concerns": ["up to 2 biggest red flags, brief"]
   },
   
-  "full_analysis": {
-    "report": "Complete narrative analysis (be thorough)",
-    "hidden_discoveries": ["all hidden/unusual findings"],
-    "red_flags": ["all concerns found"],
-    "green_flags": ["all positive signals"],
-    "revenue_model": "how they really make money",
-    "technical_assessment": "code quality and implementation",
-    "most_revealing": "the single most important discovery"
-  },
-  
-  "stage_2_recommended": true/false,
-  "stage_2_reason": "what needs verification",
   "stage_2_resources": {
     "contract_addresses": [
       {
@@ -468,9 +507,14 @@ Return comprehensive JSON:
       }
     }
     
-    // The AI now returns the tier directly, but ensure score is capped
-    if (result.score > 100) {
-      result.score = 100;
+    // Use the final_score which should match strongest_signal.score
+    if (!result.final_score && result.strongest_signal) {
+      result.final_score = result.strongest_signal.score;
+    }
+    
+    // Ensure score is capped at 100
+    if (result.final_score > 100) {
+      result.final_score = 100;
     }
     
     // Add token usage to result if available
@@ -734,10 +778,10 @@ serve(async (req) => {
           analyzed_at: new Date().toISOString()
         };
         
-        // Prepare update payload for crypto_projects_rated with new columns
+        // Prepare update payload for crypto_projects_rated with new signal-based structure
         const updatePayload = {
           website_status: 'active',  // Mark as active since we successfully analyzed it
-          website_stage1_score: analysis.score,
+          website_stage1_score: analysis.final_score || 0,
           website_stage1_tier: analysis.tier,
           website_stage1_analysis: fullAnalysis,  // Full comprehensive JSON (everything)
           website_stage1_tooltip: analysis.tooltip,  // Just tooltip for fast loading
@@ -747,7 +791,11 @@ serve(async (req) => {
           token_type: analysis.token_type,
           contract_verification: analysis.contract_verification || null,  // Store CA verification
           is_imposter: analysis.contract_verification?.found_on_site === false && 
-                       analysis.contract_verification?.confidence === 'high'  // Set imposter flag
+                       analysis.contract_verification?.confidence === 'high',  // Set imposter flag
+          // Store signal-specific data
+          strongest_signal: analysis.strongest_signal || null,
+          signals_found: analysis.signals_found || [],
+          red_flags: analysis.red_flags || []
         };
         
         console.log('Update payload ready, executing...');
@@ -781,14 +829,15 @@ serve(async (req) => {
         success: true,
         symbol,
         websiteUrl,
-        score: analysis.score,
+        final_score: analysis.final_score || 0,
         tier: analysis.tier,
         token_type: analysis.token_type,
+        project_description: analysis.project_description,
         contract_verification: analysis.contract_verification,
+        signals_found: analysis.signals_found || [],
+        red_flags: analysis.red_flags || [],
+        strongest_signal: analysis.strongest_signal,
         tooltip: analysis.tooltip,
-        full_analysis: analysis.full_analysis,
-        stage_2_recommended: analysis.stage_2_recommended,
-        stage_2_reason: analysis.stage_2_reason,
         stage_2_resources: analysis.stage_2_resources,
         token_usage: analysis.token_usage || null,  // Include token usage in response
         database_update: {
