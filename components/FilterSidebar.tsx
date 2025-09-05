@@ -200,7 +200,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
   return (
     <div className="relative flex-shrink-0">
       {/* Sidebar Container */}
-      <div className={`bg-[#111214] border-r border-[#2a2d31] h-full transition-all duration-300 ${isSidebarCollapsed ? 'w-[50px]' : 'w-[300px] overflow-y-auto'}`}>
+      <div className={`bg-[#111214] border-r border-[#2a2d31] h-full transition-all duration-300 ${isSidebarCollapsed ? 'w-[50px]' : 'w-[300px] overflow-y-auto scrollbar-hide'}`}>
       
       {isSidebarCollapsed ? (
         /* Collapsed State - Icon Stack */

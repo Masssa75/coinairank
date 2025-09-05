@@ -350,7 +350,7 @@ export default function ProjectsRatedPage() {
       />
       
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto scrollbar-hide">
         {/* New Header Bar */}
         <header className="sticky top-0 z-50 bg-[#0f0f0f] border-b border-[#2a2d31] px-6 h-14 flex items-center gap-4">
           {/* Logo */}

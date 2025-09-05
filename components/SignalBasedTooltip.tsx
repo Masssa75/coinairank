@@ -154,7 +154,7 @@ export function SignalBasedTooltip({
               : 'translate(-50%, 8px)',
           }}
         >
-          <div className="bg-[#1a1c1f] rounded-lg shadow-2xl border border-[#333] p-4 min-w-[400px] max-w-[500px] max-h-[80vh] overflow-y-auto">
+          <div className="bg-[#1a1c1f] rounded-lg shadow-2xl border border-[#333] p-4 min-w-[400px] max-w-[500px] max-h-[80vh] overflow-y-auto scrollbar-hide">
             
             {/* Header with Tier Badge */}
             {strongestSignal && tierBadge && (

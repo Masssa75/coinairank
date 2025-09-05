@@ -231,7 +231,7 @@ export function WebsiteAnalysisTooltip({ fullAnalysis, tooltip, children }: Webs
               : 'translate(-50%, 8px)',
           }}
         >
-          <div className="bg-[#1a1c1f] rounded-lg shadow-2xl border border-[#333] p-4 min-w-[350px] max-w-[450px] max-h-[80vh] overflow-y-auto">
+          <div className="bg-[#1a1c1f] rounded-lg shadow-2xl border border-[#333] p-4 min-w-[350px] max-w-[450px] max-h-[80vh] overflow-y-auto scrollbar-hide">
             
             {/* Quick Take Section */}
             {quickTakeDisplay && (
