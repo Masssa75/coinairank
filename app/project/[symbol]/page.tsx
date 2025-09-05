@@ -22,10 +22,30 @@ interface ProjectData {
   website_stage1_score: number;
   website_stage1_tier: string;
   website_stage1_analysis: any;
+  strongest_signal?: {
+    signal: string;
+    rarity: string;
+    score: number;
+  };
+  signals_found?: Array<{
+    signal: string;
+    importance: string;
+    similar_to?: string;
+    strength_score: number;
+    rarity_estimate: string;
+    score_reasoning: string;
+  }>;
+  red_flags?: Array<{
+    flag: string;
+    severity: string;
+    evidence: string;
+  }>;
   website_stage1_tooltip?: {
     one_liner: string;
-    pros: string[];
-    cons: string[];
+    pros?: string[];
+    cons?: string[];
+    top_signals?: string[];
+    main_concerns?: string[];
   };
   website_stage2_resources?: any;
   website_stage1_token_usage?: {
@@ -209,6 +229,51 @@ export default function ProjectDetailPage({ params }: { params: { symbol: string
           {/* Left Column - Main Analysis */}
           <div className="lg:col-span-2 space-y-8">
             
+            {/* Strongest Signal - New signal-based analysis */}
+            {project.strongest_signal && (
+              <section className="bg-gradient-to-r from-[#111214] to-[#1a1c1f] rounded-xl border border-[#00ff88] p-6">
+                <h2 className="text-lg font-bold text-[#00ff88] mb-4 flex items-center gap-2">
+                  <TrendingUp size={20} />
+                  Strongest Signal
+                </h2>
+                <div className="space-y-3">
+                  <p className="text-xl text-white font-semibold">{project.strongest_signal.signal}</p>
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-[#666]">Rarity:</span>
+                      <span className="text-[#00ff88] font-bold">{project.strongest_signal.rarity}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-[#666]">Score:</span>
+                      <span className="text-2xl text-[#00ff88] font-bold">{project.strongest_signal.score}/100</span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* All Signals Found */}
+            {project.signals_found && project.signals_found.length > 0 && (
+              <section className="bg-[#111214] rounded-xl border border-[#2a2d31] p-6">
+                <h2 className="text-lg font-bold text-white mb-4">Signals Detected</h2>
+                <div className="space-y-4">
+                  {project.signals_found.map((signal, idx) => (
+                    <div key={idx} className="border-l-2 border-[#00ff88] pl-4 space-y-2">
+                      <div className="flex items-start justify-between">
+                        <h3 className="text-white font-semibold">{signal.signal}</h3>
+                        <span className="text-[#00ff88] font-bold">{signal.strength_score}</span>
+                      </div>
+                      <p className="text-sm text-[#aaa]">{signal.importance}</p>
+                      {signal.similar_to && (
+                        <p className="text-xs text-[#666]">Similar to: {signal.similar_to}</p>
+                      )}
+                      <p className="text-xs text-[#666]">Rarity: {signal.rarity_estimate}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Quick Summary */}
             {project.website_stage1_tooltip && (
               <section className="bg-[#111214] rounded-xl border border-[#2a2d31] p-6">
@@ -219,13 +284,13 @@ export default function ProjectDetailPage({ params }: { params: { symbol: string
                   <div>
                     <h3 className="text-sm font-semibold text-[#00ff88] mb-2 flex items-center gap-2">
                       <CheckCircle2 size={16} />
-                      Pros
+                      {project.website_stage1_tooltip.top_signals ? 'Top Signals' : 'Pros'}
                     </h3>
                     <ul className="space-y-1">
-                      {project.website_stage1_tooltip.pros.map((pro, idx) => (
+                      {(project.website_stage1_tooltip.top_signals || project.website_stage1_tooltip.pros || []).map((item, idx) => (
                         <li key={idx} className="text-sm text-[#aaa] flex items-start">
                           <span className="text-[#00ff88] mr-2">•</span>
-                          <span>{pro}</span>
+                          <span>{item}</span>
                         </li>
                       ))}
                     </ul>
@@ -234,13 +299,13 @@ export default function ProjectDetailPage({ params }: { params: { symbol: string
                   <div>
                     <h3 className="text-sm font-semibold text-[#ff4444] mb-2 flex items-center gap-2">
                       <AlertCircle size={16} />
-                      Cons
+                      {project.website_stage1_tooltip.main_concerns ? 'Main Concerns' : 'Cons'}
                     </h3>
                     <ul className="space-y-1">
-                      {project.website_stage1_tooltip.cons.map((con, idx) => (
+                      {(project.website_stage1_tooltip.main_concerns || project.website_stage1_tooltip.cons || []).map((item, idx) => (
                         <li key={idx} className="text-sm text-[#aaa] flex items-start">
                           <span className="text-[#ff4444] mr-2">•</span>
-                          <span>{con}</span>
+                          <span>{item}</span>
                         </li>
                       ))}
                     </ul>
@@ -332,17 +397,36 @@ export default function ProjectDetailPage({ params }: { params: { symbol: string
                 </section>
               )}
 
-              {fullAnalysis.red_flags?.length > 0 && (
+              {(project.red_flags?.length > 0 || fullAnalysis.red_flags?.length > 0) && (
                 <section className="bg-[#111214] rounded-xl border border-[#2a2d31] p-6">
                   <h2 className="text-lg font-bold text-[#ff4444] mb-4 flex items-center gap-2">
                     <AlertCircle size={20} />
                     Red Flags
                   </h2>
-                  <ul className="space-y-2">
-                    {fullAnalysis.red_flags.map((flag: string, idx: number) => (
-                      <li key={idx} className="text-sm text-[#aaa] flex items-start">
-                        <span className="text-[#ff4444] mr-2 mt-0.5">✗</span>
-                        <span>{flag}</span>
+                  <ul className="space-y-3">
+                    {(project.red_flags || fullAnalysis.red_flags || []).map((flag: any, idx: number) => (
+                      <li key={idx} className="text-sm text-[#aaa]">
+                        {typeof flag === 'string' ? (
+                          <div className="flex items-start">
+                            <span className="text-[#ff4444] mr-2 mt-0.5">✗</span>
+                            <span>{flag}</span>
+                          </div>
+                        ) : (
+                          <div className="space-y-1">
+                            <div className="flex items-start">
+                              <span className="text-[#ff4444] mr-2 mt-0.5">✗</span>
+                              <div className="flex-1">
+                                <span className="text-white font-semibold">{flag.flag}</span>
+                                <span className="ml-2 text-xs px-2 py-0.5 rounded bg-[#ff4444] bg-opacity-20 text-[#ff6666]">
+                                  {flag.severity}
+                                </span>
+                              </div>
+                            </div>
+                            {flag.evidence && (
+                              <p className="ml-6 text-xs text-[#666]">Evidence: {flag.evidence}</p>
+                            )}
+                          </div>
+                        )}
                       </li>
                     ))}
                   </ul>
