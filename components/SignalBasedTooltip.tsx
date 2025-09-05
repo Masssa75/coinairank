@@ -186,7 +186,7 @@ export function SignalBasedTooltip({
             {strongestSignal && (
               <div className="mb-3 pb-3 border-b border-[#2a2d31]">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[#00ff88] text-xs font-bold">🚀 STRONGEST SIGNAL</span>
+                  <span className="text-[#00ff88] text-xs font-bold">STRONGEST SIGNAL</span>
                 </div>
                 <div className="text-sm text-white">
                   {strongestSignal.signal}
@@ -201,7 +201,7 @@ export function SignalBasedTooltip({
             {topSignals.length > 0 && (
               <div className="mb-3">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[#88ddff] text-xs font-bold">📊 KEY SIGNALS</span>
+                  <span className="text-[#88ddff] text-xs font-bold">KEY SIGNALS</span>
                 </div>
                 <ul className="space-y-1.5">
                   {topSignals.map((signal, idx) => {
@@ -229,7 +229,7 @@ export function SignalBasedTooltip({
             {mainConcerns.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[#ff4444] text-xs font-bold">⚠️ CONCERNS</span>
+                  <span className="text-[#ff4444] text-xs font-bold">CONCERNS</span>
                 </div>
                 <ul className="space-y-1">
                   {mainConcerns.map((concern, idx) => {
