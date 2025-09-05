@@ -36,7 +36,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
       networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'],
       excludeRugs: true,
       excludeImposters: true,
-      excludeUnverified: true,
+      excludeUnverified: false,
       minWebsiteScore: 1
     }
   }
@@ -85,7 +85,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
   })
   const [excludeUnverified, setExcludeUnverified] = useState(() => {
     const initial = getInitialFilterState()
-    return initial.excludeUnverified !== undefined ? initial.excludeUnverified : true
+    return initial.excludeUnverified !== undefined ? initial.excludeUnverified : false
   })
   const [isNetworksCollapsed, setIsNetworksCollapsed] = useState(sectionStates.networks)
   const [selectedNetworks, setSelectedNetworks] = useState<string[]>(() => {
@@ -143,6 +143,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
       networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'],
       excludeRugs: true,
       excludeImposters: true,
+      excludeUnverified: false,
       minWebsiteScore: 1
     }
     
@@ -152,6 +153,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     setSelectedNetworks(['ethereum', 'solana', 'bsc', 'base', 'pulsechain'])
     setExcludeRugs(true)
     setExcludeImposters(true)
+    setExcludeUnverified(false)
     setMinWebsiteScore(1)
     
     // Reset all sections to collapsed (except token type)

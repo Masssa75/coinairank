@@ -52,7 +52,7 @@ async function pollGeckoTerminal(supabase: any) {
 
             // Complete data for token_discovery table with all required fields
             const tokenData = {
-              contract_address: tokenAddress,
+              contract_address: tokenAddress.toLowerCase(), // Store in lowercase for consistency
               network: network === 'eth' ? 'ethereum' : network === 'pulsechain' ? 'pulsechain' : network,
               symbol: attrs.name?.split(' / ')[0] || null,
               name: attrs.name || null,

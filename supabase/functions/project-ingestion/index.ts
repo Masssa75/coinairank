@@ -187,7 +187,7 @@ async function getPoolAddressFromDiscovery(
     const { data, error } = await supabase
       .from('token_discovery')
       .select('pool_address')
-      .eq('contract_address', contractAddress.toLowerCase())
+      .ilike('contract_address', contractAddress) // Case-insensitive lookup
       .eq('network', network)
       .single();
 
