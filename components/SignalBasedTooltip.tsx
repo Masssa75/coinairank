@@ -182,20 +182,6 @@ export function SignalBasedTooltip({
               </div>
             )}
 
-            {/* Strongest Signal */}
-            {strongestSignal && (
-              <div className="mb-3 pb-3 border-b border-[#2a2d31]">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[#00ff88] text-xs font-bold">STRONGEST SIGNAL</span>
-                </div>
-                <div className="text-sm text-white">
-                  {strongestSignal.signal}
-                </div>
-                <div className="text-xs text-[#888] mt-1">
-                  {strongestSignal.rarity} projects have this
-                </div>
-              </div>
-            )}
 
             {/* Other Signals */}
             {topSignals.length > 0 && (
