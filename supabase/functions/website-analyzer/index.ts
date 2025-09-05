@@ -328,6 +328,7 @@ For EACH signal you find:
 1. Ask: Does this predict future success?
 2. Consider: Could a bad project easily get this signal?
 3. Apply score based on historical success correlation
+4. EXPLAIN: Why does this signal deserve this specific score?
 
 CONTRACT VERIFICATION:
 Search for this exact contract address: ${contractAddress}
