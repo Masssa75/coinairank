@@ -397,7 +397,7 @@ export default function ProjectDetailPage({ params }: { params: { symbol: string
                 </section>
               )}
 
-              {(project.red_flags?.length > 0 || fullAnalysis.red_flags?.length > 0) && (
+              {((project.red_flags && project.red_flags.length > 0) || (fullAnalysis.red_flags && fullAnalysis.red_flags.length > 0)) && (
                 <section className="bg-[#111214] rounded-xl border border-[#2a2d31] p-6">
                   <h2 className="text-lg font-bold text-[#ff4444] mb-4 flex items-center gap-2">
                     <AlertCircle size={20} />
