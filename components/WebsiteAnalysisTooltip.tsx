@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { isAdmin } from '../lib/auth';
 
 interface WebsiteAnalysisTooltipProps {
   fullAnalysis: {
@@ -34,6 +33,7 @@ interface WebsiteAnalysisTooltipProps {
   tokenId?: string;
   signalFeedback?: Record<string, any>;
   onFeedbackUpdate?: (feedback: Record<string, any>) => void;
+  isAdmin?: boolean;
 }
 
 export function WebsiteAnalysisTooltip({ 
@@ -42,20 +42,19 @@ export function WebsiteAnalysisTooltip({
   children,
   tokenId,
   signalFeedback,
-  onFeedbackUpdate
+  onFeedbackUpdate,
+  isAdmin = false
 }: WebsiteAnalysisTooltipProps) {
   const [showTooltip, setShowTooltip] = React.useState(false);
   const [tooltipPosition, setTooltipPosition] = React.useState<{ x: number; y: number; placement: 'above' | 'below' } | null>(null);
   const tooltipRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = React.useState(false);
-  const [isAdminUser, setIsAdminUser] = React.useState(false);
   const [showSignalDetails, setShowSignalDetails] = React.useState<string | null>(null);
   const [localFeedback, setLocalFeedback] = React.useState<Record<string, any>>(signalFeedback || {});
 
   React.useEffect(() => {
     setMounted(true);
-    setIsAdminUser(isAdmin());
   }, []);
 
   React.useEffect(() => {
@@ -386,7 +385,7 @@ export function WebsiteAnalysisTooltip({
             )}
 
             {/* Admin Signal Feedback Section */}
-            {isAdminUser && tokenId && (
+            {isAdmin && tokenId && (
               <div className="mt-3 pt-3 border-t border-[#2a2d31] bg-[#0f1011] -mx-4 px-4 py-3">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[#ff9500] font-bold text-xs uppercase tracking-wider">⚙️ Admin: Signal Feedback</span>

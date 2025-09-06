@@ -714,6 +714,7 @@ export default function ProjectsRatedPage() {
                               tooltip={project.website_stage1_tooltip}
                               tokenId={project.id}
                               signalFeedback={project.signal_feedback}
+                              isAdmin={isAdmin}
                               onFeedbackUpdate={(feedback) => {
                                 // Update local state to reflect feedback changes
                                 setProjects(prev => prev.map(p => 
