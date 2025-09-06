@@ -90,14 +90,22 @@ export default function AdminPromptsPage() {
           <span className="text-xl font-semibold tracking-tight text-white">AI Analysis Prompts</span>
         </div>
         
-        <button
-          onClick={fetchPrompts}
-          disabled={loading}
-          className="p-2 rounded hover:bg-[#1a1c1f] transition-colors disabled:opacity-50"
-          title="Refresh"
-        >
-          <RefreshCw className={`w-5 h-5 text-white ${loading ? 'animate-spin' : ''}`} />
-        </button>
+        <div className="flex items-center gap-3">
+          <Link 
+            href="/admin/domains"
+            className="px-4 py-2 bg-[#1a1c1f] border border-[#2a2d31] text-white rounded-lg hover:bg-[#2a2d31] transition-colors text-sm"
+          >
+            Domain Exclusions
+          </Link>
+          <button
+            onClick={fetchPrompts}
+            disabled={loading}
+            className="p-2 rounded hover:bg-[#1a1c1f] transition-colors disabled:opacity-50"
+            title="Refresh"
+          >
+            <RefreshCw className={`w-5 h-5 text-white ${loading ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
       </header>
 
       {/* Main Content */}

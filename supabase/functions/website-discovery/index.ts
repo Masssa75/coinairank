@@ -59,10 +59,30 @@ async function sendTelegramNotification(token: any) {
   }
 }
 
-// List of trading/launch platforms that shouldn't be considered project websites
+// List of trading/launch platforms and social media that shouldn't be considered project websites
 const TRADING_PLATFORM_DOMAINS = [
-  'pump.fun'
-  // Add more domains here as needed
+  'pump.fun',
+  // Social media platforms
+  'youtube.com',
+  'instagram.com',
+  'tiktok.com',
+  'reddit.com',
+  'twitter.com',
+  'x.com',
+  'facebook.com',
+  'linkedin.com',
+  'line.me',
+  'telegram.org',
+  't.me',
+  'discord.com',
+  'discord.gg',
+  // Archive sites
+  'web.archive.org',
+  'archive.org',
+  // Other non-project sites
+  'github.com',
+  'gitlab.com',
+  'medium.com'
 ];
 
 // Check if URL is a trading platform (not a real project website)
