@@ -424,6 +424,85 @@ export function SignalBasedTooltip({
                                   <div>• vs Tier 1: {evalSignal.progression.tier_1_comparison}</div>
                                 </div>
                               )}
+                              
+                              {/* Admin Feedback Controls - Only show when reasoning is visible */}
+                              {tokenId && (
+                                <div className="mt-3 pt-2 border-t border-[#333]">
+                                  <div className="text-[#ff9500] text-[9px] font-bold mb-2">ADMIN: Signal Feedback</div>
+                                  <div className="flex gap-1">
+                                    <button 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleSignalFeedback(evalSignal.signal, 'too_high');
+                                      }}
+                                      className={`px-2 py-0.5 rounded text-[9px] transition-colors ${
+                                        localFeedback[evalSignal.signal]?.issue === 'too_high' 
+                                          ? 'bg-red-900/50 text-red-400 border border-red-700' 
+                                          : 'bg-[#1a1c1f] text-[#888] border border-[#333] hover:bg-[#222]'
+                                      }`}
+                                    >
+                                      Too High
+                                    </button>
+                                    <button 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleSignalFeedback(evalSignal.signal, 'too_low');
+                                      }}
+                                      className={`px-2 py-0.5 rounded text-[9px] transition-colors ${
+                                        localFeedback[evalSignal.signal]?.issue === 'too_low' 
+                                          ? 'bg-blue-900/50 text-blue-400 border border-blue-700' 
+                                          : 'bg-[#1a1c1f] text-[#888] border border-[#333] hover:bg-[#222]'
+                                      }`}
+                                    >
+                                      Too Low
+                                    </button>
+                                    <button 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleSignalFeedback(evalSignal.signal, 'incorrect');
+                                      }}
+                                      className={`px-2 py-0.5 rounded text-[9px] transition-colors ${
+                                        localFeedback[evalSignal.signal]?.issue === 'incorrect' 
+                                          ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-700' 
+                                          : 'bg-[#1a1c1f] text-[#888] border border-[#333] hover:bg-[#222]'
+                                      }`}
+                                    >
+                                      Wrong
+                                    </button>
+                                    {localFeedback[evalSignal.signal] && (
+                                      <button 
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleSignalFeedback(evalSignal.signal, null);
+                                        }}
+                                        className="px-2 py-0.5 rounded text-[9px] bg-[#1a1c1f] text-[#666] border border-[#333] hover:bg-[#222]"
+                                      >
+                                        Clear
+                                      </button>
+                                    )}
+                                  </div>
+                                  
+                                  {/* Show current feedback */}
+                                  {localFeedback[evalSignal.signal] && (
+                                    <div className="mt-2 text-[9px] text-[#999]">
+                                      Marked as: <span className="text-[#ff9500]">{localFeedback[evalSignal.signal].issue}</span>
+                                    </div>
+                                  )}
+                                  
+                                  {/* Save button if any feedback exists */}
+                                  {Object.keys(localFeedback).length > 0 && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        saveFeedback();
+                                      }}
+                                      className="mt-2 px-2 py-1 bg-[#ff9500] text-black rounded text-[9px] font-medium hover:bg-[#ffb033] transition-colors"
+                                    >
+                                      Save All Feedback
+                                    </button>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           )}
                         </li>
@@ -492,96 +571,7 @@ export function SignalBasedTooltip({
               </div>
             )}
 
-            {/* Admin Signal Feedback Section - For tokens with signal scores */}
-            {isAdmin && tokenId && signals.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-[#2a2d31] bg-[#0f1011] -mx-4 px-4 py-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[#ff9500] font-bold text-xs uppercase tracking-wider">⚙️ Admin: Signal Feedback</span>
-                </div>
-                
-                <div className="text-[10px] text-[#888] mb-2">
-                  Record issues with signal ratings for pattern analysis
-                </div>
-                
-                {/* Simple feedback for main signals */}
-                <div className="space-y-2">
-                  {signals.slice(0, 5).map((signal, idx) => {
-                    const signalKey = signal.signal || `signal_${idx}`;
-                    const feedback = localFeedback[signalKey];
-                    
-                    return (
-                      <div key={idx} className="text-[11px]">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[#888]">{signal.signal}</span>
-                          <span className="text-[#ff9500]">[{signal.strength_score}]</span>
-                        </div>
-                        
-                        {/* Quick Feedback Buttons */}
-                        <div className="flex gap-1 mb-1">
-                          <button 
-                            onClick={() => handleSignalFeedback(signalKey, 'too_high')}
-                            className={`px-2 py-0.5 rounded text-[10px] transition-colors ${
-                              feedback?.issue === 'too_high' 
-                                ? 'bg-red-900/50 text-red-400 border border-red-700' 
-                                : 'bg-[#1a1c1f] text-[#888] border border-[#333] hover:bg-[#222]'
-                            }`}
-                          >
-                            Too High
-                          </button>
-                          <button 
-                            onClick={() => handleSignalFeedback(signalKey, 'too_low')}
-                            className={`px-2 py-0.5 rounded text-[10px] transition-colors ${
-                              feedback?.issue === 'too_low' 
-                                ? 'bg-blue-900/50 text-blue-400 border border-blue-700' 
-                                : 'bg-[#1a1c1f] text-[#888] border border-[#333] hover:bg-[#222]'
-                            }`}
-                          >
-                            Too Low
-                          </button>
-                          <button 
-                            onClick={() => handleSignalFeedback(signalKey, 'incorrect')}
-                            className={`px-2 py-0.5 rounded text-[10px] transition-colors ${
-                              feedback?.issue === 'incorrect' 
-                                ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-700' 
-                                : 'bg-[#1a1c1f] text-[#888] border border-[#333] hover:bg-[#222]'
-                            }`}
-                          >
-                            Wrong
-                          </button>
-                          {feedback && (
-                            <button 
-                              onClick={() => handleSignalFeedback(signalKey, null)}
-                              className="px-2 py-0.5 rounded text-[10px] bg-[#1a1c1f] text-[#666] border border-[#333] hover:bg-[#222]"
-                            >
-                              Clear
-                            </button>
-                          )}
-                        </div>
-                        
-                        {/* Show feedback if exists */}
-                        {feedback && (
-                          <div className="mt-1 p-1 bg-[#1a1c1f] rounded border border-[#333]">
-                            <div className="text-[10px] text-[#999]">
-                              {feedback.issue && <span className="text-[#ff9500]">Issue: {feedback.issue}</span>}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                
-                {/* Save Button */}
-                {Object.keys(localFeedback).length > 0 && (
-                  <button
-                    onClick={saveFeedback}
-                    className="mt-3 w-full px-3 py-1.5 bg-[#ff9500] text-black rounded text-xs font-medium hover:bg-[#ffb033] transition-colors"
-                  >
-                    Save Feedback
-                  </button>
-                )}
-              </div>
-            )}
+            {/* Removed standalone admin feedback section - now integrated into signal reasoning */}
           </div>
         </div>,
         document.body
