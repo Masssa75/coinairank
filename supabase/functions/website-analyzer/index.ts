@@ -279,9 +279,9 @@ function parseHtmlContent(html: string) {
   };
 }
 
-// Function to analyze with AI using signal-based scoring
+// Function to analyze with AI - Phase 1: Pure extraction without scoring
 async function analyzeWithAI(html: string, ticker: string, contractAddress: string, network: string, isDead: boolean = false) {
-  const prompt = `You are an expert crypto analyst specializing in identifying high-potential projects through website analysis.
+  const EXTRACTION_PROMPT = `You are an expert crypto analyst specializing in identifying high-potential projects through website analysis.
 
 HUNT FOR ALPHA in this HTML. Look for:
 
@@ -310,25 +310,12 @@ HUNT FOR ALPHA in this HTML. Look for:
 - Fake partnerships
 - No technical documentation or code repositories
 
-CRITICAL - Score based on SUCCESS LIKELIHOOD INDICATORS:
-- Extremely predictive of success → 90-100 points
-- Strongly predictive → 70-85 points  
-- Moderately predictive → 50-65 points
-- Weakly predictive → 20-40 points
-- Not predictive → 0-15 points
-
 Project: ${ticker}
 Network: ${network}
 Current Price: unknown
 
 HTML Content (ANALYZE EVERYTHING):
 ${html}
-
-For EACH signal you find:
-1. Ask: Does this predict future success?
-2. Consider: Could a bad project easily get this signal?
-3. Apply score based on historical success correlation
-4. EXPLAIN: Why does this signal deserve this specific score?
 
 CONTRACT VERIFICATION:
 Search for this exact contract address: ${contractAddress}
@@ -349,7 +336,19 @@ Is this a meme token (focus on community/viral) or utility token (real use case)
 CREATE DESCRIPTION:
 Write a clear 100-character description of what this project actually does.
 
-Return detailed JSON:
+CREATE RICH PROJECT SUMMARY:
+Write a comprehensive 200+ word description covering:
+- What the project does (detailed explanation)
+- Website quality and design (professional/template/basic with specifics)
+- Where key information was found (homepage, docs, footer, etc)
+- Technical depth observed
+- Team presentation (if any)
+- Community indicators
+- Unique aspects that stand out
+- Credibility markers found
+- Concerns or missing elements
+
+Return detailed JSON with ONLY EXTRACTION (NO SCORES):
 {
   "website_status": "active/dead/blocked",
   
@@ -365,11 +364,12 @@ Return detailed JSON:
   
   "signals_found": [
     {
-      "signal": "specific discovery",
+      "signal": "specific discovery EXACTLY as found",
+      "location": "where on site found (homepage/docs/footer/etc)",
+      "context": "surrounding information that provides context",
       "importance": "why this matters",
       "success_indicator": "how strongly this predicts breakout potential",
-      "strength_score": 0-100,
-      "score_reasoning": "why this score based on success correlation",
+      "category": "social_media/partnership/investment/technical/community/team/exchange/documentation/product/other",
       "similar_to": "successful project this reminds you of"
     }
   ],
@@ -382,14 +382,18 @@ Return detailed JSON:
     }
   ],
   
-  "strongest_signal": {
-    "signal": "the single best thing you found",
-    "success_predictor": "why this indicates future potential",
-    "score": 0-100
+  "project_summary_rich": {
+    "overview": "Detailed 200+ word description of the project and its purpose",
+    "website_quality": "Professional/template/basic with specific details",
+    "key_findings": "Most important discoveries with locations",
+    "technical_depth": "What technical information is available",
+    "team_presentation": "How team is presented if at all",
+    "community_indicators": "Social proof and community metrics observed",
+    "unique_aspects": "What makes this project different",
+    "credibility_markers": "Trust signals found",
+    "concerns": "What's missing or questionable",
+    "information_structure": "How information is organized on the site"
   },
-  
-  "final_score": 0-100 (MUST BE EXACTLY THE SAME AS strongest_signal.score),
-  "tier": "TRASH(0-29)/BASIC(30-59)/SOLID(60-84)/ALPHA(85-100)/DEAD",
   
   "tooltip": {
     "one_liner": "60 char max - what makes this unique",
@@ -432,7 +436,9 @@ Return detailed JSON:
       "discord": "url"
     }
   }
-}`;
+}
+
+IMPORTANT: Extract signals EXACTLY as they appear. Do NOT score or rate anything - only extract and categorize.`;
 
   try {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -448,7 +454,7 @@ Return detailed JSON:
         messages: [
           {
             role: 'user',
-            content: prompt
+            content: EXTRACTION_PROMPT
           }
         ],
         temperature: 0.4,
@@ -529,6 +535,116 @@ Return detailed JSON:
   }
 }
 
+// Function for Phase 2: Bottom-up tier comparison and scoring
+async function compareWithBenchmarks(signals: any[], benchmarks: any[], symbol: string) {
+  const COMPARISON_PROMPT = `Evaluate extracted signals using BOTTOM-UP tier assignment.
+
+PROJECT: ${symbol}
+SIGNALS: ${JSON.stringify(signals)}
+
+TIER BENCHMARKS:
+${JSON.stringify(benchmarks, null, 2)}
+
+EVALUATION PROCESS:
+1. Start by assuming all signals are Tier 4 (weakest)
+2. For each signal, progressively test if it's STRONGER than benchmarks:
+   - Stronger than ANY Tier 4 benchmark? → Consider for Tier 3
+   - Stronger than ANY Tier 3 benchmark? → Consider for Tier 2  
+   - Stronger than ANY Tier 2 benchmark? → Consider for Tier 1
+   - Equal/comparable to Tier 1 benchmark? → Confirm as Tier 1
+3. Signal stops at the highest tier where it truly belongs
+4. The SINGLE STRONGEST signal determines final project tier
+
+IMPORTANT RULES:
+- If a signal has NO comparable benchmarks, it stays at Tier 4
+- "Stronger" means objectively more predictive of success
+- Cross-category comparison is allowed (social signals can be compared to technical benchmarks if reasonable)
+- Be strict: a weak signal doesn't become strong just by being vaguely similar to a strong benchmark
+
+Return JSON:
+{
+  "signal_evaluations": [
+    {
+      "signal": "exact signal text",
+      "progression": {
+        "tier_4_comparison": "stronger/equal/weaker/not_comparable",
+        "tier_3_comparison": "stronger/equal/weaker/not_comparable",
+        "tier_2_comparison": "stronger/equal/weaker/not_comparable",
+        "tier_1_comparison": "stronger/equal/weaker/not_comparable"
+      },
+      "assigned_tier": 1-4,
+      "reasoning": "why signal belongs in this tier"
+    }
+  ],
+  "strongest_signal": {
+    "signal": "the single best signal",
+    "tier": 1-4,
+    "benchmark_match": "most comparable benchmark"
+  },
+  "final_tier": 1-4,
+  "final_score": 0-100,
+  "tier_name": "ALPHA/SOLID/BASIC/TRASH",
+  "explanation": "concise explanation of tier assignment"
+}
+
+TIER RANGES:
+- Tier 1 (ALPHA): 85-100
+- Tier 2 (SOLID): 60-84
+- Tier 3 (BASIC): 30-59
+- Tier 4 (TRASH): 0-29`;
+
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://coinairank.com',
+        'X-Title': 'CAR Phase 2 Comparison'
+      },
+      body: JSON.stringify({
+        model: 'moonshotai/kimi-k2',
+        messages: [
+          {
+            role: 'user',
+            content: COMPARISON_PROMPT
+          }
+        ],
+        temperature: 0.3, // Lower temperature for more consistent scoring
+        max_tokens: 2000,
+        response_format: { type: "json_object" }
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Phase 2 comparison failed: ${response.status} - ${errorText}`);
+      throw new Error(`Phase 2 comparison failed: ${response.status}`);
+    }
+
+    const data = await response.json();
+    let contentStr = data.choices[0].message.content;
+    
+    // Clean the response - remove markdown code blocks if present
+    contentStr = contentStr.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    
+    // If it starts with non-JSON text, find the first {
+    const jsonStart = contentStr.indexOf('{');
+    if (jsonStart > 0) {
+      contentStr = contentStr.substring(jsonStart);
+    }
+    
+    const result = JSON.parse(contentStr);
+    
+    console.log(`Phase 2 comparison complete: Tier ${result.final_tier} (${result.tier_name}) - Score ${result.final_score}`);
+    
+    return result;
+  } catch (error) {
+    console.error(`Phase 2 comparison error: ${error}`);
+    throw error;
+  }
+}
+
 serve(async (req) => {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -541,6 +657,7 @@ serve(async (req) => {
 
   try {
     const { 
+      phase = 1,            // Phase 1 (extraction) or Phase 2 (scoring)
       projectId,            // ID in crypto_projects_rated table
       contractAddress,      // For logging
       websiteUrl,          // Website to analyze
@@ -548,11 +665,124 @@ serve(async (req) => {
       source               // Where request came from
     } = await req.json();
     
+    // Phase 2: Benchmark comparison and scoring
+    if (phase === 2) {
+      if (!projectId) {
+        throw new Error('Phase 2 requires projectId');
+      }
+      
+      console.log(`Phase 2: Benchmark comparison for ${symbol} (Project ID: ${projectId})`);
+      
+      // Load Phase 1 data from database
+      const { data: project, error: projectError } = await supabase
+        .from('crypto_projects_rated')
+        .select('signals_found, red_flags, project_summary_rich, extraction_status')
+        .eq('id', projectId)
+        .single();
+      
+      if (projectError || !project) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: `Failed to load project data: ${projectError?.message || 'Project not found'}`
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
+      
+      if (project.extraction_status !== 'completed') {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'Phase 1 extraction not completed. Run with phase: 1 first.'
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
+      
+      // Load active benchmarks from database
+      const { data: benchmarks, error: benchmarksError } = await supabase
+        .from('website_tier_benchmarks')
+        .select('*')
+        .eq('is_active', true)
+        .order('tier', { ascending: true });
+      
+      if (benchmarksError || !benchmarks) {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: `Failed to load benchmarks: ${benchmarksError?.message || 'No benchmarks found'}`
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
+      
+      console.log(`Loaded ${benchmarks.length} benchmarks and ${project.signals_found?.length || 0} signals`);
+      
+      // Run Phase 2 comparison
+      const comparison = await compareWithBenchmarks(
+        project.signals_found || [],
+        benchmarks,
+        symbol
+      );
+      
+      // Update database with Phase 2 results
+      const updatePayload = {
+        website_stage1_score: comparison.final_score,
+        website_stage1_tier: comparison.tier_name,
+        strongest_signal: comparison.strongest_signal,
+        benchmark_comparison: comparison,
+        comparison_explanation: comparison.explanation,
+        comparison_status: 'completed',
+        comparison_completed_at: new Date().toISOString()
+      };
+      
+      const { data: updateData, error: updateError } = await supabase
+        .from('crypto_projects_rated')
+        .update(updatePayload)
+        .eq('id', projectId)
+        .select();
+      
+      if (updateError) {
+        console.error(`Failed to update Phase 2 results: ${updateError.message}`);
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: `Database update failed: ${updateError.message}`
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        );
+      }
+      
+      console.log(`✅ Phase 2 complete for ${symbol}: Tier ${comparison.final_tier} (${comparison.tier_name}), Score ${comparison.final_score}`);
+      
+      // Return Phase 2 results
+      return new Response(
+        JSON.stringify({
+          success: true,
+          phase: 'scoring',
+          symbol,
+          final_tier: comparison.final_tier,
+          tier_name: comparison.tier_name,
+          final_score: comparison.final_score,
+          strongest_signal: comparison.strongest_signal,
+          signal_evaluations: comparison.signal_evaluations,
+          explanation: comparison.explanation,
+          database_update: {
+            success: true,
+            projectId: projectId
+          }
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
+    }
+    
+    // Phase 1: Extraction (existing logic)
     if (!websiteUrl || !symbol) {
       throw new Error('Missing required parameters: websiteUrl and symbol');
     }
 
-    console.log(`Analyzing website for ${symbol}: ${websiteUrl}`);
+    console.log(`Phase 1: Analyzing website for ${symbol}: ${websiteUrl}`);
     console.log(`Project ID: ${projectId}, Source: ${source || 'unknown'}`);
 
     // Check for Instagram URLs - they can't be scraped due to 403 blocking
@@ -731,10 +961,13 @@ serve(async (req) => {
           .from('crypto_projects_rated')
           .update({
             website_status: 'dead',
-            website_stage1_score: 0,
-            website_stage1_tier: 'DEAD',
+            extraction_status: 'failed',
+            extraction_completed_at: new Date().toISOString(),
             website_stage1_analyzed_at: new Date().toISOString(),
-            website_stage1_analysis: analysis
+            website_stage1_analysis: analysis,
+            // Clear scoring fields
+            website_stage1_score: null,
+            website_stage1_tier: null
           })
           .eq('id', projectId);
           
@@ -746,13 +979,13 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: true,
+          phase: 'extraction',
           symbol,
           websiteUrl,
           website_status: 'dead',
           dead_reason: analysis.dead_reason,
-          score: 0,
-          tier: 'DEAD',
-          message: `Website is a ${analysis.dead_reason} page`
+          extraction_complete: false,
+          message: `Website is a ${analysis.dead_reason} page - no extraction possible`
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -761,7 +994,7 @@ serve(async (req) => {
       );
     }
     
-    console.log(`Analysis complete: Score ${analysis.score}/100 (${analysis.tier})`);
+    console.log(`Phase 1 extraction complete. Signals found: ${analysis.signals_found?.length || 0}`);
     
     // Step 4: Update database if projectId provided
     let updateSuccess = false;
@@ -771,31 +1004,38 @@ serve(async (req) => {
       console.log(`Updating crypto_projects_rated for ${symbol} with ID ${projectId}`);
       
       try {
-        // Store the complete analysis object
+        // Store the complete extraction object
         const fullAnalysis = {
           ...analysis,
           html_length: html.length,
-          analyzed_at: new Date().toISOString()
+          extracted_at: new Date().toISOString()
         };
         
-        // Prepare update payload for crypto_projects_rated with new signal-based structure
+        // Phase 1 extraction update payload
         const updatePayload = {
-          website_status: 'active',  // Mark as active since we successfully analyzed it
-          website_stage1_score: analysis.final_score || 0,
-          website_stage1_tier: analysis.tier,
-          website_stage1_analysis: fullAnalysis,  // Full comprehensive JSON (everything)
-          website_stage1_tooltip: analysis.tooltip,  // Just tooltip for fast loading
-          website_stage2_resources: analysis.stage_2_resources,  // Just resources for Stage 2
-          website_stage1_analyzed_at: new Date().toISOString(),
-          website_stage1_token_usage: analysis.token_usage || null,  // Store token usage if available
-          token_type: analysis.token_type,
-          contract_verification: analysis.contract_verification || null,  // Store CA verification
-          is_imposter: analysis.contract_verification?.found_on_site === false && 
-                       analysis.contract_verification?.confidence === 'high',  // Set imposter flag
-          // Store signal-specific data
-          strongest_signal: analysis.strongest_signal || null,
+          // Phase 1 extraction results
           signals_found: analysis.signals_found || [],
-          red_flags: analysis.red_flags || []
+          red_flags: analysis.red_flags || [],
+          project_summary_rich: analysis.project_summary_rich || {},
+          token_type: analysis.token_type,
+          contract_verification: analysis.contract_verification,
+          website_stage2_resources: analysis.stage_2_resources,
+          extraction_status: 'completed',
+          extraction_completed_at: new Date().toISOString(),
+          
+          // Store full extraction data
+          website_stage1_analysis: fullAnalysis,
+          website_stage1_tooltip: analysis.tooltip,
+          
+          // Clear scoring fields (will be set by Phase 2)
+          website_stage1_score: null,
+          website_stage1_tier: null,
+          
+          // Keep for backward compatibility
+          website_status: 'active',
+          website_stage1_analyzed_at: new Date().toISOString(),
+          is_imposter: analysis.contract_verification?.found_on_site === false && 
+                       analysis.contract_verification?.confidence === 'high'
         };
         
         console.log('Update payload ready, executing...');
@@ -814,6 +1054,12 @@ serve(async (req) => {
           updateSuccess = true;
           console.log(`✅ Database UPDATE SUCCESS for ${symbol}`);
           console.log('Updated record:', data?.[0]?.id, data?.[0]?.symbol);
+          
+          // Trigger Phase 2 scoring automatically
+          console.log('Phase 1 complete. Triggering Phase 2 scoring...');
+          // Phase 2 will be implemented as a separate code path or edge function
+          // For now, we log that Phase 2 should be triggered
+          // TODO: Implement Phase 2 scoring logic here or call separate function
         }
       } catch (err) {
         updateError = err;
@@ -823,30 +1069,26 @@ serve(async (req) => {
       console.log('No projectId provided, skipping database update');
     }
     
-    // Return comprehensive analysis results
+    // Return Phase 1 extraction results (no scores)
     return new Response(
       JSON.stringify({
         success: true,
+        phase: 'extraction',
         symbol,
         websiteUrl,
-        final_score: analysis.final_score || 0,
-        tier: analysis.tier,
-        token_type: analysis.token_type,
-        project_description: analysis.project_description,
-        contract_verification: analysis.contract_verification,
+        extraction_complete: true,
+        signals_count: analysis.signals_found?.length || 0,
+        has_rich_summary: !!analysis.project_summary_rich,
         signals_found: analysis.signals_found || [],
         red_flags: analysis.red_flags || [],
-        strongest_signal: analysis.strongest_signal,
-        tooltip: analysis.tooltip,
-        stage_2_resources: analysis.stage_2_resources,
-        token_usage: analysis.token_usage || null,  // Include token usage in response
+        project_summary: analysis.project_summary_rich,
+        token_type: analysis.token_type,
+        extraction_status: 'completed',
+        message: updateSuccess ? 'Phase 1 extraction complete. Call with phase: 2 to score.' : 'Phase 1 extraction complete.',
         database_update: {
           attempted: !!projectId,
           success: updateSuccess,
           error: updateError ? updateError.message : null
-        },
-        content_stats: {
-          html_length: html.length
         }
       }),
       {

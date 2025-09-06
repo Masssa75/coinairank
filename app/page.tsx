@@ -30,6 +30,9 @@ interface CryptoProject {
   };
   website_stage2_resources?: Record<string, unknown>;
   website_stage1_analyzed_at: string;
+  benchmark_comparison?: any;  // Phase 2 comparison data
+  extraction_status?: string;  // Phase 1 extraction status
+  comparison_status?: string;  // Phase 2 comparison status
   current_liquidity_usd: number | null;
   current_market_cap: number | null;
   current_price_usd: number | null;
@@ -622,6 +625,10 @@ export default function ProjectsRatedPage() {
                               signals={project.website_stage1_analysis?.signals_found}
                               redFlags={project.website_stage1_analysis?.red_flags}
                               strongestSignal={project.website_stage1_analysis?.strongest_signal}
+                              benchmarkComparison={project.benchmark_comparison}
+                              extractionStatus={project.extraction_status}
+                              comparisonStatus={project.comparison_status}
+                              websiteAnalysis={project.website_stage1_analysis}
                               tooltip={project.website_stage1_tooltip}
                             >
                               <span 

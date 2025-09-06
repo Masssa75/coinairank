@@ -18,6 +18,31 @@ interface RedFlag {
   evidence?: string;
 }
 
+interface SignalEvaluation {
+  signal: string;
+  assigned_tier: number;
+  reasoning: string;
+  progression?: {
+    tier_4_comparison: string;
+    tier_3_comparison: string;
+    tier_2_comparison: string;
+    tier_1_comparison: string;
+  };
+}
+
+interface BenchmarkComparison {
+  signal_evaluations?: SignalEvaluation[];
+  strongest_signal?: {
+    signal: string;
+    tier: number;
+    benchmark_match: string;
+  };
+  final_tier?: number;
+  final_score?: number;
+  tier_name?: string;
+  explanation?: string;
+}
+
 interface SignalBasedTooltipProps {
   projectDescription?: string;
   signals?: Signal[];
@@ -27,6 +52,10 @@ interface SignalBasedTooltipProps {
     rarity: string;
     score: number;
   };
+  benchmarkComparison?: BenchmarkComparison;
+  extractionStatus?: string;
+  comparisonStatus?: string;
+  websiteAnalysis?: any;
   tooltip?: {
     one_liner: string;
     top_signals?: string[];
@@ -42,6 +71,10 @@ export function SignalBasedTooltip({
   signals = [], 
   redFlags = [], 
   strongestSignal,
+  benchmarkComparison,
+  extractionStatus,
+  comparisonStatus,
+  websiteAnalysis,
   tooltip,
   children 
 }: SignalBasedTooltipProps) {
@@ -55,8 +88,19 @@ export function SignalBasedTooltip({
     setMounted(true);
   }, []);
 
-  // Don't show tooltip if no data
-  if (!tooltip && signals.length === 0 && redFlags.length === 0) {
+  // Convert tier to score for display
+  const tierToScore = (tier: number): number => {
+    switch(tier) {
+      case 1: return 90;
+      case 2: return 70;
+      case 3: return 45;
+      case 4: return 15;
+      default: return 0;
+    }
+  };
+
+  // Don't show tooltip if no data at all
+  if (!tooltip && signals.length === 0 && redFlags.length === 0 && !benchmarkComparison && !websiteAnalysis) {
     return <>{children}</>;
   }
 
@@ -103,12 +147,12 @@ export function SignalBasedTooltip({
     setTooltipPosition(null);
   };
 
-  // Get score color based on value
+  // Get score color based on value - updated colors per spec
   const getScoreColor = (score: number) => {
-    if (score >= 85) return 'text-[#00ff88]'; // Alpha
-    if (score >= 60) return 'text-[#88ddff]'; // Solid
-    if (score >= 30) return 'text-[#ffaa44]'; // Basic
-    return 'text-[#ff4444]'; // Trash
+    if (score >= 85) return 'text-[#10b981]'; // Green (Tier 1)
+    if (score >= 60) return 'text-[#eab308]'; // Yellow (Tier 2)
+    if (score >= 30) return 'text-[#f97316]'; // Orange (Tier 3)
+    return 'text-[#ef4444]'; // Red (Tier 4)
   };
 
   // Get tier badge based on score
@@ -156,24 +200,32 @@ export function SignalBasedTooltip({
         >
           <div className="bg-[#1a1c1f] rounded-lg shadow-2xl border border-[#333] p-4 min-w-[400px] max-w-[500px] max-h-[80vh] overflow-y-auto scrollbar-hide">
             
-            {/* Header with Tier Badge */}
-            {strongestSignal && tierBadge && (
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className={`px-2 py-0.5 rounded text-xs font-bold ${tierBadge.color}`}>
-                    {tierBadge.text}
-                  </span>
-                  <span className={`text-lg font-bold ${getScoreColor(strongestSignal.score)}`}>
-                    {strongestSignal.score}
-                  </span>
-                </div>
-                <span className="text-[#666] text-xs">
-                  Rarity: {strongestSignal.rarity}
-                </span>
+            {/* Error States for Incomplete Data */}
+            {!websiteAnalysis && (
+              <div className="text-[#ef4444] text-sm mb-3 p-2 bg-[#ef4444]/10 rounded">
+                ⚠️ Website analysis not available
+              </div>
+            )}
+            
+            {websiteAnalysis && extractionStatus !== 'completed' && (
+              <div className="text-[#ef4444] text-sm mb-3 p-2 bg-[#ef4444]/10 rounded">
+                ⚠️ Phase 1 extraction missing
+              </div>
+            )}
+            
+            {extractionStatus === 'completed' && !benchmarkComparison && (
+              <div className="text-[#ef4444] text-sm mb-3 p-2 bg-[#ef4444]/10 rounded">
+                ⚠️ Phase 2 scoring not complete
+              </div>
+            )}
+            
+            {benchmarkComparison && !benchmarkComparison.signal_evaluations && (
+              <div className="text-[#ef4444] text-sm mb-3 p-2 bg-[#ef4444]/10 rounded">
+                ⚠️ Benchmark comparison not available
               </div>
             )}
 
-            {/* Project Description */}
+            {/* Project Description - if available */}
             {(tooltip?.one_liner || projectDescription) && (
               <div className="mb-3 pb-3 border-b border-[#2a2d31]">
                 <div className="text-sm text-[#ddd] leading-relaxed">
@@ -183,11 +235,37 @@ export function SignalBasedTooltip({
             )}
 
 
-            {/* Other Signals */}
-            {topSignals.length > 0 && (
+            {/* Key Signals - Use Phase 2 data if available, otherwise Phase 1 */}
+            {benchmarkComparison?.signal_evaluations && benchmarkComparison.signal_evaluations.length > 0 ? (
               <div className="mb-3">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[#88ddff] text-xs font-bold">KEY SIGNALS</span>
+                  <span className="text-[#666] text-xs font-bold">KEY SIGNALS</span>
+                </div>
+                <ul className="space-y-1.5">
+                  {benchmarkComparison.signal_evaluations
+                    .slice(0, 4) // Take top 4 signals
+                    .sort((a, b) => a.assigned_tier - b.assigned_tier) // Sort by tier (best first)
+                    .map((evalSignal, idx) => {
+                      const score = tierToScore(evalSignal.assigned_tier);
+                      return (
+                        <li key={idx} className="text-xs flex items-start">
+                          <span className="text-[#666] mr-2">•</span>
+                          <div className="flex-1">
+                            <span className="text-[#ddd]">{evalSignal.signal}</span>
+                            <span className={`ml-2 font-bold ${getScoreColor(score)}`}>
+                              [{score}]
+                            </span>
+                          </div>
+                        </li>
+                      );
+                    })}
+                </ul>
+              </div>
+            ) : topSignals.length > 0 && (
+              // Fallback to Phase 1 signals if Phase 2 not available
+              <div className="mb-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[#666] text-xs font-bold">KEY SIGNALS</span>
                 </div>
                 <ul className="space-y-1.5">
                   {topSignals.map((signal, idx) => {
@@ -195,11 +273,11 @@ export function SignalBasedTooltip({
                     const score = fullSignal?.strength_score;
                     return (
                       <li key={idx} className="text-xs flex items-start">
-                        <span className="text-[#88ddff] mr-2">•</span>
+                        <span className="text-[#666] mr-2">•</span>
                         <div className="flex-1">
                           <span className="text-[#ddd]">{signal}</span>
                           {score && (
-                            <span className={`ml-2 ${getScoreColor(score)}`}>
+                            <span className={`ml-2 font-bold ${getScoreColor(score)}`}>
                               [{score}]
                             </span>
                           )}
@@ -211,33 +289,21 @@ export function SignalBasedTooltip({
               </div>
             )}
 
-            {/* Red Flags */}
+            {/* Concerns - No scores, just list */}
             {mainConcerns.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[#ff4444] text-xs font-bold">CONCERNS</span>
+                  <span className="text-[#666] text-xs font-bold">CONCERNS</span>
                 </div>
                 <ul className="space-y-1">
-                  {mainConcerns.map((concern, idx) => {
-                    const fullFlag = redFlags[idx];
-                    return (
-                      <li key={idx} className="text-xs flex items-start">
-                        <span className="text-[#ff4444] mr-2">•</span>
-                        <div className="flex-1">
-                          <span className="text-[#ddd]">{concern}</span>
-                          {fullFlag?.severity && (
-                            <span className={`ml-2 text-xs ${
-                              fullFlag.severity === 'high' ? 'text-[#ff4444]' : 
-                              fullFlag.severity === 'medium' ? 'text-[#ffaa44]' : 
-                              'text-[#888]'
-                            }`}>
-                              [{fullFlag.severity}]
-                            </span>
-                          )}
-                        </div>
-                      </li>
-                    );
-                  })}
+                  {mainConcerns.slice(0, 3).map((concern, idx) => (
+                    <li key={idx} className="text-xs flex items-start">
+                      <span className="text-[#666] mr-2">•</span>
+                      <div className="flex-1">
+                        <span className="text-[#ddd]">{concern}</span>
+                      </div>
+                    </li>
+                  ))}
                 </ul>
               </div>
             )}
