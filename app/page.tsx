@@ -636,9 +636,9 @@ export default function ProjectsRatedPage() {
                         <h3 className={`text-xl font-bold hover:text-[#00ff88] transition-colors cursor-pointer ${
                           project.is_imposter ? 'text-red-500' : 'text-white'
                         }`}>
-                          {project.contract_verification || project.is_imposter ? (
+                          {(project.contract_verification || project.is_imposter) ? (
                             <ContractVerificationTooltip
-                              verification={project.contract_verification}
+                              verification={project.contract_verification || null}
                               isImposter={project.is_imposter}
                             >
                               <span className="flex items-center gap-2">
