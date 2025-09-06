@@ -42,7 +42,7 @@ export default function AdminDomains() {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('/api/admin/check-auth');
+      const response = await fetch('/api/admin/auth');
       const data = await response.json();
       
       if (!data.authenticated) {
