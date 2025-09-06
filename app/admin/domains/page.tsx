@@ -5,7 +5,7 @@ import { AlertCircle, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-// The domains that are hardcoded in the edge function
+// The domains that are hardcoded in the edge function (fallback if API fails)
 const DEFAULT_DOMAINS = [
   'pump.fun',
   'youtube.com',
@@ -23,8 +23,6 @@ const DEFAULT_DOMAINS = [
   'discord.gg',
   'web.archive.org',
   'archive.org',
-  'github.com',
-  'gitlab.com',
   'medium.com'
 ];
 

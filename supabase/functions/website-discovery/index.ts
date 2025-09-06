@@ -80,8 +80,6 @@ const TRADING_PLATFORM_DOMAINS = [
   'web.archive.org',
   'archive.org',
   // Other non-project sites
-  'github.com',
-  'gitlab.com',
   'medium.com'
 ];
 
