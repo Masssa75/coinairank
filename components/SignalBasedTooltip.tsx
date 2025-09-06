@@ -486,8 +486,34 @@ export function SignalBasedTooltip({
                                   {localFeedback[evalSignal.signal] && (
                                     <div className="mt-2 text-[9px] text-[#999]">
                                       Marked as: <span className="text-[#ff9500]">{localFeedback[evalSignal.signal].issue}</span>
+                                      {localFeedback[evalSignal.signal].note && (
+                                        <div className="mt-1">Note: {localFeedback[evalSignal.signal].note}</div>
+                                      )}
                                     </div>
                                   )}
+                                  
+                                  {/* Text input for detailed feedback */}
+                                  <div className="mt-2">
+                                    <input
+                                      type="text"
+                                      placeholder="Add specific feedback note..."
+                                      value={localFeedback[evalSignal.signal]?.note || ''}
+                                      onChange={(e) => {
+                                        const note = e.target.value;
+                                        const newFeedback = {
+                                          ...localFeedback,
+                                          [evalSignal.signal]: {
+                                            ...localFeedback[evalSignal.signal],
+                                            note,
+                                            date: new Date().toISOString().split('T')[0]
+                                          }
+                                        };
+                                        setLocalFeedback(newFeedback);
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="w-full px-2 py-1 bg-[#1a1c1f] border border-[#333] rounded text-[9px] text-[#ddd] placeholder-[#555]"
+                                    />
+                                  </div>
                                   
                                   {/* Save button if any feedback exists */}
                                   {Object.keys(localFeedback).length > 0 && (
