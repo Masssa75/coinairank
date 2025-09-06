@@ -697,6 +697,14 @@ export default function ProjectsRatedPage() {
                               comparisonStatus={project.comparison_status}
                               websiteAnalysis={project.website_stage1_analysis}
                               isAdmin={isAdmin}
+                              tokenId={project.id.toString()}
+                              signalFeedback={project.signal_feedback}
+                              onFeedbackUpdate={(feedback) => {
+                                // Update local state to reflect feedback changes
+                                setProjects(prev => prev.map(p => 
+                                  p.id === project.id ? { ...p, signal_feedback: feedback } : p
+                                ));
+                              }}
                               tooltip={project.website_stage1_tooltip}
                             >
                               <span 

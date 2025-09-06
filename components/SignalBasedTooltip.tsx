@@ -57,6 +57,9 @@ interface SignalBasedTooltipProps {
   comparisonStatus?: string;
   websiteAnalysis?: any;
   isAdmin?: boolean;  // Add admin flag
+  tokenId?: string;
+  signalFeedback?: Record<string, any>;
+  onFeedbackUpdate?: (feedback: Record<string, any>) => void;
   tooltip?: {
     one_liner: string;
     top_signals?: string[];
@@ -77,6 +80,9 @@ export function SignalBasedTooltip({
   comparisonStatus,
   websiteAnalysis,
   isAdmin = false,
+  tokenId,
+  signalFeedback,
+  onFeedbackUpdate,
   tooltip,
   children 
 }: SignalBasedTooltipProps) {
@@ -87,10 +93,16 @@ export function SignalBasedTooltip({
   const tooltipRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = React.useState(false);
+  const [showSignalDetails, setShowSignalDetails] = React.useState<string | null>(null);
+  const [localFeedback, setLocalFeedback] = React.useState<Record<string, any>>(signalFeedback || {});
 
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  React.useEffect(() => {
+    setLocalFeedback(signalFeedback || {});
+  }, [signalFeedback]);
 
   // Handle click outside to close persistent tooltip
   React.useEffect(() => {
@@ -218,6 +230,59 @@ export function SignalBasedTooltip({
       setTooltipPosition({ x, y, placement });
       setShowTooltip(true);
       setIsPersistent(true);
+    }
+  };
+
+  const handleSignalFeedback = (signal: string, issue: string | null) => {
+    if (!issue) {
+      // Clear feedback for this signal
+      const newFeedback = { ...localFeedback };
+      delete newFeedback[signal];
+      setLocalFeedback(newFeedback);
+    } else {
+      // Set feedback
+      const newFeedback = {
+        ...localFeedback,
+        [signal]: {
+          ...localFeedback[signal],
+          issue,
+          date: new Date().toISOString().split('T')[0],
+          suggested_adjustment: issue === 'too_high' ? -2 : issue === 'too_low' ? 2 : 0
+        }
+      };
+      setLocalFeedback(newFeedback);
+    }
+  };
+
+  const handleSignalNote = (signal: string, note: string) => {
+    if (!note.trim()) return;
+    
+    const newFeedback = {
+      ...localFeedback,
+      [signal]: {
+        ...localFeedback[signal],
+        note,
+        date: new Date().toISOString().split('T')[0]
+      }
+    };
+    setLocalFeedback(newFeedback);
+  };
+
+  const saveFeedback = async () => {
+    if (!tokenId || !onFeedbackUpdate) return;
+    
+    try {
+      const response = await fetch('/api/signal-feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tokenId, feedback: localFeedback })
+      });
+      
+      if (response.ok) {
+        onFeedbackUpdate(localFeedback);
+      }
+    } catch (error) {
+      console.error('Failed to save feedback:', error);
     }
   };
 
