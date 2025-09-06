@@ -10,6 +10,7 @@ interface FilterState {
   excludeImposters?: boolean
   excludeUnverified?: boolean
   minWebsiteScore?: number
+  showReprocessedOnly?: boolean
 }
 
 interface FilterSidebarProps {
@@ -37,7 +38,8 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
       excludeRugs: true,
       excludeImposters: true,
       excludeUnverified: false,
-      minWebsiteScore: 1
+      minWebsiteScore: 1,
+      showReprocessedOnly: false
     }
   }
 
@@ -58,7 +60,8 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
       tokenType: false,
       networks: true,
       rugs: true,
-      scores: true
+      scores: true,
+      reprocessed: false
     }
   }
 
@@ -106,6 +109,11 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     const initial = getInitialFilterState()
     return initial.minWebsiteScore || 1
   })
+  const [isReprocessedCollapsed, setIsReprocessedCollapsed] = useState(sectionStates.reprocessed || false)
+  const [showReprocessedOnly, setShowReprocessedOnly] = useState(() => {
+    const initial = getInitialFilterState()
+    return initial.showReprocessedOnly || false
+  })
 
   // Save filters to localStorage whenever they change
   useEffect(() => {
@@ -122,7 +130,8 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
         tokenType: isTokenTypeCollapsed,
         networks: isNetworksCollapsed,
         rugs: isRugsCollapsed,
-        scores: isScoresCollapsed
+        scores: isScoresCollapsed,
+        reprocessed: isReprocessedCollapsed
       }
       localStorage.setItem('kromProjectsFilterSections', JSON.stringify(sectionStates))
     }
@@ -144,7 +153,8 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
       excludeRugs: true,
       excludeImposters: true,
       excludeUnverified: false,
-      minWebsiteScore: 1
+      minWebsiteScore: 1,
+      showReprocessedOnly: false
     }
     
     // Update all individual states
@@ -155,12 +165,14 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     setExcludeImposters(true)
     setExcludeUnverified(false)
     setMinWebsiteScore(1)
+    setShowReprocessedOnly(false)
     
     // Reset all sections to collapsed (except token type)
     setIsTokenTypeCollapsed(false)
     setIsNetworksCollapsed(true)
     setIsRugsCollapsed(true)
     setIsScoresCollapsed(true)
+    setIsReprocessedCollapsed(false)
     
     // Update main filter state
     setFilters(defaultState)
@@ -176,6 +188,11 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
   useEffect(() => {
     setFilters(prev => ({ ...prev, excludeUnverified }))
   }, [excludeUnverified])
+
+  // Update filters when showReprocessedOnly changes
+  useEffect(() => {
+    setFilters(prev => ({ ...prev, showReprocessedOnly }))
+  }, [showReprocessedOnly])
 
   const handleTokenTypeChange = (utilityChecked: boolean, memeChecked: boolean) => {
     let newType: FilterState['tokenType'] = 'all'
@@ -516,6 +533,48 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
             </div>
           </div>
         </div>
+          </div>
+
+          {/* Reprocessed Tokens Filter - TEMPORARY */}
+          <div className={`border-b border-[#1a1c1f] ${isReprocessedCollapsed ? 'collapsed' : ''}`}>
+            <div 
+              className="px-5 py-5 cursor-pointer flex justify-between items-center bg-[#111214] hover:bg-[#1a1c1f] hover:pl-6 transition-all"
+              onClick={() => setIsReprocessedCollapsed(!isReprocessedCollapsed)}
+            >
+              <h3 className={`text-[13px] uppercase tracking-[1px] font-semibold transition-colors ${!isReprocessedCollapsed ? 'text-[#00ff88]' : 'text-[#888]'}`}>
+                Analysis Status
+              </h3>
+              <ChevronDown className={`w-3 h-3 transition-all ${!isReprocessedCollapsed ? 'text-[#00ff88]' : 'text-[#666]'} ${isReprocessedCollapsed ? '-rotate-90' : ''}`} />
+            </div>
+            <div className={`bg-[#0a0b0d] overflow-hidden transition-all ${isReprocessedCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100 p-5'}`}>
+              <div className="flex flex-col gap-3">
+                <label 
+                  className="flex items-center gap-2.5 cursor-pointer text-sm text-[#ccc] hover:text-white transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div 
+                    className={`w-5 h-5 border-2 rounded-[5px] transition-all flex items-center justify-center ${
+                      showReprocessedOnly ? 'bg-[#00ff88] border-[#00ff88]' : 'border-[#333]'
+                    }`}
+                    onClick={() => {
+                      setShowReprocessedOnly(!showReprocessedOnly)
+                    }}
+                  >
+                    {showReprocessedOnly && <span className="text-black font-bold text-xs">✓</span>}
+                  </div>
+                  <span>Show Only Reprocessed</span>
+                </label>
+                <div className="text-xs text-[#666] mt-1">
+                  Filters to only show tokens with completed Phase 1 & 2 analysis
+                </div>
+                <div className="mt-2 p-3 bg-[#1a1c1f] rounded-lg">
+                  <div className="text-xs text-[#00ff88] font-semibold mb-1">TEMPORARY FILTER</div>
+                  <div className="text-xs text-[#666]">
+                    This filter shows tokens where comparison_status = 'completed'
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </>
       )}

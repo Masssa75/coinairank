@@ -66,6 +66,7 @@ interface FilterState {
   excludeUnverified?: boolean
   minXScore?: number
   minWebsiteScore?: number
+  showReprocessedOnly?: boolean
 }
 
 export default function ProjectsRatedPage() {
@@ -192,6 +193,11 @@ export default function ProjectsRatedPage() {
         // Convert website score from 1-10 scale to 0-100 scale for API
         const apiScore = (debouncedFilters.minWebsiteScore - 1) * 10;
         params.append('minScore', apiScore.toString());
+      }
+      
+      // Add reprocessed filter
+      if (debouncedFilters.showReprocessedOnly) {
+        params.append('reprocessedOnly', 'true');
       }
 
       const response = await fetch(`/api/crypto-projects-rated?${params}`);

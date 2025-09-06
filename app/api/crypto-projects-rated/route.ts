@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
     const maxLiquidity = parseFloat(searchParams.get('maxLiquidity') || '1000000000');
     const tokenType = searchParams.get('tokenType');
     const includeUnverified = searchParams.get('includeUnverified') === 'true';
+    const reprocessedOnly = searchParams.get('reprocessedOnly') === 'true';
     
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
     
@@ -83,6 +84,11 @@ export async function GET(request: NextRequest) {
     if (!includeUnverified) {
       // Only show tokens where contract_verification.found_on_site is true
       query = query.eq('contract_verification->>found_on_site', 'true');
+    }
+    
+    // Apply reprocessed filter - only show tokens with completed Phase 2 analysis
+    if (reprocessedOnly) {
+      query = query.eq('comparison_status', 'completed');
     }
     
     // Apply sorting
