@@ -30,7 +30,7 @@ export function ContractVerificationTooltip({ verification, isImposter, children
 
   const getStatus = () => {
     // Verified imposter (admin-confirmed) takes priority
-    if (isImposter) {
+    if (isImposter === true) {
       return {
         title: 'Verified Imposter',
         color: 'red',
@@ -104,7 +104,7 @@ export function ContractVerificationTooltip({ verification, isImposter, children
 
   const getIcon = () => {
     // Verified imposter (admin-confirmed) takes priority
-    if (isImposter) {
+    if (isImposter === true) {
       // Red X or ban icon for verified imposter
       return (
         <svg className="w-4 h-4 text-red-500 cursor-help" fill="currentColor" viewBox="0 0 20 20">
@@ -168,7 +168,7 @@ export function ContractVerificationTooltip({ verification, isImposter, children
             </p>
             
             {/* Note */}
-            {isImposter ? (
+            {isImposter === true ? (
               <p className="text-xs text-[#aaa] leading-relaxed">
                 This project has been manually verified as an imposter by an administrator.
               </p>

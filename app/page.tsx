@@ -634,7 +634,7 @@ export default function ProjectsRatedPage() {
                     <div>
                       <Link href={`/project/${project.symbol}`}>
                         <h3 className={`text-xl font-bold hover:text-[#00ff88] transition-colors cursor-pointer ${
-                          project.is_imposter ? 'text-red-500' : 'text-white'
+                          project.is_imposter === true ? 'text-red-500' : 'text-white'
                         }`}>
                           {(project.contract_verification || project.is_imposter) ? (
                             <ContractVerificationTooltip
