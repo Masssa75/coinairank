@@ -513,7 +513,7 @@ export function SignalBasedTooltip({
                       <div key={idx} className="text-[11px]">
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-[#888]">{signal.signal}</span>
-                          <span className="text-[#ff9500]">[{signal.score}]</span>
+                          <span className="text-[#ff9500]">[{signal.rarity}]</span>
                         </div>
                         
                         {/* Quick Feedback Buttons */}
