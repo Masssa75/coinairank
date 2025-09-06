@@ -56,6 +56,7 @@ interface SignalBasedTooltipProps {
   extractionStatus?: string;
   comparisonStatus?: string;
   websiteAnalysis?: any;
+  isAdmin?: boolean;  // Add admin flag
   tooltip?: {
     one_liner: string;
     top_signals?: string[];
@@ -75,10 +76,13 @@ export function SignalBasedTooltip({
   extractionStatus,
   comparisonStatus,
   websiteAnalysis,
+  isAdmin = false,
   tooltip,
   children 
 }: SignalBasedTooltipProps) {
   const [showTooltip, setShowTooltip] = React.useState(false);
+  const [isPersistent, setIsPersistent] = React.useState(false);  // Track if tooltip is clicked to persist
+  const [selectedSignalIdx, setSelectedSignalIdx] = React.useState<number | null>(null);  // Track which signal reasoning to show
   const [tooltipPosition, setTooltipPosition] = React.useState<{ x: number; y: number; placement: 'above' | 'below' } | null>(null);
   const tooltipRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -87,6 +91,25 @@ export function SignalBasedTooltip({
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Handle click outside to close persistent tooltip
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isPersistent && tooltipRef.current && !tooltipRef.current.contains(event.target as Node) && 
+          containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsPersistent(false);
+        setShowTooltip(false);
+        setSelectedSignalIdx(null);
+      }
+    };
+
+    if (isPersistent) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isPersistent]);
 
   // Convert tier to score for display
   const tierToScore = (tier: number): number => {
@@ -105,6 +128,7 @@ export function SignalBasedTooltip({
   }
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isPersistent) return;  // Don't show on hover if already persistent
     if (!containerRef.current) return;
     
     const rect = containerRef.current.getBoundingClientRect();
@@ -143,8 +167,65 @@ export function SignalBasedTooltip({
   };
 
   const handleMouseLeave = () => {
-    setShowTooltip(false);
-    setTooltipPosition(null);
+    if (!isPersistent) {  // Only hide on mouse leave if not persistent
+      setShowTooltip(false);
+      setTooltipPosition(null);
+    }
+  };
+
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    if (!containerRef.current) return;
+    
+    if (isPersistent) {
+      // If already persistent, close it
+      setIsPersistent(false);
+      setShowTooltip(false);
+      setSelectedSignalIdx(null);
+    } else {
+      // Make tooltip persistent
+      const rect = containerRef.current.getBoundingClientRect();
+      const tooltipHeight = 400; // Estimated height
+      const tooltipWidth = 500; // Max width
+      
+      // Calculate position
+      let x = rect.left + rect.width / 2;
+      let y: number;
+      let placement: 'above' | 'below';
+      
+      // Check vertical space
+      const spaceAbove = rect.top;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      
+      if (spaceAbove >= tooltipHeight || spaceAbove > spaceBelow) {
+        // Position above
+        y = rect.top;
+        placement = 'above';
+      } else {
+        // Position below
+        y = rect.bottom;
+        placement = 'below';
+      }
+      
+      // Check horizontal boundaries
+      const halfWidth = tooltipWidth / 2;
+      if (x - halfWidth < 10) {
+        x = halfWidth + 10; // Adjust for left edge
+      } else if (x + halfWidth > window.innerWidth - 10) {
+        x = window.innerWidth - halfWidth - 10; // Adjust for right edge
+      }
+      
+      setTooltipPosition({ x, y, placement });
+      setShowTooltip(true);
+      setIsPersistent(true);
+    }
+  };
+
+  const handleSignalClick = (idx: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isAdmin) {
+      setSelectedSignalIdx(selectedSignalIdx === idx ? null : idx);
+    }
   };
 
   // Get score color based on value - updated colors per spec
@@ -180,6 +261,8 @@ export function SignalBasedTooltip({
         className="inline-block"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onClick={handleClick}
+        style={{ cursor: 'pointer' }}
       >
         {children}
       </div>
@@ -187,7 +270,7 @@ export function SignalBasedTooltip({
       {mounted && showTooltip && tooltipPosition && createPortal(
         <div 
           ref={tooltipRef}
-          className="fixed z-[999999] pointer-events-none"
+          className={`fixed z-[999999] ${isPersistent ? 'pointer-events-auto' : 'pointer-events-none'}`}
           style={{ 
             left: `${tooltipPosition.x}px`,
             top: tooltipPosition.placement === 'above' 
@@ -247,15 +330,37 @@ export function SignalBasedTooltip({
                     .sort((a, b) => a.assigned_tier - b.assigned_tier) // Sort by tier (best first)
                     .map((evalSignal, idx) => {
                       const score = tierToScore(evalSignal.assigned_tier);
+                      const isExpanded = selectedSignalIdx === idx;
                       return (
-                        <li key={idx} className="text-xs flex items-start">
-                          <span className="text-[#666] mr-2">•</span>
-                          <div className="flex-1">
-                            <span className="text-[#ddd]">{evalSignal.signal}</span>
-                            <span className={`ml-2 font-bold ${getScoreColor(score)}`}>
-                              [{score}]
-                            </span>
+                        <li key={idx} className="text-xs">
+                          <div className="flex items-start">
+                            <span className="text-[#666] mr-2">•</span>
+                            <div className="flex-1">
+                              <span className="text-[#ddd]">{evalSignal.signal}</span>
+                              <span 
+                                className={`ml-2 font-bold ${getScoreColor(score)} ${isAdmin ? 'cursor-pointer hover:underline' : ''}`}
+                                onClick={(e) => handleSignalClick(idx, e)}
+                                title={isAdmin ? 'Click to see reasoning' : ''}
+                              >
+                                [{score}]
+                              </span>
+                            </div>
                           </div>
+                          {/* Show reasoning if admin and signal is selected */}
+                          {isAdmin && isExpanded && evalSignal.reasoning && (
+                            <div className="mt-2 ml-4 p-2 bg-[#2a2d31] rounded text-[10px] text-[#999]">
+                              <div className="font-semibold text-[#aaa] mb-1">Tier {evalSignal.assigned_tier} Reasoning:</div>
+                              <div>{evalSignal.reasoning}</div>
+                              {evalSignal.progression && (
+                                <div className="mt-2 text-[9px]">
+                                  <div>• vs Tier 4: {evalSignal.progression.tier_4_comparison}</div>
+                                  <div>• vs Tier 3: {evalSignal.progression.tier_3_comparison}</div>
+                                  <div>• vs Tier 2: {evalSignal.progression.tier_2_comparison}</div>
+                                  <div>• vs Tier 1: {evalSignal.progression.tier_1_comparison}</div>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </li>
                       );
                     })}
@@ -315,6 +420,12 @@ export function SignalBasedTooltip({
                 : '-top-2 border-l-[8px] border-l-transparent border-b-[8px] border-b-[#1a1c1f] border-r-[8px] border-r-transparent'
             }`}>
             </div>
+            {/* Show click hint for admins */}
+            {isPersistent && isAdmin && benchmarkComparison?.signal_evaluations && (
+              <div className="mt-3 pt-3 border-t border-[#2a2d31] text-[10px] text-[#666]">
+                💡 Click on signal scores to see AI reasoning
+              </div>
+            )}
           </div>
         </div>,
         document.body

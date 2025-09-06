@@ -629,6 +629,7 @@ export default function ProjectsRatedPage() {
                               extractionStatus={project.extraction_status}
                               comparisonStatus={project.comparison_status}
                               websiteAnalysis={project.website_stage1_analysis}
+                              isAdmin={isAdmin}
                               tooltip={project.website_stage1_tooltip}
                             >
                               <span 
