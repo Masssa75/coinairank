@@ -124,7 +124,7 @@ export default function AdminDomains() {
               <h3 className="text-white font-semibold mb-2">How Domain Exclusions Work</h3>
               <p className="text-[#999] text-sm leading-relaxed">
                 Domains listed here are automatically excluded during website discovery. 
-                Tokens with these domains won't be migrated to the main crypto_projects_rated table.
+                Tokens with these domains won&apos;t be migrated to the main crypto_projects_rated table.
                 This prevents social media links and non-project sites from being analyzed as project websites.
               </p>
               <p className="text-[#666] text-xs mt-3">
