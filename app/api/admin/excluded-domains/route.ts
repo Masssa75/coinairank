@@ -5,7 +5,7 @@ import path from 'path';
 
 export async function GET() {
   // Check authentication
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const adminAuth = cookieStore.get('admin-auth');
   
   if (!adminAuth?.value || adminAuth.value !== 'true') {
