@@ -712,7 +712,7 @@ export default function ProjectsRatedPage() {
                             <WebsiteAnalysisTooltip 
                               fullAnalysis={project.website_stage1_analysis}
                               tooltip={project.website_stage1_tooltip}
-                              tokenId={project.id}
+                              tokenId={project.id.toString()}
                               signalFeedback={project.signal_feedback}
                               isAdmin={isAdmin}
                               onFeedbackUpdate={(feedback) => {
