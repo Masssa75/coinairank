@@ -570,7 +570,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
                 <div className="mt-2 p-3 bg-[#1a1c1f] rounded-lg">
                   <div className="text-xs text-[#00ff88] font-semibold mb-1">TEMPORARY FILTER</div>
                   <div className="text-xs text-[#666]">
-                    This filter shows tokens where comparison_status = 'completed'
+                    This filter shows tokens where comparison_status = &apos;completed&apos;
                   </div>
                 </div>
               </div>
