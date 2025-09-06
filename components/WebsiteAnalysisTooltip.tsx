@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
+import { isAdmin } from '../lib/auth';
 
 interface WebsiteAnalysisTooltipProps {
   fullAnalysis: {
@@ -30,18 +31,36 @@ interface WebsiteAnalysisTooltipProps {
     cons: string[];
   } | null;
   children: React.ReactNode;
+  tokenId?: string;
+  signalFeedback?: Record<string, any>;
+  onFeedbackUpdate?: (feedback: Record<string, any>) => void;
 }
 
-export function WebsiteAnalysisTooltip({ fullAnalysis, tooltip, children }: WebsiteAnalysisTooltipProps) {
+export function WebsiteAnalysisTooltip({ 
+  fullAnalysis, 
+  tooltip, 
+  children,
+  tokenId,
+  signalFeedback,
+  onFeedbackUpdate
+}: WebsiteAnalysisTooltipProps) {
   const [showTooltip, setShowTooltip] = React.useState(false);
   const [tooltipPosition, setTooltipPosition] = React.useState<{ x: number; y: number; placement: 'above' | 'below' } | null>(null);
   const tooltipRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = React.useState(false);
+  const [isAdminUser, setIsAdminUser] = React.useState(false);
+  const [showSignalDetails, setShowSignalDetails] = React.useState<string | null>(null);
+  const [localFeedback, setLocalFeedback] = React.useState<Record<string, any>>(signalFeedback || {});
 
   React.useEffect(() => {
     setMounted(true);
+    setIsAdminUser(isAdmin());
   }, []);
+
+  React.useEffect(() => {
+    setLocalFeedback(signalFeedback || {});
+  }, [signalFeedback]);
 
   // Use new tooltip data if available, fallback to fullAnalysis
   if (!tooltip && !fullAnalysis) {
@@ -206,6 +225,67 @@ export function WebsiteAnalysisTooltip({ fullAnalysis, tooltip, children }: Webs
     setTooltipPosition(null);
   };
 
+  const handleSignalFeedback = (signal: string, issue: string | null) => {
+    if (!issue) {
+      // Clear feedback for this signal
+      const newFeedback = { ...localFeedback };
+      delete newFeedback[signal];
+      setLocalFeedback(newFeedback);
+    } else {
+      // Set feedback
+      const newFeedback = {
+        ...localFeedback,
+        [signal]: {
+          ...localFeedback[signal],
+          issue,
+          date: new Date().toISOString().split('T')[0],
+          suggested_adjustment: issue === 'too_high' ? -2 : issue === 'too_low' ? 2 : 0
+        }
+      };
+      setLocalFeedback(newFeedback);
+    }
+  };
+
+  const handleSignalNote = (signal: string, note: string) => {
+    if (!note.trim()) return;
+    
+    const newFeedback = {
+      ...localFeedback,
+      [signal]: {
+        ...localFeedback[signal],
+        note,
+        date: new Date().toISOString().split('T')[0]
+      }
+    };
+    setLocalFeedback(newFeedback);
+  };
+
+  const saveFeedback = async () => {
+    if (!tokenId || !onFeedbackUpdate) return;
+    
+    try {
+      const response = await fetch('/api/signal-feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tokenId, feedback: localFeedback })
+      });
+      
+      if (response.ok) {
+        onFeedbackUpdate(localFeedback);
+        // Show success indicator (tooltip stays open)
+        const button = document.querySelector('button:has-text("Save Feedback")');
+        if (button) {
+          button.textContent = '✓ Saved!';
+          setTimeout(() => {
+            button.textContent = 'Save Feedback';
+          }, 2000);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to save feedback:', error);
+    }
+  };
+
   return (
     <>
       <div 
@@ -302,6 +382,127 @@ export function WebsiteAnalysisTooltip({ fullAnalysis, tooltip, children }: Webs
                 <div className="text-[11px] text-[#999] leading-relaxed italic">
                   &ldquo;{type_reasoning.split('.')[0].trim()}&rdquo;
                 </div>
+              </div>
+            )}
+
+            {/* Admin Signal Feedback Section */}
+            {isAdminUser && tokenId && (
+              <div className="mt-3 pt-3 border-t border-[#2a2d31] bg-[#0f1011] -mx-4 px-4 py-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[#ff9500] font-bold text-xs uppercase tracking-wider">⚙️ Admin: Signal Feedback</span>
+                </div>
+                
+                {/* Category Scores with Feedback */}
+                {fullAnalysis?.category_scores && (
+                  <div className="space-y-2">
+                    {Object.entries(fullAnalysis.category_scores).map(([signal, score]) => {
+                      const feedback = localFeedback[signal];
+                      return (
+                        <div key={signal} className="text-[11px]">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[#888] capitalize">{signal.replace(/_/g, ' ')}</span>
+                            <span className="text-[#ddd]">{score}/10</span>
+                          </div>
+                          
+                          {/* Quick Feedback Buttons */}
+                          <div className="flex gap-1 mb-1">
+                            <button 
+                              onClick={() => handleSignalFeedback(signal, 'too_high')}
+                              className={`px-2 py-0.5 rounded text-[10px] transition-colors ${
+                                feedback?.issue === 'too_high' 
+                                  ? 'bg-red-900/50 text-red-400 border border-red-700' 
+                                  : 'bg-[#1a1c1f] text-[#888] border border-[#333] hover:bg-[#222]'
+                              }`}
+                            >
+                              Too High
+                            </button>
+                            <button 
+                              onClick={() => handleSignalFeedback(signal, 'too_low')}
+                              className={`px-2 py-0.5 rounded text-[10px] transition-colors ${
+                                feedback?.issue === 'too_low' 
+                                  ? 'bg-blue-900/50 text-blue-400 border border-blue-700' 
+                                  : 'bg-[#1a1c1f] text-[#888] border border-[#333] hover:bg-[#222]'
+                              }`}
+                            >
+                              Too Low
+                            </button>
+                            <button 
+                              onClick={() => handleSignalFeedback(signal, 'incorrect')}
+                              className={`px-2 py-0.5 rounded text-[10px] transition-colors ${
+                                feedback?.issue === 'incorrect' 
+                                  ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-700' 
+                                  : 'bg-[#1a1c1f] text-[#888] border border-[#333] hover:bg-[#222]'
+                              }`}
+                            >
+                              Wrong
+                            </button>
+                            {feedback && (
+                              <button 
+                                onClick={() => handleSignalFeedback(signal, null)}
+                                className="px-2 py-0.5 rounded text-[10px] bg-[#1a1c1f] text-[#666] border border-[#333] hover:bg-[#222]"
+                              >
+                                Clear
+                              </button>
+                            )}
+                          </div>
+                          
+                          {/* Show feedback if exists */}
+                          {feedback && (
+                            <div className="mt-1 p-1 bg-[#1a1c1f] rounded border border-[#333]">
+                              <div className="text-[10px] text-[#999]">
+                                {feedback.issue && <span className="text-[#ff9500]">Issue: {feedback.issue}</span>}
+                                {feedback.suggested_adjustment && (
+                                  <span className="ml-2">Suggested: {feedback.suggested_adjustment > 0 ? '+' : ''}{feedback.suggested_adjustment}</span>
+                                )}
+                              </div>
+                              {feedback.note && (
+                                <div className="text-[10px] text-[#777] mt-0.5">{feedback.note}</div>
+                              )}
+                            </div>
+                          )}
+                          
+                          {/* Expandable note input */}
+                          {showSignalDetails === signal && (
+                            <div className="mt-1">
+                              <input
+                                type="text"
+                                placeholder="Add specific note..."
+                                className="w-full px-2 py-1 bg-[#1a1c1f] border border-[#333] rounded text-[10px] text-[#ddd] placeholder-[#555]"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    const target = e.target as HTMLInputElement;
+                                    handleSignalNote(signal, target.value);
+                                    setShowSignalDetails(null);
+                                  }
+                                }}
+                                autoFocus
+                              />
+                            </div>
+                          )}
+                          
+                          {!showSignalDetails && (
+                            <button
+                              onClick={() => setShowSignalDetails(signal)}
+                              className="text-[10px] text-[#666] hover:text-[#888] mt-0.5"
+                            >
+                              + Add note
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                
+                {/* Save Button */}
+                {Object.keys(localFeedback).length > 0 && (
+                  <button
+                    onClick={saveFeedback}
+                    className="mt-3 w-full px-3 py-1.5 bg-[#ff9500] text-black rounded text-xs font-medium hover:bg-[#ffb033] transition-colors"
+                  >
+                    Save Feedback
+                  </button>
+                )}
               </div>
             )}
 

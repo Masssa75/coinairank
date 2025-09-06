@@ -712,6 +712,14 @@ export default function ProjectsRatedPage() {
                             <WebsiteAnalysisTooltip 
                               fullAnalysis={project.website_stage1_analysis}
                               tooltip={project.website_stage1_tooltip}
+                              tokenId={project.id}
+                              signalFeedback={project.signal_feedback}
+                              onFeedbackUpdate={(feedback) => {
+                                // Update local state to reflect feedback changes
+                                setProjects(prev => prev.map(p => 
+                                  p.id === project.id ? { ...p, signal_feedback: feedback } : p
+                                ));
+                              }}
                             >
                               <span 
                                 className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"
