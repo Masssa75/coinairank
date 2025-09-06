@@ -8,7 +8,7 @@ import FilterSidebar from '@/components/FilterSidebar';
 import { AddTokenModal } from '@/components/AddTokenModal';
 import SearchInput from '@/components/SearchInput';
 import { useDebounce } from '@/lib/useDebounce';
-import { Settings, Menu, ChevronDown, ChevronUp, Shield, FileCode2, LogOut } from 'lucide-react';
+import { Settings, Menu, ChevronDown, ChevronUp, Shield, FileCode2, LogOut, MoreVertical, AlertTriangle, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -83,6 +83,8 @@ export default function ProjectsRatedPage() {
   const [isAddTokenModalOpen, setIsAddTokenModalOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [openActionMenu, setOpenActionMenu] = useState<number | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     tokenType: 'all',
     networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'],
@@ -142,6 +144,48 @@ export default function ProjectsRatedPage() {
     setIsAdmin(false);
     setIsMenuOpen(false);
     router.refresh();
+  };
+
+  const handleToggleImposter = async (projectId: number, currentStatus: boolean) => {
+    try {
+      const response = await fetch('/api/admin/imposter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId,
+          isImposter: !currentStatus
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Update local state
+        setProjects(prev => prev.map(p => 
+          p.id === projectId ? { ...p, is_imposter: !currentStatus } : p
+        ));
+        // Show success toast
+        setToast({
+          message: `Project ${!currentStatus ? 'marked as' : 'unmarked as'} imposter`,
+          type: 'success'
+        });
+        setTimeout(() => setToast(null), 3000);
+      } else {
+        setToast({
+          message: 'Failed to update imposter status',
+          type: 'error'
+        });
+        setTimeout(() => setToast(null), 3000);
+      }
+    } catch (error) {
+      console.error('Error toggling imposter status:', error);
+      setToast({
+        message: 'Error updating imposter status',
+        type: 'error'
+      });
+      setTimeout(() => setToast(null), 3000);
+    } finally {
+      setOpenActionMenu(null);
+    }
   };
   const lastProjectRef = useCallback((node: HTMLDivElement | null) => {
     if (loading) return;
@@ -352,6 +396,20 @@ export default function ProjectsRatedPage() {
 
   return (
     <div className="fixed inset-0 flex bg-[#0a0b0d]">
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed top-4 right-4 z-[9999] flex items-center gap-2 px-4 py-3 bg-[#1a1c1f] border border-[#2a2d31] rounded-lg shadow-lg animate-in slide-in-from-top-2 duration-300">
+          {toast.type === 'success' ? (
+            <CheckCircle className="w-5 h-5 text-[#00ff88]" />
+          ) : (
+            <AlertTriangle className="w-5 h-5 text-red-500" />
+          )}
+          <span className={toast.type === 'success' ? 'text-[#00ff88]' : 'text-red-500'}>
+            {toast.message}
+          </span>
+        </div>
+      )}
+      
       {/* Filter Sidebar */}
       <FilterSidebar 
         onFiltersChange={handleFiltersChange}
@@ -575,8 +633,10 @@ export default function ProjectsRatedPage() {
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <Link href={`/project/${project.symbol}`}>
-                        <h3 className="text-xl font-bold text-white hover:text-[#00ff88] transition-colors cursor-pointer">
-                          {project.contract_verification ? (
+                        <h3 className={`text-xl font-bold hover:text-[#00ff88] transition-colors cursor-pointer ${
+                          project.is_imposter ? 'text-red-500' : 'text-white'
+                        }`}>
+                          {project.contract_verification || project.is_imposter ? (
                             <ContractVerificationTooltip
                               verification={project.contract_verification}
                               isImposter={project.is_imposter}
@@ -718,6 +778,41 @@ export default function ProjectsRatedPage() {
                       >
                         Chart 📊
                       </a>
+                    )}
+                    {/* Admin Actions Menu */}
+                    {isAdmin && (
+                      <div className="relative">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenActionMenu(openActionMenu === project.id ? null : project.id);
+                          }}
+                          className="p-2 bg-[#1a1c1f] text-[#888] rounded-lg hover:bg-[#252729] hover:text-white transition-colors border border-[#2a2d31] relative z-20"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+                        
+                        {openActionMenu === project.id && (
+                          <>
+                            {/* Backdrop to close menu */}
+                            <div 
+                              className="fixed inset-0 z-30" 
+                              onClick={() => setOpenActionMenu(null)}
+                            />
+                            
+                            {/* Dropdown Menu */}
+                            <div className="absolute right-0 bottom-full mb-2 w-48 bg-[#111214] border border-[#2a2d31] rounded-lg shadow-lg z-40">
+                              <button
+                                onClick={() => handleToggleImposter(project.id, project.is_imposter || false)}
+                                className="w-full px-4 py-2 text-left text-white hover:bg-[#1a1c1f] transition-colors flex items-center gap-2 text-sm rounded-lg"
+                              >
+                                <AlertTriangle className="w-4 h-4 text-red-500" />
+                                {project.is_imposter ? 'Unmark as Imposter' : 'Mark as Imposter'}
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     )}
                   </div>
 

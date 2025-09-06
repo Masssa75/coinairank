@@ -1055,36 +1055,42 @@ serve(async (req) => {
           console.log(`✅ Database UPDATE SUCCESS for ${symbol}`);
           console.log('Updated record:', data?.[0]?.id, data?.[0]?.symbol);
           
-          // Auto-trigger Phase 2 scoring
+          // Auto-trigger Phase 2 scoring - AWAIT it properly to ensure it runs
           console.log(`Phase 1 complete. Auto-triggering Phase 2 for ${symbol}...`);
           
-          // Use setTimeout to ensure Phase 1 data is committed to database
-          setTimeout(async () => {
-            try {
-              const phase2Response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/website-analyzer`, {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  phase: 2,
-                  projectId,
-                  symbol
-                })
-              });
-              
-              if (!phase2Response.ok) {
-                const errorText = await phase2Response.text();
-                console.error(`Phase 2 auto-trigger failed for ${symbol}: ${phase2Response.status} - ${errorText}`);
-              } else {
-                const result = await phase2Response.json();
-                console.log(`✅ Phase 2 auto-triggered successfully for ${symbol}: Tier ${result.final_tier} (${result.tier_name}), Score ${result.final_score}`);
-              }
-            } catch (error) {
-              console.error(`Error auto-triggering Phase 2 for ${symbol}:`, error);
+          // Small delay to ensure Phase 1 data is committed
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          try {
+            const phase2Response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/website-analyzer`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                phase: 2,
+                projectId,
+                symbol
+              })
+            });
+            
+            if (!phase2Response.ok) {
+              const errorText = await phase2Response.text();
+              console.error(`Phase 2 auto-trigger failed for ${symbol}: ${phase2Response.status} - ${errorText}`);
+            } else {
+              const result = await phase2Response.json();
+              console.log(`✅ Phase 2 auto-triggered successfully for ${symbol}: Tier ${result.final_tier} (${result.tier_name}), Score ${result.final_score}`);
+              // Add Phase 2 results to the response
+              responseData.phase2_triggered = true;
+              responseData.phase2_tier = result.final_tier;
+              responseData.phase2_score = result.final_score;
             }
-          }, 2000); // 2 second delay to ensure Phase 1 data is fully committed
+          } catch (error) {
+            console.error(`Error auto-triggering Phase 2 for ${symbol}:`, error);
+            // Don't fail Phase 1 if Phase 2 fails
+            responseData.phase2_error = error.message;
+          }
         }
       } catch (err) {
         updateError = err;
