@@ -113,12 +113,27 @@ export default function ProjectsRatedPage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [openActionMenu, setOpenActionMenu] = useState<number | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const [filters, setFilters] = useState<FilterState>({
-    tokenType: 'all',
-    networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'],
-    includeImposters: false,  // Default: don't show imposters
-    includeUnverified: false,  // Default: don't show unverified
-    minWebsiteScore: 1
+  
+  // Load saved filter state from localStorage or use defaults
+  const [filters, setFilters] = useState<FilterState>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('carProjectsFilters');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Error parsing saved filters:', e);
+        }
+      }
+    }
+    // Default filters if nothing saved
+    return {
+      tokenType: 'all',
+      networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'],
+      includeImposters: false,  // Default: don't show imposters
+      includeUnverified: false,  // Default: don't show unverified
+      minWebsiteScore: 1
+    };
   });
   
   // Debounce filters with 400ms delay
