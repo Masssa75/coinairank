@@ -758,19 +758,6 @@ export default function ProjectsRatedPage() {
                     <div className="text-right relative z-10">
                       {project.website_stage1_tier && (
                         <>
-                          {/* Score Display - Clickable to go to detail page */}
-                          {project.website_stage1_score !== null && project.website_stage1_score !== undefined && (
-                            <Link href={`/token/${project.id}`}>
-                              <div className="mb-2 cursor-pointer hover:opacity-80 transition-opacity">
-                                <span 
-                                  className="text-2xl font-bold"
-                                  style={{ color: getTierColor(project.website_stage1_tier).text }}
-                                >
-                                  {project.website_stage1_score}
-                                </span>
-                              </div>
-                            </Link>
-                          )}
                           {/* Use SignalBasedTooltip if signals are available */}
                           {project.website_stage1_analysis?.signals_found ? (
                             <SignalBasedTooltip
