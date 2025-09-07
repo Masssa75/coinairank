@@ -1,4 +1,4 @@
-// Cleanup function to remove deprecated excludeRugs filter from localStorage
+// Cleanup function to remove deprecated filters and migrate to new naming
 export function cleanupDeprecatedFilters() {
   if (typeof window === 'undefined') return;
   
@@ -7,10 +7,31 @@ export function cleanupDeprecatedFilters() {
     const savedFilters = localStorage.getItem('carProjectsFilters');
     if (savedFilters) {
       const filters = JSON.parse(savedFilters);
+      let changed = false;
+      
+      // Remove deprecated excludeRugs
       if ('excludeRugs' in filters) {
         delete filters.excludeRugs;
+        changed = true;
+      }
+      
+      // Migrate excludeImposters to includeImposters (invert the logic)
+      if ('excludeImposters' in filters) {
+        filters.includeImposters = !filters.excludeImposters;
+        delete filters.excludeImposters;
+        changed = true;
+      }
+      
+      // Migrate excludeUnverified to includeUnverified (invert the logic)
+      if ('excludeUnverified' in filters) {
+        filters.includeUnverified = !filters.excludeUnverified;
+        delete filters.excludeUnverified;
+        changed = true;
+      }
+      
+      if (changed) {
         localStorage.setItem('carProjectsFilters', JSON.stringify(filters));
-        console.log('Cleaned up deprecated excludeRugs filter');
+        console.log('Migrated filter settings to new format');
       }
     }
     

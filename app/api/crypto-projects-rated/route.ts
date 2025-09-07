@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
     const maxLiquidity = parseFloat(searchParams.get('maxLiquidity') || '1000000000');
     const tokenType = searchParams.get('tokenType');
     const includeUnverified = searchParams.get('includeUnverified') === 'true';
+    const includeImposters = searchParams.get('includeImposters') === 'true';
     const reprocessedOnly = searchParams.get('reprocessedOnly') === 'true';
     
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -78,6 +79,12 @@ export async function GET(request: NextRequest) {
     // Apply token type filter
     if (tokenType && tokenType !== 'all') {
       query = query.eq('token_type', tokenType);
+    }
+    
+    // Apply imposter filter - by default exclude imposters
+    if (!includeImposters) {
+      // Exclude tokens marked as imposters
+      query = query.or('is_imposter.eq.false,is_imposter.is.null');
     }
     
     // Apply verified filter - by default exclude unverified tokens

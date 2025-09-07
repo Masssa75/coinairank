@@ -7,8 +7,8 @@ import { cleanupDeprecatedFilters } from '@/lib/cleanupLocalStorage';
 interface FilterState {
   tokenType: 'all' | 'meme' | 'utility'
   networks: string[]
-  excludeImposters?: boolean
-  excludeUnverified?: boolean
+  includeImposters?: boolean  // true = show imposters, false = hide imposters
+  includeUnverified?: boolean  // true = show unverified, false = hide unverified
   minWebsiteScore?: number
   showReprocessedOnly?: boolean
 }
@@ -35,8 +35,8 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     return {
       tokenType: 'all',
       networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'],
-      excludeImposters: true,
-      excludeUnverified: false,
+      includeImposters: false,  // Default: hide imposters
+      includeUnverified: false,  // Default: hide unverified
       minWebsiteScore: 1,
       showReprocessedOnly: false
     }
@@ -85,9 +85,9 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     const initial = getInitialFilterState()
     return initial.tokenType === 'all' || initial.tokenType === 'meme'
   })
-  const [excludeUnverified, setExcludeUnverified] = useState(() => {
+  const [includeUnverified, setIncludeUnverified] = useState(() => {
     const initial = getInitialFilterState()
-    return initial.excludeUnverified !== undefined ? initial.excludeUnverified : false
+    return initial.includeUnverified !== undefined ? initial.includeUnverified : false
   })
   const [isNetworksCollapsed, setIsNetworksCollapsed] = useState(sectionStates.networks)
   const [selectedNetworks, setSelectedNetworks] = useState<string[]>(() => {
@@ -95,9 +95,9 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     return initial.networks || ['ethereum', 'solana', 'bsc', 'base', 'pulsechain']
   })
   const [isSafetyCollapsed, setIsSafetyCollapsed] = useState(sectionStates.safety || true)
-  const [excludeImposters, setExcludeImposters] = useState(() => {
+  const [includeImposters, setIncludeImposters] = useState(() => {
     const initial = getInitialFilterState()
-    return initial.excludeImposters !== undefined ? initial.excludeImposters : true
+    return initial.includeImposters !== undefined ? initial.includeImposters : false
   })
   const [isScoresCollapsed, setIsScoresCollapsed] = useState(sectionStates.scores)
   const [minWebsiteScore, setMinWebsiteScore] = useState<number>(() => {
@@ -150,8 +150,8 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     const defaultState = {
       tokenType: 'all' as const,
       networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'],
-      excludeImposters: true,
-      excludeUnverified: false,
+      includeImposters: false,
+      includeUnverified: false,
       minWebsiteScore: 1,
       showReprocessedOnly: false
     }
@@ -160,8 +160,8 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     setIncludeUtility(true)
     setIncludeMeme(true)
     setSelectedNetworks(['ethereum', 'solana', 'bsc', 'base', 'pulsechain'])
-    setExcludeImposters(true)
-    setExcludeUnverified(false)
+    setIncludeImposters(false)
+    setIncludeUnverified(false)
     setMinWebsiteScore(1)
     setShowReprocessedOnly(false)
     
@@ -372,20 +372,20 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
             >
               <div 
                 className={`w-5 h-5 border-2 rounded-[5px] transition-all flex items-center justify-center ${
-                  !excludeImposters ? 'bg-[#00ff88] border-[#00ff88]' : 'border-[#333]'
+                  includeImposters ? 'bg-[#00ff88] border-[#00ff88]' : 'border-[#333]'
                 }`}
                 onClick={() => {
-                  const newExcludeState = !excludeImposters
-                  setExcludeImposters(newExcludeState)
-                  setFilters(prev => ({ ...prev, excludeImposters: newExcludeState }))
+                  const newIncludeState = !includeImposters
+                  setIncludeImposters(newIncludeState)
+                  setFilters(prev => ({ ...prev, includeImposters: newIncludeState }))
                 }}
               >
-                {!excludeImposters && <span className="text-black font-bold text-xs">✓</span>}
+                {includeImposters && <span className="text-black font-bold text-xs">✓</span>}
               </div>
               <span>Include Imposters</span>
             </label>
             <div className="text-xs text-[#666] mt-1">
-              When unchecked, hides tokens marked as having inauthentic websites
+              When checked, shows tokens marked as having inauthentic websites
             </div>
             
             {/* Include Unverified Tokens */}
@@ -395,15 +395,15 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
             >
               <div 
                 className={`w-5 h-5 border-2 rounded-[5px] transition-all flex items-center justify-center ${
-                  !excludeUnverified ? 'bg-[#00ff88] border-[#00ff88]' : 'border-[#333]'
+                  includeUnverified ? 'bg-[#00ff88] border-[#00ff88]' : 'border-[#333]'
                 }`}
                 onClick={() => {
-                  const newExcludeState = !excludeUnverified
-                  setExcludeUnverified(newExcludeState)
-                  setFilters(prev => ({ ...prev, excludeUnverified: newExcludeState }))
+                  const newIncludeState = !includeUnverified
+                  setIncludeUnverified(newIncludeState)
+                  setFilters(prev => ({ ...prev, includeUnverified: newIncludeState }))
                 }}
               >
-                {!excludeUnverified && <span className="text-black font-bold text-xs">✓</span>}
+                {includeUnverified && <span className="text-black font-bold text-xs">✓</span>}
               </div>
               <span>Include Unverified</span>
             </label>

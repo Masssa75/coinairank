@@ -63,9 +63,8 @@ interface CryptoProject {
 interface FilterState {
   tokenType: 'all' | 'meme' | 'utility'
   networks: string[]
-  excludeRugs?: boolean
-  excludeImposters?: boolean
-  excludeUnverified?: boolean
+  includeImposters?: boolean
+  includeUnverified?: boolean
   minXScore?: number
   minWebsiteScore?: number
   showReprocessedOnly?: boolean
@@ -118,8 +117,8 @@ export default function ProjectsRatedPage() {
     tokenType: 'all',
     networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'],
     excludeRugs: false,  // CAR doesn't have these columns yet
-    excludeImposters: false,
-    excludeUnverified: true,  // Show only verified tokens by default
+    includeImposters: false,  // Default: don't show imposters
+    includeUnverified: false,  // Default: don't show unverified
     minWebsiteScore: 1
   });
   
@@ -259,11 +258,11 @@ export default function ProjectsRatedPage() {
       }
       
       
-      if (debouncedFilters.excludeImposters === false) {
+      if (debouncedFilters.includeImposters) {
         params.append('includeImposters', 'true');
       }
       
-      if (debouncedFilters.excludeUnverified === false) {
+      if (debouncedFilters.includeUnverified) {
         params.append('includeUnverified', 'true');
       }
       
