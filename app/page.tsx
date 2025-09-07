@@ -141,8 +141,20 @@ export default function ProjectsRatedPage() {
     setFiltersLoaded(true);
   }, []); // Only run once on mount
   
-  // Debounce filters with 400ms delay
-  const debouncedFilters = useDebounce(filters, 400);
+  // Track if we should skip debounce (for initial load)
+  const [skipDebounce, setSkipDebounce] = useState(true);
+  
+  // Debounce filters with 400ms delay (except on initial load)
+  const debouncedFilters = useDebounce(filters, skipDebounce ? 0 : 400);
+  
+  // After first render with loaded filters, enable debouncing
+  useEffect(() => {
+    if (filtersLoaded && skipDebounce) {
+      // Give it a moment to apply the non-debounced filters, then enable debouncing
+      const timer = setTimeout(() => setSkipDebounce(false), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [filtersLoaded, skipDebounce]);
   
   // Save sort state to localStorage whenever it changes
   useEffect(() => {
