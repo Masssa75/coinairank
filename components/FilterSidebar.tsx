@@ -182,10 +182,10 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     }
   }
 
-  // Update filters when excludeUnverified changes
+  // Update filters when includeUnverified changes
   useEffect(() => {
-    setFilters(prev => ({ ...prev, excludeUnverified }))
-  }, [excludeUnverified])
+    setFilters(prev => ({ ...prev, includeUnverified }))
+  }, [includeUnverified, setFilters])
 
   // Update filters when showReprocessedOnly changes
   useEffect(() => {

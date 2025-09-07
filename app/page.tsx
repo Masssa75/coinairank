@@ -116,7 +116,6 @@ export default function ProjectsRatedPage() {
   const [filters, setFilters] = useState<FilterState>({
     tokenType: 'all',
     networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'],
-    excludeRugs: false,  // CAR doesn't have these columns yet
     includeImposters: false,  // Default: don't show imposters
     includeUnverified: false,  // Default: don't show unverified
     minWebsiteScore: 1

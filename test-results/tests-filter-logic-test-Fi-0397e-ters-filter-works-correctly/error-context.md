@@ -1,0 +1,103 @@
+# Page snapshot
+
+```yaml
+- generic [active]:
+  - generic [ref=e1]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - heading "CAR" [level=1] [ref=e6]
+        - paragraph [ref=e7]: High-Quality Crypto Projects
+        - button "Hide Filters" [ref=e8]:
+          - img [ref=e9]
+      - generic [ref=e11]:
+        - heading "FILTERS" [level=2] [ref=e12]
+        - button "Reset" [ref=e13]
+      - generic [ref=e14]:
+        - generic [ref=e15] [cursor=pointer]:
+          - heading "Token Type" [level=3] [ref=e16] [cursor=pointer]
+          - img [ref=e17] [cursor=pointer]
+        - generic [ref=e20]:
+          - generic [ref=e21] [cursor=pointer]:
+            - generic [ref=e23] [cursor=pointer]: ✓
+            - generic [ref=e24] [cursor=pointer]: Utility Tokens
+          - generic [ref=e25] [cursor=pointer]:
+            - generic [ref=e27] [cursor=pointer]: ✓
+            - generic [ref=e28] [cursor=pointer]: Meme Tokens
+      - generic [ref=e29]:
+        - generic [ref=e30] [cursor=pointer]:
+          - heading "Safety" [level=3] [ref=e31] [cursor=pointer]
+          - img [ref=e32] [cursor=pointer]
+        - generic [ref=e35]:
+          - generic [ref=e36] [cursor=pointer]:
+            - generic [ref=e38] [cursor=pointer]: ✓
+            - generic [ref=e39] [cursor=pointer]: Include Imposters
+          - generic [ref=e40]: When unchecked, hides tokens marked as having inauthentic websites
+          - generic [ref=e41] [cursor=pointer]:
+            - generic [ref=e43] [cursor=pointer]: ✓
+            - generic [ref=e44] [cursor=pointer]: Include Unverified
+          - generic [ref=e45]: When checked, also shows tokens whose contract is not found on their website
+      - generic [ref=e46]:
+        - generic [ref=e47] [cursor=pointer]:
+          - heading "Networks" [level=3] [ref=e48] [cursor=pointer]
+          - img [ref=e49] [cursor=pointer]
+        - generic [ref=e51]:
+          - generic [ref=e52] [cursor=pointer]:
+            - generic [ref=e54] [cursor=pointer]: ✓
+            - generic [ref=e55] [cursor=pointer]: Ethereum
+          - generic [ref=e56] [cursor=pointer]:
+            - generic [ref=e58] [cursor=pointer]: ✓
+            - generic [ref=e59] [cursor=pointer]: Solana
+          - generic [ref=e60] [cursor=pointer]:
+            - generic [ref=e62] [cursor=pointer]: ✓
+            - generic [ref=e63] [cursor=pointer]: BSC
+          - generic [ref=e64] [cursor=pointer]:
+            - generic [ref=e66] [cursor=pointer]: ✓
+            - generic [ref=e67] [cursor=pointer]: Base
+          - generic [ref=e68] [cursor=pointer]:
+            - generic [ref=e70] [cursor=pointer]: ✓
+            - generic [ref=e71] [cursor=pointer]: PulseChain
+      - generic [ref=e72]:
+        - generic [ref=e73] [cursor=pointer]:
+          - heading "Website Score" [level=3] [ref=e74] [cursor=pointer]
+          - img [ref=e75] [cursor=pointer]
+        - generic [ref=e78]:
+          - generic [ref=e79]:
+            - generic [ref=e80]: Min Website Score
+            - generic [ref=e81]: "1"
+          - slider [ref=e82] [cursor=pointer]: "1"
+          - generic [ref=e83]:
+            - generic [ref=e84]: "1"
+            - generic [ref=e85]: "5"
+            - generic [ref=e86]: "10"
+      - generic [ref=e87]:
+        - generic [ref=e88] [cursor=pointer]:
+          - heading "Analysis Status" [level=3] [ref=e89] [cursor=pointer]
+          - img [ref=e90] [cursor=pointer]
+        - generic [ref=e93]:
+          - generic [ref=e96] [cursor=pointer]: Show Only Reprocessed
+          - generic [ref=e97]: Filters to only show tokens with completed Phase 1 & 2 analysis
+          - generic [ref=e98]:
+            - generic [ref=e99]: TEMPORARY FILTER
+            - generic [ref=e100]: This filter shows tokens where comparison_status = 'completed'
+    - banner [ref=e102]:
+      - link "CoinAiRank" [ref=e104] [cursor=pointer]:
+        - /url: /
+      - generic [ref=e105]:
+        - button "Column Settings" [ref=e106]:
+          - img [ref=e107]
+        - button "Search" [ref=e110]:
+          - img [ref=e111]
+      - generic [ref=e114]:
+        - generic [ref=e115]: "Sort by:"
+        - combobox [ref=e116] [cursor=pointer]:
+          - option "Date Called" [selected]
+          - option "AI Score"
+          - option "Market Cap"
+          - option "Liquidity"
+          - option "ROI %"
+        - button "Sort descending" [ref=e117]:
+          - img [ref=e118]
+      - button "Menu" [ref=e121]:
+        - img [ref=e122]
+  - alert [ref=e126]
+```
