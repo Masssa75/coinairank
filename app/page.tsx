@@ -123,6 +123,9 @@ export default function ProjectsRatedPage() {
     minWebsiteScore: 1
   });
   
+  // Track whether filters have been loaded from localStorage
+  const [filtersLoaded, setFiltersLoaded] = useState(false);
+  
   // Load saved filters from localStorage after mount to avoid hydration issues
   useEffect(() => {
     const saved = localStorage.getItem('carProjectsFilters');
@@ -134,6 +137,8 @@ export default function ProjectsRatedPage() {
         console.error('Error parsing saved filters:', e);
       }
     }
+    // Mark filters as loaded even if there were no saved filters
+    setFiltersLoaded(true);
   }, []); // Only run once on mount
   
   // Debounce filters with 400ms delay
@@ -371,13 +376,16 @@ export default function ProjectsRatedPage() {
     }
   }, [sortBy, sortOrder, searchQuery, debouncedFilters, loading, attemptedScreenshots]);
 
-  // Reset and fetch when filters change
+  // Reset and fetch when filters change (but wait for localStorage to load first)
   useEffect(() => {
+    // Don't fetch until filters have been loaded from localStorage
+    if (!filtersLoaded) return;
+    
     setProjects([]);
     setPage(1);
     setHasMore(true);
     fetchProjects(1, true);
-  }, [sortBy, sortOrder, searchQuery, debouncedFilters]);
+  }, [sortBy, sortOrder, searchQuery, debouncedFilters, filtersLoaded]);
 
   // Fetch more when page changes
   useEffect(() => {

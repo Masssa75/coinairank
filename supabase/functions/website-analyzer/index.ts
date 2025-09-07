@@ -24,6 +24,8 @@ const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_KEY!, {
 
 // Function to scrape website - uses simple fetch first, falls back to ScraperAPI if needed
 async function scrapeWebsite(url: string) {
+  let basicHtml = ''; // Store basic HTML as fallback
+  
   try {
     console.log(`Scraping website: ${url}`);
     
@@ -45,14 +47,23 @@ async function scrapeWebsite(url: string) {
 
       if (response.ok) {
         const html = await response.text();
+        basicHtml = html; // Store as fallback
         const textContent = html.replace(/<[^>]+>/g, '').trim();
         
-        // Check if we got meaningful content
-        if (textContent.length >= 500) {
+        // Check if this is a Framer site or other JS-heavy framework
+        const isFramerSite = html.includes('framerusercontent.com') || html.includes('data-framer');
+        const isReactSite = html.includes('__NEXT_DATA__') || html.includes('_app.js') || html.includes('react');
+        const hasMinimalContent = textContent.length < 500;
+        
+        // Force ScraperAPI for JS-heavy sites
+        if (isFramerSite || isReactSite) {
+          console.log(`Detected JS framework (Framer: ${isFramerSite}, React: ${isReactSite}), using ScraperAPI for full render...`);
+        } else if (hasMinimalContent) {
+          console.log(`Simple fetch returned minimal content (${textContent.length} chars), trying ScraperAPI...`);
+        } else {
           console.log(`Simple fetch success: ${html.length} chars of HTML`);
           return { html, status: 'success' };
         }
-        console.log(`Simple fetch returned minimal content (${textContent.length} chars), trying ScraperAPI...`);
       } else {
         console.log(`Simple fetch failed with status ${response.status}`);
         // Check for specific error codes that indicate dead sites
@@ -75,16 +86,24 @@ async function scrapeWebsite(url: string) {
     
     // Fall back to ScraperAPI for JavaScript-heavy sites or when simple fetch fails
     console.log('Falling back to ScraperAPI with JavaScript rendering...');
-    const renderUrl = `http://api.scraperapi.com?api_key=${SCRAPERAPI_KEY}&url=${encodeURIComponent(url)}&render=true&wait=3000`;
+    // Remove wait_for_selector as it might cause issues, just use wait time
+    const renderUrl = `http://api.scraperapi.com?api_key=${SCRAPERAPI_KEY}&url=${encodeURIComponent(url)}&render=true&wait=5000`;
     
     const response = await fetch(renderUrl, {
       method: 'GET',
       headers: {
         'Accept': 'text/html,application/xhtml+xml'
-      }
+      },
+      signal: AbortSignal.timeout(60000) // 60 second timeout for ScraperAPI
     });
 
     if (!response.ok) {
+      // If ScraperAPI fails, try to return the basic HTML we got earlier if available
+      console.log(`ScraperAPI failed with status ${response.status}, falling back to basic HTML if available`);
+      if (basicHtml && basicHtml.length > 1000) {
+        console.log(`Using basic HTML fallback (${basicHtml.length} chars) - note: JS content may be missing`);
+        return { html: basicHtml, status: 'partial', note: 'Using basic HTML - JavaScript content not rendered' };
+      }
       throw new Error(`ScraperAPI failed: ${response.status}`);
     }
 
@@ -115,6 +134,11 @@ async function scrapeWebsite(url: string) {
     return { html, status: 'success' };
   } catch (error) {
     console.error(`Error scraping website: ${error}`);
+    // If we have basic HTML, use it as fallback
+    if (basicHtml && basicHtml.length > 1000) {
+      console.log(`Error occurred but using basic HTML fallback (${basicHtml.length} chars)`);
+      return { html: basicHtml, status: 'partial', note: 'Using basic HTML fallback due to scraping error' };
+    }
     // Return dead status for complete failures
     return { html: '', status: 'dead', reason: `Scraping failed: ${error}` };
   }
