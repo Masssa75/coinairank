@@ -236,7 +236,7 @@ export function SignalBasedTooltip({
     }
   };
 
-  const handleSignalFeedback = (signal: string, issue: string | null) => {
+  const handleSignalFeedback = async (signal: string, issue: string | null) => {
     if (!issue) {
       // Clear feedback for this signal
       const newFeedback = { ...localFeedback };
@@ -249,6 +249,23 @@ export function SignalBasedTooltip({
       const newEditMode = { ...isEditMode };
       delete newEditMode[signal];
       setIsEditMode(newEditMode);
+      
+      // Persist deletion to database
+      if (tokenId && onFeedbackUpdate) {
+        try {
+          const response = await fetch('/api/signal-feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tokenId, feedback: newFeedback })
+          });
+          
+          if (response.ok) {
+            onFeedbackUpdate(newFeedback);
+          }
+        } catch (error) {
+          console.error('Failed to delete feedback:', error);
+        }
+      }
     } else {
       // Set feedback - preserve any note that's being typed
       const existingNote = editingFeedback[signal] || localFeedback[signal]?.note || '';
@@ -571,8 +588,8 @@ export function SignalBasedTooltip({
                                     </div>
                                   )}
                                   
-                                  {/* Save button if any feedback exists */}
-                                  {Object.keys(localFeedback).length > 0 && !saveSuccess && (
+                                  {/* Save button only if there are unsaved changes */}
+                                  {Object.keys(editingFeedback).length > 0 && !saveSuccess && (
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
