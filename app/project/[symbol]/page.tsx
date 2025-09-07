@@ -67,10 +67,16 @@ interface ProjectData {
   is_imposter?: boolean;
 }
 
-export default function ProjectDetailPage({ params }: { params: { symbol: string } }) {
+export default function ProjectDetailPage({ params }: { params: Promise<{ symbol: string }> }) {
   const [project, setProject] = useState<ProjectData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [resolvedParams, setResolvedParams] = useState<{ symbol: string } | null>(null);
+
+  // Resolve params promise
+  useEffect(() => {
+    params.then(p => setResolvedParams(p));
+  }, [params]);
 
   // Check admin status
   useEffect(() => {
@@ -89,11 +95,13 @@ export default function ProjectDetailPage({ params }: { params: { symbol: string
 
   useEffect(() => {
     async function fetchProject() {
+      if (!resolvedParams) return;
+      
       try {
         const { data, error } = await supabase
           .from('crypto_projects_rated')
           .select('*')
-          .eq('symbol', params.symbol.toUpperCase())
+          .eq('symbol', resolvedParams.symbol.toUpperCase())
           .single();
 
         if (error) throw error;
@@ -106,7 +114,7 @@ export default function ProjectDetailPage({ params }: { params: { symbol: string
     }
 
     fetchProject();
-  }, [params.symbol]);
+  }, [resolvedParams]);
 
   if (loading) {
     return (
