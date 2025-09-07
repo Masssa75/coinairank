@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 
 // Constants
-const SCRAPERAPI_KEY = Deno.env.get('SCRAPERAPI_KEY') || '';
+const BROWSERLESS_API_KEY = Deno.env.get('BROWSERLESS_API_KEY') || '';
 const OPENROUTER_API_KEY = Deno.env.get('OPEN_ROUTER_MANAGEMENT_API_KEY') || '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -22,125 +22,54 @@ const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_KEY!, {
   }
 });
 
-// Function to scrape website - uses simple fetch first, falls back to ScraperAPI if needed
+// Function to scrape website - always uses Browserless for consistency
 async function scrapeWebsite(url: string) {
-  let basicHtml = ''; // Store basic HTML as fallback
-  
   try {
-    console.log(`Scraping website: ${url}`);
+    console.log(`Scraping website with Browserless: ${url}`);
     
-    // Try simple fetch first (faster, free, often sufficient)
-    console.log('Trying simple fetch first...');
-    try {
-      const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.5',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'DNT': '1',
-          'Connection': 'keep-alive',
-          'Upgrade-Insecure-Requests': '1'
-        },
-        signal: AbortSignal.timeout(15000) // 15 second timeout
-      });
-
-      if (response.ok) {
-        const html = await response.text();
-        basicHtml = html; // Store as fallback
-        const textContent = html.replace(/<[^>]+>/g, '').trim();
-        
-        // Check if this is a Framer site or other JS-heavy framework
-        const isFramerSite = html.includes('framerusercontent.com') || html.includes('data-framer');
-        const isReactSite = html.includes('__NEXT_DATA__') || html.includes('_app.js') || html.includes('react');
-        const hasMinimalContent = textContent.length < 500;
-        
-        // Force ScraperAPI for JS-heavy sites
-        if (isFramerSite || isReactSite) {
-          console.log(`Detected JS framework (Framer: ${isFramerSite}, React: ${isReactSite}), using ScraperAPI for full render...`);
-        } else if (hasMinimalContent) {
-          console.log(`Simple fetch returned minimal content (${textContent.length} chars), trying ScraperAPI...`);
-        } else {
-          console.log(`Simple fetch success: ${html.length} chars of HTML`);
-          return { html, status: 'success' };
-        }
-      } else {
-        console.log(`Simple fetch failed with status ${response.status}`);
-        // Check for specific error codes that indicate dead sites
-        if (response.status === 404 || response.status >= 500) {
-          return { html: '', status: 'dead', reason: `HTTP ${response.status}` };
-        }
-        console.log(`Trying ScraperAPI...`);
-      }
-    } catch (simpleError: any) {
-      console.log(`Simple fetch error: ${simpleError}`);
-      // Check for DNS/connection errors that indicate dead sites
-      if (simpleError.message?.includes('DNS') || 
-          simpleError.message?.includes('ENOTFOUND') ||
-          simpleError.message?.includes('ECONNREFUSED') ||
-          simpleError.message?.includes('ERR_NAME_NOT_RESOLVED')) {
-        return { html: '', status: 'dead', reason: 'DNS/Connection failed' };
-      }
-      console.log(`Trying ScraperAPI...`);
+    if (!BROWSERLESS_API_KEY) {
+      throw new Error('BROWSERLESS_API_KEY not configured');
     }
     
-    // Fall back to ScraperAPI for JavaScript-heavy sites or when simple fetch fails
-    console.log('Falling back to ScraperAPI with JavaScript rendering...');
-    // Remove wait_for_selector as it might cause issues, just use wait time
-    const renderUrl = `http://api.scraperapi.com?api_key=${SCRAPERAPI_KEY}&url=${encodeURIComponent(url)}&render=true&wait=5000`;
-    
-    const response = await fetch(renderUrl, {
-      method: 'GET',
+    // Use Browserless API to render the page
+    const browserlessResponse = await fetch(`https://production-sfo.browserless.io/content?token=${BROWSERLESS_API_KEY}`, {
+      method: 'POST',
       headers: {
-        'Accept': 'text/html,application/xhtml+xml'
+        'Cache-Control': 'no-cache',
+        'Content-Type': 'application/json'
       },
-      signal: AbortSignal.timeout(60000) // 60 second timeout for ScraperAPI
+      body: JSON.stringify({
+        url: url,
+        waitForTimeout: 5000, // Wait 5 seconds for JS to render
+        waitForSelector: { selector: 'body', timeout: 5000 }, // Object format for selector
+        bestAttempt: true, // Continue even if selector not found
+        rejectResourceTypes: ['image', 'media', 'font'], // Speed up by not loading these
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }),
+      signal: AbortSignal.timeout(30000) // 30 second timeout for Browserless
     });
 
-    if (!response.ok) {
-      // If ScraperAPI fails, try to return the basic HTML we got earlier if available
-      console.log(`ScraperAPI failed with status ${response.status}, falling back to basic HTML if available`);
-      if (basicHtml && basicHtml.length > 1000) {
-        console.log(`Using basic HTML fallback (${basicHtml.length} chars) - note: JS content may be missing`);
-        return { html: basicHtml, status: 'partial', note: 'Using basic HTML - JavaScript content not rendered' };
-      }
-      throw new Error(`ScraperAPI failed: ${response.status}`);
+    if (!browserlessResponse.ok) {
+      const errorText = await browserlessResponse.text();
+      const errorMessage = `Browserless failed with status ${browserlessResponse.status}: ${errorText}`;
+      console.error(errorMessage);
+      return { html: '', status: 'error', reason: errorMessage };
     }
 
-    const html = await response.text();
+    const html = await browserlessResponse.text();
     
-    // Check if we still got minimal content (possible loading state)
+    // Check if we got content
     const textContent = html.replace(/<[^>]+>/g, '').trim();
-    if (textContent.length < 200) {
-      console.log(`Warning: Only ${textContent.length} chars of content after render. Possible loading screen.`);
-      
-      // Try one more time with longer wait
-      const longerWaitUrl = `http://api.scraperapi.com?api_key=${SCRAPERAPI_KEY}&url=${encodeURIComponent(url)}&render=true&wait=5000`;
-      console.log('Retrying with 5s wait...');
-      
-      const retryResponse = await fetch(longerWaitUrl);
-      if (retryResponse.ok) {
-        const retryHtml = await retryResponse.text();
-        const retryText = retryHtml.replace(/<[^>]+>/g, '').trim();
-        
-        if (retryText.length > textContent.length) {
-          console.log(`Better result with longer wait: ${retryText.length} chars`);
-          return retryHtml;
-        }
-      }
+    if (textContent.length < 100) {
+      console.log(`Warning: Browserless returned minimal content (${textContent.length} chars)`);
+      // Still return it - let the AI decide if it's useful
     }
     
-    console.log(`Successfully scraped ${html.length} chars of HTML via ScraperAPI`);
+    console.log(`Successfully scraped ${html.length} chars of HTML via Browserless`);
     return { html, status: 'success' };
   } catch (error) {
     console.error(`Error scraping website: ${error}`);
-    // If we have basic HTML, use it as fallback
-    if (basicHtml && basicHtml.length > 1000) {
-      console.log(`Error occurred but using basic HTML fallback (${basicHtml.length} chars)`);
-      return { html: basicHtml, status: 'partial', note: 'Using basic HTML fallback due to scraping error' };
-    }
-    // Return dead status for complete failures
-    return { html: '', status: 'dead', reason: `Scraping failed: ${error}` };
+    return { html: '', status: 'error', reason: `Scraping failed: ${error}` };
   }
 }
 
@@ -946,46 +875,46 @@ serve(async (req) => {
     // Step 1: Scrape website
     const scrapeResult = await scrapeWebsite(websiteUrl);
     
-    // Check if site is dead
-    if (scrapeResult.status === 'dead') {
-      console.log(`Website is dead: ${scrapeResult.reason}`);
+    // Check if scraping failed
+    if (scrapeResult.status === 'error') {
+      console.log(`Website scraping failed: ${scrapeResult.reason}`);
       
-      // Update database with dead status
+      // Update database with error status (not dead, just failed to scrape)
       if (projectId) {
         const { error } = await supabase
           .from('crypto_projects_rated')
           .update({
-            website_status: 'dead',
-            website_stage1_score: 0,
-            website_stage1_tier: 'DEAD',
+            website_status: 'scrape_error',
+            website_stage1_score: null,  // null means we couldn't determine
+            website_stage1_tier: 'ERROR',
             website_stage1_analyzed_at: new Date().toISOString(),
             website_stage1_analysis: {
-              website_status: 'dead',
-              dead_reason: scrapeResult.reason,
-              score: 0,
-              tier: 'DEAD',
+              website_status: 'scrape_error',
+              error_reason: scrapeResult.reason,
+              score: null,
+              tier: 'ERROR',
               analyzed_at: new Date().toISOString()
             }
           })
           .eq('id', projectId);
           
         if (error) {
-          console.error(`Failed to update dead site status: ${error}`);
+          console.error(`Failed to update scrape error status: ${error}`);
         } else {
-          console.log(`✅ Marked ${symbol} as dead site`);
+          console.log(`⚠️ Marked ${symbol} as scraping error`);
         }
       }
       
       return new Response(
         JSON.stringify({
-          success: true,
+          success: false,
           symbol,
           websiteUrl,
-          website_status: 'dead',
-          dead_reason: scrapeResult.reason,
-          score: 0,
-          tier: 'DEAD',
-          message: `Website is not accessible: ${scrapeResult.reason}`
+          website_status: 'scrape_error',
+          error_reason: scrapeResult.reason,
+          score: null,
+          tier: 'ERROR',
+          message: `Failed to scrape website: ${scrapeResult.reason}`
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
