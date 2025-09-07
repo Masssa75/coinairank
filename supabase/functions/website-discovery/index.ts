@@ -88,7 +88,10 @@ const TRADING_PLATFORM_DOMAINS = [
   'archive.org',
   // Other non-project sites
   'medium.com',
-  'msn.com'
+  'msn.com',
+  // Government/regulatory sites
+  'sec.gov',
+  'cancer.gov'
 ];
 
 // Check if URL is a trading platform (not a real project website)

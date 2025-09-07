@@ -182,6 +182,11 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     }
   }
 
+  // Update filters when includeImposters changes
+  useEffect(() => {
+    setFilters(prev => ({ ...prev, includeImposters }))
+  }, [includeImposters, setFilters])
+  
   // Update filters when includeUnverified changes
   useEffect(() => {
     setFilters(prev => ({ ...prev, includeUnverified }))
@@ -190,7 +195,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
   // Update filters when showReprocessedOnly changes
   useEffect(() => {
     setFilters(prev => ({ ...prev, showReprocessedOnly }))
-  }, [showReprocessedOnly])
+  }, [showReprocessedOnly, setFilters])
 
   const handleTokenTypeChange = (utilityChecked: boolean, memeChecked: boolean) => {
     let newType: FilterState['tokenType'] = 'all'
@@ -375,9 +380,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
                   includeImposters ? 'bg-[#00ff88] border-[#00ff88]' : 'border-[#333]'
                 }`}
                 onClick={() => {
-                  const newIncludeState = !includeImposters
-                  setIncludeImposters(newIncludeState)
-                  setFilters(prev => ({ ...prev, includeImposters: newIncludeState }))
+                  setIncludeImposters(!includeImposters)
                 }}
               >
                 {includeImposters && <span className="text-black font-bold text-xs">✓</span>}
@@ -398,9 +401,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
                   includeUnverified ? 'bg-[#00ff88] border-[#00ff88]' : 'border-[#333]'
                 }`}
                 onClick={() => {
-                  const newIncludeState = !includeUnverified
-                  setIncludeUnverified(newIncludeState)
-                  setFilters(prev => ({ ...prev, includeUnverified: newIncludeState }))
+                  setIncludeUnverified(!includeUnverified)
                 }}
               >
                 {includeUnverified && <span className="text-black font-bold text-xs">✓</span>}
