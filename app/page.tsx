@@ -8,6 +8,7 @@ import FilterSidebar from '@/components/FilterSidebar';
 import { AddTokenModal } from '@/components/AddTokenModal';
 import SearchInput from '@/components/SearchInput';
 import { useDebounce } from '@/lib/useDebounce';
+import { cleanupDeprecatedFilters } from '@/lib/cleanupLocalStorage';
 import { Settings, Menu, ChevronDown, ChevronUp, Shield, FileCode2, LogOut, MoreVertical, AlertTriangle, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -156,9 +157,10 @@ export default function ProjectsRatedPage() {
   
   const observer = useRef<IntersectionObserver | null>(null);
   
-  // Check admin authentication on mount
+  // Check admin authentication on mount and run cleanup
   useEffect(() => {
     checkAdminAuth();
+    cleanupDeprecatedFilters();
   }, []);
   
   const checkAdminAuth = async () => {
@@ -256,9 +258,6 @@ export default function ProjectsRatedPage() {
         params.append('networks', debouncedFilters.networks.join(','));
       }
       
-      if (debouncedFilters.excludeRugs === false) {
-        params.append('includeRugs', 'true');
-      }
       
       if (debouncedFilters.excludeImposters === false) {
         params.append('includeImposters', 'true');
@@ -716,12 +715,6 @@ export default function ProjectsRatedPage() {
                         >
                           {project.network}
                         </span>
-                        {project.is_rugged && (
-                          <span className="px-2 py-0.5 rounded text-xs bg-orange-500/20 text-orange-500">RUGGED</span>
-                        )}
-                        {project.is_dead && (
-                          <span className="px-2 py-0.5 rounded text-xs bg-gray-500/20 text-gray-500">DEAD</span>
-                        )}
                       </div>
                     </div>
                     <div className="text-right relative z-10">

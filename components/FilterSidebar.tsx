@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { ChevronRight, ChevronLeft, ChevronDown, Filter, Settings, Bell, User } from 'lucide-react';
+import { cleanupDeprecatedFilters } from '@/lib/cleanupLocalStorage';
 
 interface FilterState {
   tokenType: 'all' | 'meme' | 'utility'
   networks: string[]
-  excludeRugs?: boolean
   excludeImposters?: boolean
   excludeUnverified?: boolean
   minWebsiteScore?: number
@@ -35,7 +35,6 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     return {
       tokenType: 'all',
       networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'],
-      excludeRugs: true,
       excludeImposters: true,
       excludeUnverified: false,
       minWebsiteScore: 1,
@@ -59,7 +58,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     return {
       tokenType: false,
       networks: true,
-      rugs: true,
+      safety: true,
       scores: true,
       reprocessed: false
     }
@@ -95,11 +94,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     const initial = getInitialFilterState()
     return initial.networks || ['ethereum', 'solana', 'bsc', 'base', 'pulsechain']
   })
-  const [isRugsCollapsed, setIsRugsCollapsed] = useState(sectionStates.rugs)
-  const [excludeRugs, setExcludeRugs] = useState(() => {
-    const initial = getInitialFilterState()
-    return initial.excludeRugs !== undefined ? initial.excludeRugs : true
-  })
+  const [isSafetyCollapsed, setIsSafetyCollapsed] = useState(sectionStates.safety || true)
   const [excludeImposters, setExcludeImposters] = useState(() => {
     const initial = getInitialFilterState()
     return initial.excludeImposters !== undefined ? initial.excludeImposters : true
@@ -115,6 +110,11 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     return initial.showReprocessedOnly || false
   })
 
+  // Run cleanup on mount to remove deprecated filter settings
+  useEffect(() => {
+    cleanupDeprecatedFilters();
+  }, []);
+
   // Save filters to localStorage whenever they change
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -129,13 +129,13 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
       const sectionStates = {
         tokenType: isTokenTypeCollapsed,
         networks: isNetworksCollapsed,
-        rugs: isRugsCollapsed,
+        safety: isSafetyCollapsed,
         scores: isScoresCollapsed,
         reprocessed: isReprocessedCollapsed
       }
       localStorage.setItem('carProjectsFilterSections', JSON.stringify(sectionStates))
     }
-  }, [isTokenTypeCollapsed, isNetworksCollapsed, isRugsCollapsed, isScoresCollapsed])
+  }, [isTokenTypeCollapsed, isNetworksCollapsed, isSafetyCollapsed, isScoresCollapsed])
 
   // Save sidebar collapsed state
   useEffect(() => {
@@ -150,7 +150,6 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     const defaultState = {
       tokenType: 'all' as const,
       networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'],
-      excludeRugs: true,
       excludeImposters: true,
       excludeUnverified: false,
       minWebsiteScore: 1,
@@ -161,7 +160,6 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     setIncludeUtility(true)
     setIncludeMeme(true)
     setSelectedNetworks(['ethereum', 'solana', 'bsc', 'base', 'pulsechain'])
-    setExcludeRugs(true)
     setExcludeImposters(true)
     setExcludeUnverified(false)
     setMinWebsiteScore(1)
@@ -170,7 +168,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     // Reset all sections to collapsed (except token type)
     setIsTokenTypeCollapsed(false)
     setIsNetworksCollapsed(true)
-    setIsRugsCollapsed(true)
+    setIsSafetyCollapsed(true)
     setIsScoresCollapsed(true)
     setIsReprocessedCollapsed(false)
     
@@ -355,43 +353,21 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
         </div>
       </div>
 
-          {/* Rugs Filter */}
-          <div className={`border-b border-[#1a1c1f] ${isRugsCollapsed ? 'collapsed' : ''}`}>
+          {/* Safety Filter */}
+          <div className={`border-b border-[#1a1c1f] ${isSafetyCollapsed ? 'collapsed' : ''}`}>
         <div 
           className="px-5 py-5 cursor-pointer flex justify-between items-center bg-[#111214] hover:bg-[#1a1c1f] hover:pl-6 transition-all"
-          onClick={() => setIsRugsCollapsed(!isRugsCollapsed)}
+          onClick={() => setIsSafetyCollapsed(!isSafetyCollapsed)}
         >
-          <h3 className={`text-[13px] uppercase tracking-[1px] font-semibold transition-colors ${!isRugsCollapsed ? 'text-[#00ff88]' : 'text-[#888]'}`}>
+          <h3 className={`text-[13px] uppercase tracking-[1px] font-semibold transition-colors ${!isSafetyCollapsed ? 'text-[#00ff88]' : 'text-[#888]'}`}>
             Safety
           </h3>
-          <ChevronDown className={`w-3 h-3 transition-all ${!isRugsCollapsed ? 'text-[#00ff88]' : 'text-[#666]'} ${isRugsCollapsed ? '-rotate-90' : ''}`} />
+          <ChevronDown className={`w-3 h-3 transition-all ${!isSafetyCollapsed ? 'text-[#00ff88]' : 'text-[#666]'} ${isSafetyCollapsed ? '-rotate-90' : ''}`} />
         </div>
-        <div className={`bg-[#0a0b0d] overflow-hidden transition-all ${isRugsCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100 p-5'}`}>
+        <div className={`bg-[#0a0b0d] overflow-hidden transition-all ${isSafetyCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100 p-5'}`}>
           <div className="flex flex-col gap-3">
             <label 
               className="flex items-center gap-2.5 cursor-pointer text-sm text-[#ccc] hover:text-white transition-colors"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div 
-                className={`w-5 h-5 border-2 rounded-[5px] transition-all flex items-center justify-center ${
-                  !excludeRugs ? 'bg-[#00ff88] border-[#00ff88]' : 'border-[#333]'
-                }`}
-                onClick={() => {
-                  const newExcludeState = !excludeRugs
-                  setExcludeRugs(newExcludeState)
-                  setFilters(prev => ({ ...prev, excludeRugs: newExcludeState }))
-                }}
-              >
-                {!excludeRugs && <span className="text-black font-bold text-xs">✓</span>}
-              </div>
-              <span>Include Rugs</span>
-            </label>
-            <div className="text-xs text-[#666] mt-1">
-              When unchecked, hides rugged or dead projects
-            </div>
-
-            <label 
-              className="flex items-center gap-2.5 cursor-pointer text-sm text-[#ccc] hover:text-white transition-colors mt-4"
               onClick={(e) => e.stopPropagation()}
             >
               <div 

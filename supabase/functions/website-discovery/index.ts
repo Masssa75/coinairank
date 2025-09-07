@@ -87,7 +87,8 @@ const TRADING_PLATFORM_DOMAINS = [
   'web.archive.org',
   'archive.org',
   // Other non-project sites
-  'medium.com'
+  'medium.com',
+  'msn.com'
 ];
 
 // Check if URL is a trading platform (not a real project website)
