@@ -1,0 +1,475 @@
+# Page snapshot
+
+```yaml
+- generic [active]:
+  - generic [ref=e1]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - heading "CAR" [level=1] [ref=e6]
+        - paragraph [ref=e7]: High-Quality Crypto Projects
+        - button "Hide Filters" [ref=e8]:
+          - img [ref=e9]
+      - generic [ref=e11]:
+        - heading "FILTERS" [level=2] [ref=e12]
+        - button "Reset" [ref=e13]
+      - generic [ref=e14]:
+        - generic [ref=e15] [cursor=pointer]:
+          - heading "Token Type" [level=3] [ref=e16] [cursor=pointer]
+          - img [ref=e17] [cursor=pointer]
+        - generic [ref=e20]:
+          - generic [ref=e21] [cursor=pointer]:
+            - generic [ref=e23] [cursor=pointer]: ✓
+            - generic [ref=e24] [cursor=pointer]: Utility Tokens
+          - generic [ref=e25] [cursor=pointer]:
+            - generic [ref=e27] [cursor=pointer]: ✓
+            - generic [ref=e28] [cursor=pointer]: Meme Tokens
+      - generic [ref=e29]:
+        - generic [ref=e30] [cursor=pointer]:
+          - heading "Safety" [level=3] [ref=e31] [cursor=pointer]
+          - img [ref=e32] [cursor=pointer]
+        - generic [ref=e35]:
+          - generic [ref=e38] [cursor=pointer]: Include Imposters
+          - generic [ref=e39]: When checked, shows tokens marked as having inauthentic websites
+          - generic [ref=e40] [cursor=pointer]:
+            - generic [ref=e42] [cursor=pointer]: ✓
+            - generic [ref=e43] [cursor=pointer]: Include Unverified
+          - generic [ref=e44]: When checked, also shows tokens whose contract is not found on their website
+      - generic [ref=e45]:
+        - generic [ref=e46] [cursor=pointer]:
+          - heading "Networks" [level=3] [ref=e47] [cursor=pointer]
+          - img [ref=e48] [cursor=pointer]
+        - generic [ref=e50]:
+          - generic [ref=e51] [cursor=pointer]:
+            - generic [ref=e53] [cursor=pointer]: ✓
+            - generic [ref=e54] [cursor=pointer]: Ethereum
+          - generic [ref=e55] [cursor=pointer]:
+            - generic [ref=e57] [cursor=pointer]: ✓
+            - generic [ref=e58] [cursor=pointer]: Solana
+          - generic [ref=e59] [cursor=pointer]:
+            - generic [ref=e61] [cursor=pointer]: ✓
+            - generic [ref=e62] [cursor=pointer]: BSC
+          - generic [ref=e63] [cursor=pointer]:
+            - generic [ref=e65] [cursor=pointer]: ✓
+            - generic [ref=e66] [cursor=pointer]: Base
+          - generic [ref=e67] [cursor=pointer]:
+            - generic [ref=e69] [cursor=pointer]: ✓
+            - generic [ref=e70] [cursor=pointer]: PulseChain
+      - generic [ref=e71]:
+        - generic [ref=e72] [cursor=pointer]:
+          - heading "Website Score" [level=3] [ref=e73] [cursor=pointer]
+          - img [ref=e74] [cursor=pointer]
+        - generic [ref=e77]:
+          - generic [ref=e78]:
+            - generic [ref=e79]: Min Website Score
+            - generic [ref=e80]: "1"
+          - slider [ref=e81] [cursor=pointer]: "1"
+          - generic [ref=e82]:
+            - generic [ref=e83]: "1"
+            - generic [ref=e84]: "5"
+            - generic [ref=e85]: "10"
+      - generic [ref=e86]:
+        - generic [ref=e87] [cursor=pointer]:
+          - heading "Analysis Status" [level=3] [ref=e88] [cursor=pointer]
+          - img [ref=e89] [cursor=pointer]
+        - generic [ref=e92]:
+          - generic [ref=e95] [cursor=pointer]: Show Only Reprocessed
+          - generic [ref=e96]: Filters to only show tokens with completed Phase 1 & 2 analysis
+          - generic [ref=e97]:
+            - generic [ref=e98]: TEMPORARY FILTER
+            - generic [ref=e99]: This filter shows tokens where comparison_status = 'completed'
+    - generic [ref=e100]:
+      - banner [ref=e101]:
+        - link "CoinAiRank" [ref=e103] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e104]:
+          - button "Column Settings" [ref=e105]:
+            - img [ref=e106]
+          - button "Search" [ref=e109]:
+            - img [ref=e110]
+        - generic [ref=e113]:
+          - generic [ref=e114]: "Sort by:"
+          - combobox [ref=e115] [cursor=pointer]:
+            - option "Date Called"
+            - option "AI Score" [selected]
+            - option "Market Cap"
+            - option "Liquidity"
+            - option "ROI %"
+          - button "Sort descending" [ref=e116]:
+            - img [ref=e117]
+        - button "Menu" [ref=e120]:
+          - img [ref=e121]
+      - generic [ref=e123]:
+        - generic [ref=e125]:
+          - img "Ghibli / RDO 1% screenshot" [ref=e128]
+          - generic [ref=e129]:
+            - generic [ref=e130]:
+              - generic [ref=e131]:
+                - link "Ghibli" [ref=e132] [cursor=pointer]:
+                  - /url: /project/Ghibli
+                  - heading "Ghibli" [level=3] [ref=e133] [cursor=pointer]:
+                    - generic [ref=e134] [cursor=pointer]:
+                      - generic [ref=e135] [cursor=pointer]: Ghibli
+                      - img [ref=e136]
+                - generic [ref=e139]: bsc
+              - generic [ref=e140]:
+                - generic [ref=e142]: ALPHA
+                - paragraph [ref=e143]: 2d ago
+            - paragraph [ref=e144]: Meme token with CZ retweets and Binance attention on BSC
+            - generic [ref=e145]:
+              - generic [ref=e146]:
+                - paragraph [ref=e147]: Market Cap
+                - paragraph [ref=e148]: $1.1M
+              - generic [ref=e149]:
+                - paragraph [ref=e150]: Liquidity
+                - paragraph [ref=e151]: $992
+              - generic [ref=e152]:
+                - paragraph [ref=e153]: ROI
+                - paragraph [ref=e154]: "-5%"
+            - generic [ref=e155]:
+              - link "Visit Website ↗" [ref=e156] [cursor=pointer]:
+                - /url: https://ghibli-cto.com/
+              - link "Chart 📊" [ref=e157] [cursor=pointer]:
+                - /url: https://dexscreener.com/bsc/0x795d2710e383f33fbebe980a155b29757b6703f3
+        - generic [ref=e159]:
+          - img "BLOB / SOL screenshot" [ref=e162]
+          - generic [ref=e163]:
+            - generic [ref=e164]:
+              - generic [ref=e165]:
+                - link "BLOB" [ref=e166] [cursor=pointer]:
+                  - /url: /project/BLOB
+                  - heading "BLOB" [level=3] [ref=e167] [cursor=pointer]:
+                    - generic [ref=e168] [cursor=pointer]:
+                      - generic [ref=e169] [cursor=pointer]: BLOB
+                      - img [ref=e170]
+                - generic [ref=e173]: solana
+              - generic [ref=e174]:
+                - generic [ref=e176]: SOLID
+                - paragraph [ref=e177]: Today
+            - paragraph [ref=e178]: Viral blob emoji meme token on Base with Pump Fun backing
+            - generic [ref=e179]:
+              - generic [ref=e180]:
+                - paragraph [ref=e181]: Market Cap
+                - paragraph [ref=e182]: $1.6M
+              - generic [ref=e183]:
+                - paragraph [ref=e184]: Liquidity
+                - paragraph [ref=e185]: $0
+              - generic [ref=e186]:
+                - paragraph [ref=e187]: ROI
+                - paragraph [ref=e188]: N/A
+            - generic [ref=e189]:
+              - link "Visit Website ↗" [ref=e190] [cursor=pointer]:
+                - /url: https://blobisbob.com/
+              - link "Chart 📊" [ref=e191] [cursor=pointer]:
+                - /url: https://dexscreener.com/solana/6qhtavksh2csaujz6euvsikpu8rndqlpftuwh6ropump
+        - generic [ref=e193]:
+          - img "START / SOL screenshot" [ref=e196]
+          - generic [ref=e197]:
+            - generic [ref=e198]:
+              - generic [ref=e199]:
+                - link "START" [ref=e200] [cursor=pointer]:
+                  - /url: /project/START
+                  - heading "START" [level=3] [ref=e201] [cursor=pointer]:
+                    - generic [ref=e202] [cursor=pointer]:
+                      - generic [ref=e203] [cursor=pointer]: START
+                      - img [ref=e204]
+                - generic [ref=e207]: solana
+              - generic [ref=e208]:
+                - generic [ref=e210]: SOLID
+                - paragraph [ref=e211]: Yesterday
+            - paragraph [ref=e212]: Trade $START, fees directly fund new Twitch streamers
+            - generic [ref=e213]:
+              - generic [ref=e214]:
+                - paragraph [ref=e215]: Market Cap
+                - paragraph [ref=e216]: $90K
+              - generic [ref=e217]:
+                - paragraph [ref=e218]: Liquidity
+                - paragraph [ref=e219]: $40K
+              - generic [ref=e220]:
+                - paragraph [ref=e221]: ROI
+                - paragraph [ref=e222]: "-3%"
+            - generic [ref=e223]:
+              - link "Visit Website ↗" [ref=e224] [cursor=pointer]:
+                - /url: https://startcoin.live/
+              - link "Chart 📊" [ref=e225] [cursor=pointer]:
+                - /url: https://dexscreener.com/solana/g4z2uajmz3l3drtklcgrg5lzyf7myszn8ntw94nstart
+        - generic [ref=e227]:
+          - img "IKON / USDC screenshot" [ref=e230]
+          - generic [ref=e231]:
+            - generic [ref=e232]:
+              - generic [ref=e233]:
+                - link "IKON" [ref=e234] [cursor=pointer]:
+                  - /url: /project/IKON
+                  - heading "IKON" [level=3] [ref=e235] [cursor=pointer]:
+                    - generic [ref=e236] [cursor=pointer]:
+                      - generic [ref=e237] [cursor=pointer]: IKON
+                      - img [ref=e238]
+                - generic [ref=e241]: solana
+              - generic [ref=e242]:
+                - generic [ref=e244]: SOLID
+                - paragraph [ref=e245]: 3d ago
+            - paragraph [ref=e246]: Live Solana marketplace rewarding both merchants and shoppers with IKON token
+            - generic [ref=e247]:
+              - generic [ref=e248]:
+                - paragraph [ref=e249]: Market Cap
+                - paragraph [ref=e250]: $351K
+              - generic [ref=e251]:
+                - paragraph [ref=e252]: Liquidity
+                - paragraph [ref=e253]: $144K
+              - generic [ref=e254]:
+                - paragraph [ref=e255]: ROI
+                - paragraph [ref=e256]: "-10%"
+            - generic [ref=e257]:
+              - link "Visit Website ↗" [ref=e258] [cursor=pointer]:
+                - /url: https://ikonshop.io
+              - link "Chart 📊" [ref=e259] [cursor=pointer]:
+                - /url: https://dexscreener.com/solana/akepsmmyz3hg85wydmfup1svehzkbvbmwksr5jptbblv
+        - generic [ref=e261]:
+          - img "AFT / USDT 0.05% screenshot" [ref=e264]
+          - generic [ref=e265]:
+            - generic [ref=e266]:
+              - generic [ref=e267]:
+                - link "AFT" [ref=e268] [cursor=pointer]:
+                  - /url: /project/AFT
+                  - heading "AFT" [level=3] [ref=e269] [cursor=pointer]:
+                    - generic [ref=e270] [cursor=pointer]:
+                      - generic [ref=e271] [cursor=pointer]: AFT
+                      - img [ref=e272]
+                - generic [ref=e275]: bsc
+              - generic [ref=e276]:
+                - generic [ref=e278]: SOLID
+                - paragraph [ref=e279]: 4d ago
+            - paragraph [ref=e280]: AI trading agents for Binance with MCP protocol integration
+            - generic [ref=e281]:
+              - generic [ref=e282]:
+                - paragraph [ref=e283]: Market Cap
+                - paragraph [ref=e284]: N/A
+              - generic [ref=e285]:
+                - paragraph [ref=e286]: Liquidity
+                - paragraph [ref=e287]: N/A
+              - generic [ref=e288]:
+                - paragraph [ref=e289]: ROI
+                - paragraph [ref=e290]: N/A
+            - generic [ref=e291]:
+              - link "Visit Website ↗" [ref=e292] [cursor=pointer]:
+                - /url: https://aiflow.guru/
+              - link "Chart 📊" [ref=e293] [cursor=pointer]:
+                - /url: https://dexscreener.com/bsc/0xabd834a7823567673e1ac07635d5d9857b34a8d3
+        - generic [ref=e295]:
+          - img "STRIKE / SOL screenshot" [ref=e298]
+          - generic [ref=e299]:
+            - generic [ref=e300]:
+              - generic [ref=e301]:
+                - link "STRIKE" [ref=e302] [cursor=pointer]:
+                  - /url: /project/STRIKE
+                  - heading "STRIKE" [level=3] [ref=e303] [cursor=pointer]:
+                    - generic [ref=e304] [cursor=pointer]:
+                      - generic [ref=e305] [cursor=pointer]: STRIKE
+                      - img [ref=e306]
+                - generic [ref=e309]: solana
+              - generic [ref=e310]:
+                - generic [ref=e312]: SOLID
+                - paragraph [ref=e313]: 4d ago
+            - paragraph [ref=e314]: Celebrity-backed utility token powering sports betting, fighting, and media empire
+            - generic [ref=e315]:
+              - generic [ref=e316]:
+                - paragraph [ref=e317]: Market Cap
+                - paragraph [ref=e318]: $5.2M
+              - generic [ref=e319]:
+                - paragraph [ref=e320]: Liquidity
+                - paragraph [ref=e321]: $594K
+              - generic [ref=e322]:
+                - paragraph [ref=e323]: ROI
+                - paragraph [ref=e324]: +0%
+            - generic [ref=e325]:
+              - link "Visit Website ↗" [ref=e326] [cursor=pointer]:
+                - /url: https://striketoken.io
+              - link "Chart 📊" [ref=e327] [cursor=pointer]:
+                - /url: https://dexscreener.com/solana/strikemjek2tfvypg7smo9ngprnj56fhns1k7pv2fpw
+        - generic [ref=e329]:
+          - img "DGENAI / USDC 0.067% screenshot" [ref=e332]
+          - generic [ref=e333]:
+            - generic [ref=e334]:
+              - generic [ref=e335]:
+                - link "DGENAI" [ref=e336] [cursor=pointer]:
+                  - /url: /project/DGENAI
+                  - heading "DGENAI" [level=3] [ref=e337] [cursor=pointer]:
+                    - generic [ref=e338] [cursor=pointer]:
+                      - generic [ref=e339] [cursor=pointer]: DGENAI
+                      - img [ref=e340]
+                - generic [ref=e343]: base
+              - generic [ref=e344]:
+                - generic [ref=e346]: SOLID
+                - paragraph [ref=e347]: 4d ago
+            - paragraph [ref=e348]: AI trading agent with $309K vault and 787% ROI on Hyperliquid
+            - generic [ref=e349]:
+              - generic [ref=e350]:
+                - paragraph [ref=e351]: Market Cap
+                - paragraph [ref=e352]: N/A
+              - generic [ref=e353]:
+                - paragraph [ref=e354]: Liquidity
+                - paragraph [ref=e355]: N/A
+              - generic [ref=e356]:
+                - paragraph [ref=e357]: ROI
+                - paragraph [ref=e358]: N/A
+            - generic [ref=e359]:
+              - link "Visit Website ↗" [ref=e360] [cursor=pointer]:
+                - /url: https://degenai.dev
+              - link "Chart 📊" [ref=e361] [cursor=pointer]:
+                - /url: https://dexscreener.com/base/0x54eaf6bb665565bb8897f9d7ad5b3818ded143b4
+        - generic [ref=e363]:
+          - img "TROLL / SOL screenshot" [ref=e366]
+          - generic [ref=e367]:
+            - generic [ref=e368]:
+              - generic [ref=e369]:
+                - link "TROLL" [ref=e370] [cursor=pointer]:
+                  - /url: /project/TROLL
+                  - heading "TROLL" [level=3] [ref=e371] [cursor=pointer]:
+                    - generic [ref=e372] [cursor=pointer]:
+                      - generic [ref=e373] [cursor=pointer]: TROLL
+                      - img [ref=e374]
+                - generic [ref=e377]: solana
+              - generic [ref=e378]:
+                - generic [ref=e380]: SOLID
+                - paragraph [ref=e381]: Yesterday
+            - paragraph [ref=e382]: Trollface meme coin on Solana with Binance Alpha listing
+            - generic [ref=e383]:
+              - generic [ref=e384]:
+                - paragraph [ref=e385]: Market Cap
+                - paragraph [ref=e386]: $166.0M
+              - generic [ref=e387]:
+                - paragraph [ref=e388]: Liquidity
+                - paragraph [ref=e389]: $20K
+              - generic [ref=e390]:
+                - paragraph [ref=e391]: ROI
+                - paragraph [ref=e392]: "-21%"
+            - generic [ref=e393]:
+              - link "Visit Website ↗" [ref=e394] [cursor=pointer]:
+                - /url: https://trololol.io
+              - link "Chart 📊" [ref=e395] [cursor=pointer]:
+                - /url: https://dexscreener.com/solana/5uuh9rtdispq6hks6bp4ndu9pnjpxrxuiw6shbtbhgh2
+        - generic [ref=e397]:
+          - img "MTN / USDC screenshot" [ref=e400]
+          - generic [ref=e401]:
+            - generic [ref=e402]:
+              - generic [ref=e403]:
+                - link "MTN" [ref=e404] [cursor=pointer]:
+                  - /url: /project/MTN
+                  - heading "MTN" [level=3] [ref=e405] [cursor=pointer]:
+                    - generic [ref=e406] [cursor=pointer]:
+                      - generic [ref=e407] [cursor=pointer]: MTN
+                      - img [ref=e408]
+                - generic [ref=e411]: solana
+              - generic [ref=e412]:
+                - generic [ref=e414]: SOLID
+                - paragraph [ref=e415]: Today
+            - paragraph [ref=e416]: First futarchy-governed investment fund with CoinDesk coverage
+            - generic [ref=e417]:
+              - generic [ref=e418]:
+                - paragraph [ref=e419]: Market Cap
+                - paragraph [ref=e420]: $6.6M
+              - generic [ref=e421]:
+                - paragraph [ref=e422]: Liquidity
+                - paragraph [ref=e423]: $10K
+              - generic [ref=e424]:
+                - paragraph [ref=e425]: ROI
+                - paragraph [ref=e426]: N/A
+            - generic [ref=e427]:
+              - link "Visit Website ↗" [ref=e428] [cursor=pointer]:
+                - /url: https://mtncapital.xyz
+              - link "Chart 📊" [ref=e429] [cursor=pointer]:
+                - /url: https://dexscreener.com/solana/mtnc7nnspajuvynmayxu63whwzggfzwq2yeywqemeta
+        - generic [ref=e431]:
+          - img "DAVID / SOL screenshot" [ref=e434]
+          - generic [ref=e435]:
+            - generic [ref=e436]:
+              - generic [ref=e437]:
+                - link "DAVID" [ref=e438] [cursor=pointer]:
+                  - /url: /project/DAVID
+                  - heading "DAVID" [level=3] [ref=e439] [cursor=pointer]:
+                    - generic [ref=e440] [cursor=pointer]:
+                      - generic [ref=e441] [cursor=pointer]: DAVID
+                      - img [ref=e442]
+                - generic [ref=e445]: solana
+              - generic [ref=e446]:
+                - generic [ref=e448]: SOLID
+                - paragraph [ref=e449]: Yesterday
+            - paragraph [ref=e450]: Memorial token evolving into P2E gaming utility with mobile app launch
+            - generic [ref=e451]:
+              - generic [ref=e452]:
+                - paragraph [ref=e453]: Market Cap
+                - paragraph [ref=e454]: $7K
+              - generic [ref=e455]:
+                - paragraph [ref=e456]: Liquidity
+                - paragraph [ref=e457]: N/A
+              - generic [ref=e458]:
+                - paragraph [ref=e459]: ROI
+                - paragraph [ref=e460]: N/A
+            - generic [ref=e461]:
+              - link "Visit Website ↗" [ref=e462] [cursor=pointer]:
+                - /url: https://banditgang.xyz/david/
+              - link "Chart 📊" [ref=e463] [cursor=pointer]:
+                - /url: https://dexscreener.com/solana/8wiwmpdbwlqdt7efeczs1511m28hq1nxdyno2kq6pump
+        - generic [ref=e465]:
+          - img "U8 / SOL screenshot" [ref=e468]
+          - generic [ref=e469]:
+            - generic [ref=e470]:
+              - generic [ref=e471]:
+                - link "U8" [ref=e472] [cursor=pointer]:
+                  - /url: /project/U8
+                  - heading "U8" [level=3] [ref=e473] [cursor=pointer]:
+                    - generic [ref=e474] [cursor=pointer]:
+                      - generic [ref=e475] [cursor=pointer]: U8
+                      - img [ref=e476]
+                - generic [ref=e479]: solana
+              - generic [ref=e480]:
+                - generic [ref=e482]: SOLID
+                - paragraph [ref=e483]: 2d ago
+            - paragraph [ref=e484]: AI-powered trading bot for pump.fun/letsbonk.fun with real transaction logs
+            - generic [ref=e485]:
+              - generic [ref=e486]:
+                - paragraph [ref=e487]: Market Cap
+                - paragraph [ref=e488]: $6K
+              - generic [ref=e489]:
+                - paragraph [ref=e490]: Liquidity
+                - paragraph [ref=e491]: N/A
+              - generic [ref=e492]:
+                - paragraph [ref=e493]: ROI
+                - paragraph [ref=e494]: N/A
+            - generic [ref=e495]:
+              - link "Visit Website ↗" [ref=e496] [cursor=pointer]:
+                - /url: https://github.com/chainstacklabs/pump-fun-bot/blob/main/trades/trades.log
+              - link "Chart 📊" [ref=e497] [cursor=pointer]:
+                - /url: https://dexscreener.com/solana/dwmumrquzpcba1gwddxtjuz6jhnqkreiwmyqpskwgp9v
+        - generic [ref=e499]:
+          - img "Pumpy / SOL screenshot" [ref=e502]
+          - generic [ref=e503]:
+            - generic [ref=e504]:
+              - generic [ref=e505]:
+                - link "Pumpy" [ref=e506] [cursor=pointer]:
+                  - /url: /project/Pumpy
+                  - heading "Pumpy" [level=3] [ref=e507] [cursor=pointer]:
+                    - generic [ref=e508] [cursor=pointer]:
+                      - generic [ref=e509] [cursor=pointer]: Pumpy
+                      - img [ref=e510]
+                - generic [ref=e513]: solana
+              - generic [ref=e514]:
+                - generic [ref=e516]: SOLID
+                - paragraph [ref=e517]: Today
+            - paragraph [ref=e518]: First AI agent orchestration protocol for web3 with gasless USDC
+            - generic [ref=e519]:
+              - generic [ref=e520]:
+                - paragraph [ref=e521]: Market Cap
+                - paragraph [ref=e522]: $6K
+              - generic [ref=e523]:
+                - paragraph [ref=e524]: Liquidity
+                - paragraph [ref=e525]: N/A
+              - generic [ref=e526]:
+                - paragraph [ref=e527]: ROI
+                - paragraph [ref=e528]: N/A
+            - generic [ref=e529]:
+              - link "Visit Website ↗" [ref=e530] [cursor=pointer]:
+                - /url: https://whsprs.ai/
+              - link "Chart 📊" [ref=e531] [cursor=pointer]:
+                - /url: https://dexscreener.com/solana/2gqayub6ungy7cjdnybynmh6iwxxrfvjyjpfexpopump
+  - alert [ref=e532]
+```

@@ -7,7 +7,7 @@ import { ContractVerificationTooltip } from '@/components/ContractVerificationTo
 import FilterSidebar from '@/components/FilterSidebar';
 import { AddTokenModal } from '@/components/AddTokenModal';
 import SearchInput from '@/components/SearchInput';
-import { useDebounce } from '@/lib/useDebounce';
+// Removed useDebounce - using custom implementation for better control
 import { cleanupDeprecatedFilters } from '@/lib/cleanupLocalStorage';
 import { Settings, Menu, ChevronDown, ChevronUp, Shield, FileCode2, LogOut, MoreVertical, AlertTriangle, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -133,6 +133,8 @@ export default function ProjectsRatedPage() {
       try {
         const parsedFilters = JSON.parse(saved);
         setFilters(parsedFilters);
+        // IMPORTANT: Also set debounced filters immediately when loading from localStorage
+        setDebouncedFilters(parsedFilters);
       } catch (e) {
         console.error('Error parsing saved filters:', e);
       }
@@ -141,20 +143,23 @@ export default function ProjectsRatedPage() {
     setFiltersLoaded(true);
   }, []); // Only run once on mount
   
-  // Track if we should skip debounce (for initial load)
-  const [skipDebounce, setSkipDebounce] = useState(true);
+  // Debounced filters state (starts with default filters)
+  const [debouncedFilters, setDebouncedFilters] = useState(filters);
   
-  // Debounce filters with 400ms delay (except on initial load)
-  const debouncedFilters = useDebounce(filters, skipDebounce ? 0 : 400);
-  
-  // After first render with loaded filters, enable debouncing
+  // Handle filter changes with debouncing (but skip on initial load)
   useEffect(() => {
-    if (filtersLoaded && skipDebounce) {
-      // Give it a moment to apply the non-debounced filters, then enable debouncing
-      const timer = setTimeout(() => setSkipDebounce(false), 100);
-      return () => clearTimeout(timer);
-    }
-  }, [filtersLoaded, skipDebounce]);
+    // Skip if we're still loading filters from localStorage
+    if (!filtersLoaded) return;
+    
+    // Debounce filter changes by 400ms
+    const timer = setTimeout(() => {
+      setDebouncedFilters(filters);
+    }, 400);
+    
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [filters, filtersLoaded]);
   
   // Save sort state to localStorage whenever it changes
   useEffect(() => {
