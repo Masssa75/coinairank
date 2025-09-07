@@ -95,6 +95,9 @@ export function SignalBasedTooltip({
   const [mounted, setMounted] = React.useState(false);
   const [showSignalDetails, setShowSignalDetails] = React.useState<string | null>(null);
   const [localFeedback, setLocalFeedback] = React.useState<Record<string, any>>(signalFeedback || {});
+  const [editingFeedback, setEditingFeedback] = React.useState<Record<string, string>>({});
+  const [saveSuccess, setSaveSuccess] = React.useState(false);
+  const [isEditMode, setIsEditMode] = React.useState<Record<string, boolean>>({});
 
   React.useEffect(() => {
     setMounted(true);
@@ -239,13 +242,22 @@ export function SignalBasedTooltip({
       const newFeedback = { ...localFeedback };
       delete newFeedback[signal];
       setLocalFeedback(newFeedback);
+      // Also clear editing state
+      const newEditingFeedback = { ...editingFeedback };
+      delete newEditingFeedback[signal];
+      setEditingFeedback(newEditingFeedback);
+      const newEditMode = { ...isEditMode };
+      delete newEditMode[signal];
+      setIsEditMode(newEditMode);
     } else {
-      // Set feedback
+      // Set feedback - preserve any note that's being typed
+      const existingNote = editingFeedback[signal] || localFeedback[signal]?.note || '';
       const newFeedback = {
         ...localFeedback,
         [signal]: {
           ...localFeedback[signal],
           issue,
+          note: existingNote,
           date: new Date().toISOString().split('T')[0],
           suggested_adjustment: issue === 'too_high' ? -2 : issue === 'too_low' ? 2 : 0
         }
@@ -280,6 +292,11 @@ export function SignalBasedTooltip({
       
       if (response.ok) {
         onFeedbackUpdate(localFeedback);
+        // Clear editing state and show success
+        setEditingFeedback({});
+        setIsEditMode({});
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 2000);
       }
     } catch (error) {
       console.error('Failed to save feedback:', error);
@@ -482,41 +499,80 @@ export function SignalBasedTooltip({
                                     )}
                                   </div>
                                   
-                                  {/* Show current feedback */}
-                                  {localFeedback[evalSignal.signal] && (
-                                    <div className="mt-2 text-[9px] text-[#999]">
-                                      Marked as: <span className="text-[#ff9500]">{localFeedback[evalSignal.signal].issue}</span>
+                                  {/* Show saved feedback OR edit mode, not both */}
+                                  {localFeedback[evalSignal.signal] && !isEditMode[evalSignal.signal] ? (
+                                    <div className="mt-2 p-2 bg-[#1a1c1f]/50 border border-[#333] rounded">
+                                      <div className="text-[9px] text-[#999]">
+                                        Marked as: <span className="text-[#ff9500]">{localFeedback[evalSignal.signal].issue}</span>
+                                      </div>
                                       {localFeedback[evalSignal.signal].note && (
-                                        <div className="mt-1">Note: {localFeedback[evalSignal.signal].note}</div>
+                                        <div className="mt-1 text-[9px] text-[#aaa]">Note: {localFeedback[evalSignal.signal].note}</div>
+                                      )}
+                                      <div className="mt-2 flex gap-1">
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsEditMode({ ...isEditMode, [evalSignal.signal]: true });
+                                            setEditingFeedback({ ...editingFeedback, [evalSignal.signal]: localFeedback[evalSignal.signal]?.note || '' });
+                                          }}
+                                          className="px-2 py-0.5 bg-[#222] text-[#888] rounded text-[9px] hover:bg-[#333] transition-colors"
+                                        >
+                                          Edit
+                                        </button>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleSignalFeedback(evalSignal.signal, null);
+                                          }}
+                                          className="px-2 py-0.5 bg-[#222] text-red-400 rounded text-[9px] hover:bg-[#333] transition-colors"
+                                        >
+                                          Delete
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    /* Text input for new feedback or editing */
+                                    <div className="mt-2">
+                                      <input
+                                        type="text"
+                                        placeholder="Add specific feedback note..."
+                                        value={editingFeedback[evalSignal.signal] !== undefined ? editingFeedback[evalSignal.signal] : ''}
+                                        onChange={(e) => {
+                                          const note = e.target.value;
+                                          setEditingFeedback({ ...editingFeedback, [evalSignal.signal]: note });
+                                          // Only update localFeedback if there's an issue selected
+                                          if (localFeedback[evalSignal.signal]?.issue) {
+                                            const newFeedback = {
+                                              ...localFeedback,
+                                              [evalSignal.signal]: {
+                                                ...localFeedback[evalSignal.signal],
+                                                note,
+                                                date: new Date().toISOString().split('T')[0]
+                                              }
+                                            };
+                                            setLocalFeedback(newFeedback);
+                                          }
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="w-full px-2 py-1 bg-[#1a1c1f] border border-[#333] rounded text-[9px] text-[#ddd] placeholder-[#555]"
+                                      />
+                                      {isEditMode[evalSignal.signal] && (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsEditMode({ ...isEditMode, [evalSignal.signal]: false });
+                                            setEditingFeedback({ ...editingFeedback, [evalSignal.signal]: '' });
+                                          }}
+                                          className="mt-1 px-2 py-0.5 bg-[#222] text-[#666] rounded text-[9px] hover:bg-[#333] transition-colors"
+                                        >
+                                          Cancel Edit
+                                        </button>
                                       )}
                                     </div>
                                   )}
                                   
-                                  {/* Text input for detailed feedback */}
-                                  <div className="mt-2">
-                                    <input
-                                      type="text"
-                                      placeholder="Add specific feedback note..."
-                                      value={localFeedback[evalSignal.signal]?.note || ''}
-                                      onChange={(e) => {
-                                        const note = e.target.value;
-                                        const newFeedback = {
-                                          ...localFeedback,
-                                          [evalSignal.signal]: {
-                                            ...localFeedback[evalSignal.signal],
-                                            note,
-                                            date: new Date().toISOString().split('T')[0]
-                                          }
-                                        };
-                                        setLocalFeedback(newFeedback);
-                                      }}
-                                      onClick={(e) => e.stopPropagation()}
-                                      className="w-full px-2 py-1 bg-[#1a1c1f] border border-[#333] rounded text-[9px] text-[#ddd] placeholder-[#555]"
-                                    />
-                                  </div>
-                                  
                                   {/* Save button if any feedback exists */}
-                                  {Object.keys(localFeedback).length > 0 && (
+                                  {Object.keys(localFeedback).length > 0 && !saveSuccess && (
                                     <button
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -526,6 +582,13 @@ export function SignalBasedTooltip({
                                     >
                                       Save All Feedback
                                     </button>
+                                  )}
+                                  
+                                  {/* Success message */}
+                                  {saveSuccess && (
+                                    <div className="mt-2 px-2 py-1 bg-green-900/30 text-green-400 rounded text-[9px] font-medium">
+                                      ✓ Feedback saved successfully
+                                    </div>
                                   )}
                                 </div>
                               )}
