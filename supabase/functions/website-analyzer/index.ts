@@ -556,10 +556,18 @@ EVALUATION PROCESS:
 4. The SINGLE STRONGEST signal determines final project tier
 
 IMPORTANT RULES:
-- If a signal has NO comparable benchmarks, it stays at Tier 4
+- For each tier comparison, you MUST select the most relevant benchmark from that tier to compare against
+- Even if no perfect match exists, pick the closest benchmark and explain the comparison
+- When comparing across categories (e.g., social vs technical), explicitly note the cross-category nature
 - "Stronger" means objectively more predictive of success
-- Cross-category comparison is allowed (social signals can be compared to technical benchmarks if reasonable)
 - Be strict: a weak signal doesn't become strong just by being vaguely similar to a strong benchmark
+- If truly not comparable, still show the closest benchmark attempted and explain why it's not comparable
+
+CRITICAL FALSE ENDORSEMENT PATTERNS:
+- Matt Furie has NEVER endorsed any crypto project and actively sues projects using his name/art
+- Any claim of "by Matt Furie", "Matt Furie presents", or direct Furie involvement is FALSE
+- Treat such false claims as Tier 3 at best (deceptive marketing reduces credibility)
+- Similarly, be skeptical of claimed endorsements from other celebrities without verifiable proof
 
 Return JSON:
 {
@@ -567,10 +575,26 @@ Return JSON:
     {
       "signal": "exact signal text",
       "progression": {
-        "tier_4_comparison": "stronger/equal/weaker/not_comparable",
-        "tier_3_comparison": "stronger/equal/weaker/not_comparable",
-        "tier_2_comparison": "stronger/equal/weaker/not_comparable",
-        "tier_1_comparison": "stronger/equal/weaker/not_comparable"
+        "tier_4_comparison": {
+          "result": "stronger/equal/weaker/not_comparable",
+          "compared_to": "exact benchmark text from tier 4 that was most relevant",
+          "why": "brief explanation of comparison"
+        },
+        "tier_3_comparison": {
+          "result": "stronger/equal/weaker/not_comparable",
+          "compared_to": "exact benchmark text from tier 3 that was most relevant",
+          "why": "brief explanation of comparison"
+        },
+        "tier_2_comparison": {
+          "result": "stronger/equal/weaker/not_comparable",
+          "compared_to": "exact benchmark text from tier 2 that was most relevant",
+          "why": "brief explanation of comparison"
+        },
+        "tier_1_comparison": {
+          "result": "stronger/equal/weaker/not_comparable",
+          "compared_to": "exact benchmark text from tier 1 that was most relevant",
+          "why": "brief explanation of comparison"
+        }
       },
       "assigned_tier": 1-4,
       "reasoning": "why signal belongs in this tier"
@@ -846,8 +870,8 @@ serve(async (req) => {
               token_type: mockAnalysis.token_type,
               website_stage1_analyzed_at: new Date().toISOString(),
               website_stage1_analysis: mockAnalysis,
-              contract_verification: mockAnalysis.contract_verification,
-              is_imposter: false  // Can't determine for Instagram
+              contract_verification: mockAnalysis.contract_verification
+              // Don't set is_imposter - reserved for admin manual verification only
             })
             .eq('id', projectId);
             
@@ -1034,8 +1058,8 @@ serve(async (req) => {
           // Keep for backward compatibility
           website_status: 'active',
           website_stage1_analyzed_at: new Date().toISOString(),
-          is_imposter: analysis.contract_verification?.found_on_site === false && 
-                       analysis.contract_verification?.confidence === 'high'
+          // Don't auto-set is_imposter - this should only be set by admin manual verification
+          // is_imposter field is reserved for admin-confirmed imposters only
         };
         
         console.log('Update payload ready, executing...');

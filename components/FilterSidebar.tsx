@@ -70,7 +70,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
   // Load sidebar collapsed state
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('kromSidebarCollapsed')
+      const saved = localStorage.getItem('carSidebarCollapsed')
       return saved === 'true'
     }
     return false
@@ -118,7 +118,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
   // Save filters to localStorage whenever they change
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('kromProjectsFilters', JSON.stringify(filters))
+      localStorage.setItem('carProjectsFilters', JSON.stringify(filters))
     }
     onFiltersChange(filters)
   }, [filters, onFiltersChange])
@@ -133,14 +133,14 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
         scores: isScoresCollapsed,
         reprocessed: isReprocessedCollapsed
       }
-      localStorage.setItem('kromProjectsFilterSections', JSON.stringify(sectionStates))
+      localStorage.setItem('carProjectsFilterSections', JSON.stringify(sectionStates))
     }
   }, [isTokenTypeCollapsed, isNetworksCollapsed, isRugsCollapsed, isScoresCollapsed])
 
   // Save sidebar collapsed state
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('kromSidebarCollapsed', String(isSidebarCollapsed))
+      localStorage.setItem('carSidebarCollapsed', String(isSidebarCollapsed))
     }
     onSidebarToggle?.(isSidebarCollapsed)
   }, [isSidebarCollapsed, onSidebarToggle])

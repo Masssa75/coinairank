@@ -77,8 +77,35 @@ export default function ProjectsRatedPage() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [sortBy, setSortBy] = useState<string>('created_at');
-  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+  // Load saved sort state from localStorage
+  const [sortBy, setSortBy] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('carProjectsSort');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          return parsed.sortBy || 'created_at';
+        } catch (e) {
+          console.error('Failed to parse saved sort:', e);
+        }
+      }
+    }
+    return 'created_at';
+  });
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('carProjectsSort');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          return parsed.sortOrder || 'desc';
+        } catch (e) {
+          console.error('Failed to parse saved sort:', e);
+        }
+      }
+    }
+    return 'desc';
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAddTokenModalOpen, setIsAddTokenModalOpen] = useState(false);
@@ -97,6 +124,13 @@ export default function ProjectsRatedPage() {
   
   // Debounce filters with 400ms delay
   const debouncedFilters = useDebounce(filters, 400);
+  
+  // Save sort state to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('carProjectsSort', JSON.stringify({ sortBy, sortOrder }));
+    }
+  }, [sortBy, sortOrder]);
   
   const [capturingScreenshots, setCapturingScreenshots] = useState<Set<number>>(new Set());
   const [attemptedScreenshots, setAttemptedScreenshots] = useState<Set<number>>(() => {
@@ -463,7 +497,11 @@ export default function ProjectsRatedPage() {
             <span className="text-[#666] text-[13px] font-medium">Sort by:</span>
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={(e) => {
+                setSortBy(e.target.value);
+                setProjects([]); // Clear projects to force reload with new sort
+                setPage(1); // Reset pagination
+              }}
               className="w-[180px] px-3 py-1.5 bg-[#1a1c1f] border border-[#2a2d31] text-[#ccc] rounded-md text-sm cursor-pointer appearance-none pr-8"
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
@@ -479,7 +517,11 @@ export default function ProjectsRatedPage() {
               <option value="roi_percent">ROI %</option>
             </select>
             <button
-              onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+              onClick={() => {
+                setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
+                setProjects([]); // Clear projects to force reload with new sort
+                setPage(1); // Reset pagination
+              }}
               className="p-1.5 bg-[#1a1c1f] border border-[#2a2d31] rounded-md hover:bg-[#222426] transition-colors"
               title={sortOrder === 'desc' ? 'Sort descending' : 'Sort ascending'}
             >

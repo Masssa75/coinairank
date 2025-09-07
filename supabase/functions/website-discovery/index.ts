@@ -62,6 +62,13 @@ async function sendTelegramNotification(token: any) {
 // List of trading/launch platforms and social media that shouldn't be considered project websites
 const TRADING_PLATFORM_DOMAINS = [
   'pump.fun',
+  // DEX aggregators and exchanges - legitimate platforms that scam tokens falsely claim
+  'jup.ag',
+  'raydium.io',
+  'orca.so',
+  'uniswap.org',
+  '1inch.io',
+  'sushiswap.com',
   // Social media platforms
   'youtube.com',
   'instagram.com',
