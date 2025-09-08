@@ -9,34 +9,55 @@ interface AddTokenModalProps {
   onSuccess?: () => void;
 }
 
+interface TokenResponse {
+  success: boolean;
+  message: string;
+  symbol?: string;
+  warning?: boolean;
+  needsWebsite?: boolean;
+  error?: string;
+}
+
 export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps) {
   const [contractAddress, setContractAddress] = useState('');
   const [network, setNetwork] = useState<NetworkKey>('ethereum');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [warningMessage, setWarningMessage] = useState<string | null>(null);
+  const [showWebsiteInput, setShowWebsiteInput] = useState(false);
+  const [manualWebsiteUrl, setManualWebsiteUrl] = useState('');
+  const [pendingTokenData, setPendingTokenData] = useState<{address: string, network: string, symbol?: string} | null>(null);
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, websiteUrl?: string) => {
     e.preventDefault();
     setError(null);
     setSuccessMessage(null);
+    setWarningMessage(null);
     setIsSubmitting(true);
 
     try {
+      const payload: any = {
+        contractAddress: pendingTokenData?.address || contractAddress.trim(),
+        network: pendingTokenData?.network || network
+      };
+      
+      // Include website URL if provided
+      if (websiteUrl) {
+        payload.websiteUrl = websiteUrl;
+      }
+
       const response = await fetch('/api/add-token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          contractAddress: contractAddress.trim(),
-          network
-        })
+        body: JSON.stringify(payload)
       });
 
-      const data = await response.json();
+      const data: TokenResponse = await response.json();
 
       if (!response.ok) {
         if (response.status === 409) {
@@ -45,17 +66,32 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
         } else if (response.status === 429) {
           // Rate limited
           setError('Too many requests. Please try again later.');
+        } else if (response.status === 400 && data.needsWebsite) {
+          // Token needs website
+          setError(null);
+          setWarningMessage(data.error || 'This token does not have a website listed.');
+          setShowWebsiteInput(true);
+          setPendingTokenData({ 
+            address: contractAddress.trim(), 
+            network,
+            symbol: data.symbol 
+          });
+          setIsSubmitting(false);
+          return;
         } else {
           setError(data.error || 'Failed to add token');
         }
+        setIsSubmitting(false);
         return;
       }
 
-      // Success! Use the message from the API or construct one
-      const successMsg = data.message || `✅ ${data.symbol} added successfully!`;
-      
+      // Success - token was added
+      const successMsg = data.message || `Token ${data.symbol} added successfully!`;
       setSuccessMessage(successMsg);
       setContractAddress('');
+      setManualWebsiteUrl('');
+      setShowWebsiteInput(false);
+      setPendingTokenData(null);
       
       // Close modal after 2 seconds
       setTimeout(() => {
@@ -137,18 +173,80 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
             </div>
           )}
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isSubmitting || !contractAddress.trim()}
-            className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
-              isSubmitting || !contractAddress.trim()
-                ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-            {isSubmitting ? 'Adding Token...' : 'Add Token'}
-          </button>
+          {/* Warning Message with Website Input */}
+          {warningMessage && (
+            <div className="space-y-3">
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-yellow-400 text-sm">
+                <div className="font-medium mb-1">Website Required</div>
+                {warningMessage}
+                {pendingTokenData?.symbol && (
+                  <div className="mt-2 text-yellow-300">
+                    Token: <span className="font-mono">{pendingTokenData.symbol}</span>
+                  </div>
+                )}
+              </div>
+              
+              {showWebsiteInput && (
+                <div>
+                  <label htmlFor="websiteUrl" className="block text-sm font-medium text-gray-300 mb-1">
+                    Website URL (optional)
+                  </label>
+                  <div className="space-y-2">
+                    <input
+                      id="websiteUrl"
+                      type="url"
+                      value={manualWebsiteUrl}
+                      onChange={(e) => setManualWebsiteUrl(e.target.value)}
+                      placeholder="https://example.com"
+                      className="w-full bg-[#1a1c1f] border border-[#2a2d31] rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          if (manualWebsiteUrl.trim()) {
+                            handleSubmit(e as any, manualWebsiteUrl.trim());
+                          }
+                        }}
+                        disabled={!manualWebsiteUrl.trim() || isSubmitting}
+                        className="flex-1 py-2 px-4 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-400"
+                      >
+                        {isSubmitting ? 'Adding...' : 'Add with Website'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setWarningMessage(null);
+                          setShowWebsiteInput(false);
+                          setPendingTokenData(null);
+                          setContractAddress('');
+                          setManualWebsiteUrl('');
+                        }}
+                        className="flex-1 py-2 px-4 rounded-lg font-medium bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Submit Button - only show if not in website input mode */}
+          {!showWebsiteInput && (
+            <button
+              type="submit"
+              disabled={isSubmitting || !contractAddress.trim()}
+              className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
+                isSubmitting || !contractAddress.trim()
+                  ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              {isSubmitting ? 'Checking Token...' : 'Add Token'}
+            </button>
+          )}
         </form>
 
         <p className="mt-4 text-xs text-gray-500 text-center">

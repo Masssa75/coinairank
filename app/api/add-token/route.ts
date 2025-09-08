@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { contractAddress, network } = body;
+    const { contractAddress, network, websiteUrl } = body;
 
     // Validate required fields
     if (!contractAddress || !network) {
@@ -201,6 +201,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if we're providing a manual website URL
+    const manualWebsiteUrl = body.websiteUrl;
+    if (manualWebsiteUrl) {
+      tokenData.website = manualWebsiteUrl;
+    }
+
+    // If no website at all, return error with needsWebsite flag
+    if (!tokenData.website) {
+      return NextResponse.json(
+        { 
+          error: 'This token does not have a website listed on DexScreener.',
+          needsWebsite: true,
+          symbol: tokenData.symbol,
+          liquidity: tokenData.liquidity
+        },
+        { status: 400 }
+      );
+    }
+
     // Call the project-ingestion edge function
     const ingestionUrl = `${supabaseUrl}/functions/v1/project-ingestion`;
     const ingestionResponse = await fetch(ingestionUrl, {
@@ -232,19 +251,22 @@ export async function POST(request: NextRequest) {
 
     const ingestionResult = await ingestionResponse.json();
 
-    return NextResponse.json({
+    // Prepare response with appropriate warnings
+    const response: any = {
       success: true,
-      message: tokenData.website 
-        ? 'Token added successfully! Website analysis in progress (may take 1-2 minutes).' 
-        : 'Token added successfully!',
       tokenId: ingestionResult.project_id,
-      symbol: ingestionResult.symbol,
+      symbol: tokenData.symbol,
       hasWebsite: !!tokenData.website,
       liquidity: tokenData.liquidity,
       priceUsd: ingestionResult.price_usd,
       marketCap: ingestionResult.market_cap,
       analysisStatus: tokenData.website ? 'pending' : 'not_applicable'
-    });
+    };
+
+    // We always have a website at this point (either from DexScreener or manual)
+    response.message = 'Token added successfully! Website analysis in progress (may take 1-2 minutes).';
+
+    return NextResponse.json(response);
 
   } catch (error) {
     console.error('Error in add-token API:', error);

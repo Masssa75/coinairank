@@ -89,9 +89,8 @@ const TRADING_PLATFORM_DOMAINS = [
   // Other non-project sites
   'medium.com',
   'msn.com',
-  // Government/regulatory sites
-  'sec.gov',
-  'cancer.gov'
+  // Government/regulatory sites - ALL .gov domains are excluded
+  '.gov'  // This will block ALL government domains (dhs.gov, sec.gov, etc.)
 ];
 
 // Check if URL is a trading platform (not a real project website)

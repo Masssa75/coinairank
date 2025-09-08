@@ -218,8 +218,7 @@ async function triggerWebsiteAnalysis(projectId: number, contractAddress: string
         projectId,
         contractAddress,
         websiteUrl,
-        symbol,
-        source: 'project-ingestion'
+        symbol
       })
     });
     
@@ -331,6 +330,16 @@ serve(async (req) => {
       pool_address: poolAddress, // Store pool address for future use
     };
 
+    // For manual submissions, set default contract verification
+    // (user-submitted tokens are assumed legitimate unless proven otherwise)
+    if (body.source === 'manual') {
+      projectData.contract_verification = {
+        found_on_site: true,
+        confidence: 'medium',
+        note: 'Manually submitted token - pending website verification'
+      };
+    }
+
     // Fetch fresh data from DexScreener if we have a pool address
     if (poolAddress) {
       const dexData = await fetchDexScreenerData(network, poolAddress);
@@ -341,12 +350,17 @@ serve(async (req) => {
         // Determine if our token is base or quote
         const isBase = dexData.baseToken.address.toLowerCase() === body.contract_address.toLowerCase();
         const tokenInfo = isBase ? dexData.baseToken : dexData.quoteToken;
+        const counterToken = isBase ? dexData.quoteToken : dexData.baseToken;
         
         // Update symbol and name from DexScreener if not provided
         if (!body.symbol && tokenInfo.symbol) {
           projectData.symbol = tokenInfo.symbol;
         }
-        if (!body.name && tokenInfo.name) {
+        
+        // Format name to include trading pair like "PAYAI / SOL"
+        if (tokenInfo.symbol && counterToken.symbol) {
+          projectData.name = `${tokenInfo.symbol} / ${counterToken.symbol}`;
+        } else if (!body.name && tokenInfo.name) {
           projectData.name = tokenInfo.name;
         }
         

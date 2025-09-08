@@ -232,8 +232,66 @@ function parseHtmlContent(html: string) {
   };
 }
 
+// Function to intelligently reduce HTML size by removing useless content
+function intelligentlyReduceHtml(html: string): string {
+  let reduced = html;
+  
+  // 1. Remove base64 encoded images (can be massive)
+  reduced = reduced.replace(/data:image\/[^;]+;base64,[^"'\s]*/g, 'data:image/removed');
+  
+  // 2. Remove inline SVG path data (keep structure)
+  reduced = reduced.replace(/<path\s+d="[^"]+"/g, '<path d="..."');
+  
+  // 3. Remove tracking/analytics scripts (keep useful scripts)
+  const trackingPatterns = [
+    /<!-- Google Analytics -->[\s\S]*?<!-- End Google Analytics -->/g,
+    /<!-- Facebook Pixel Code -->[\s\S]*?<!-- End Facebook Pixel Code -->/g,
+    /<script[^>]*google-analytics[^>]*>[\s\S]*?<\/script>/gi,
+    /<script[^>]*gtag[^>]*>[\s\S]*?<\/script>/gi,
+    /<script[^>]*fbevents\.js[^>]*>[\s\S]*?<\/script>/gi,
+    /<script[^>]*analytics[^>]*>[\s\S]*?<\/script>/gi,
+  ];
+  trackingPatterns.forEach(pattern => {
+    reduced = reduced.replace(pattern, '');
+  });
+  
+  // 4. Remove CSS style blocks (keep class names)
+  reduced = reduced.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+  
+  // 5. Remove non-essential JSON-LD (keep schema.org)
+  reduced = reduced.replace(/<script type="application\/ld\+json">(?!.*"@context":\s*"https?:\/\/schema\.org)[\s\S]*?<\/script>/gi, '');
+  
+  // 6. Remove HTML comments
+  reduced = reduced.replace(/<!--[\s\S]*?-->/g, '');
+  
+  // 7. Collapse excessive whitespace
+  reduced = reduced.replace(/\s+/g, ' ').replace(/>\s+</g, '><');
+  
+  return reduced;
+}
+
 // Function to analyze with AI - Phase 1: Pure extraction without scoring
 async function analyzeWithAI(html: string, ticker: string, contractAddress: string, network: string, isDead: boolean = false) {
+  let processedHtml = html;
+  
+  // Check if HTML exceeds kimi-k2 model limits (131,071 chars max, leave room for prompt)
+  const MAX_HTML_LENGTH = 120000;
+  
+  // ONLY process if we exceed the limit
+  if (html.length > MAX_HTML_LENGTH) {
+    console.log(`HTML too large (${html.length} chars), attempting intelligent reduction...`);
+    processedHtml = intelligentlyReduceHtml(html);
+    console.log(`After parsing: ${processedHtml.length} chars (${Math.round((1 - processedHtml.length/html.length) * 100)}% reduction)`);
+    
+    // If STILL too large after parsing, truncate as last resort
+    if (processedHtml.length > MAX_HTML_LENGTH) {
+      console.log(`Still too large after parsing, truncating from ${processedHtml.length} to ${MAX_HTML_LENGTH} chars`);
+      processedHtml = processedHtml.substring(0, MAX_HTML_LENGTH);
+    }
+  } else {
+    console.log(`HTML size OK (${html.length} chars), using original content`);
+  }
+  
   const EXTRACTION_PROMPT = `You are an expert crypto analyst specializing in identifying high-potential projects through website analysis.
 
 HUNT FOR ALPHA in this HTML. Look for:
@@ -268,7 +326,7 @@ Network: ${network}
 Current Price: unknown
 
 HTML Content (ANALYZE EVERYTHING):
-${html}
+${processedHtml}
 
 CONTRACT VERIFICATION:
 Search for this exact contract address: ${contractAddress}
@@ -423,6 +481,21 @@ IMPORTANT: Extract signals EXACTLY as they appear. Do NOT score or rate anything
     }
 
     const data = await response.json();
+    
+    // Debug log the response
+    console.log('OpenRouter API response keys:', Object.keys(data));
+    
+    // Check if response has expected structure
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('Unexpected API response structure:', JSON.stringify(data).substring(0, 500));
+      // Check if it's a different error format
+      if (data.error) {
+        console.error('API Error:', data.error);
+        throw new Error(`API Error: ${data.error.message || data.error}`);
+      }
+      throw new Error('Invalid API response structure');
+    }
+    
     const contentStr = data.choices[0].message.content;
     
     // Extract token usage information if available
@@ -600,6 +673,21 @@ TIER RANGES:
     }
 
     const data = await response.json();
+    
+    // Debug log the response
+    console.log('Phase 2 OpenRouter API response keys:', Object.keys(data));
+    
+    // Check if response has expected structure
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('Unexpected Phase 2 API response structure:', JSON.stringify(data).substring(0, 500));
+      // Check if it's a different error format
+      if (data.error) {
+        console.error('Phase 2 API Error:', data.error);
+        throw new Error(`Phase 2 API Error: ${data.error.message || data.error}`);
+      }
+      throw new Error('Invalid Phase 2 API response structure');
+    }
+    
     let contentStr = data.choices[0].message.content;
     
     // Clean the response - remove markdown code blocks if present
