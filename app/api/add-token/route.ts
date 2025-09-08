@@ -202,9 +202,34 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if we're providing a manual website URL
-    const manualWebsiteUrl = body.websiteUrl;
+    let manualWebsiteUrl = body.websiteUrl;
     if (manualWebsiteUrl) {
-      tokenData.website = manualWebsiteUrl;
+      // Normalize the URL - add https:// if missing
+      if (!manualWebsiteUrl.startsWith('http://') && !manualWebsiteUrl.startsWith('https://')) {
+        manualWebsiteUrl = `https://${manualWebsiteUrl}`;
+      }
+      
+      // Test the URL and follow redirects to get the final URL
+      try {
+        const testResponse = await fetch(manualWebsiteUrl, { 
+          method: 'HEAD',
+          redirect: 'follow'
+        });
+        
+        // Use the final URL after redirects
+        if (testResponse.ok || testResponse.status === 200 || testResponse.status === 301 || testResponse.status === 302) {
+          // Get the final URL after redirects
+          tokenData.website = testResponse.url || manualWebsiteUrl;
+          console.log(`URL normalized: ${manualWebsiteUrl} → ${tokenData.website}`);
+        } else {
+          console.warn(`URL test failed with status ${testResponse.status}, using as-is`);
+          tokenData.website = manualWebsiteUrl;
+        }
+      } catch (error) {
+        console.error('Error testing URL:', error);
+        // Use the URL as-is if test fails
+        tokenData.website = manualWebsiteUrl;
+      }
     }
 
     // If no website at all, return error with needsWebsite flag
