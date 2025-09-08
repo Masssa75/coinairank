@@ -1065,6 +1065,28 @@ serve(async (req) => {
     let updateSuccess = false;
     let updateError = null;
     
+    // Prepare response data early so we can add phase 2 results if needed
+    const responseData: any = {
+      success: true,
+      phase: 'extraction',
+      symbol,
+      websiteUrl,
+      extraction_complete: true,
+      signals_count: analysis.signals_found?.length || 0,
+      has_rich_summary: !!analysis.project_summary_rich,
+      signals_found: analysis.signals_found || [],
+      red_flags: analysis.red_flags || [],
+      project_summary: analysis.project_summary_rich,
+      token_type: analysis.token_type,
+      extraction_status: 'completed',
+      message: 'Phase 1 extraction complete.',
+      database_update: {
+        attempted: false,
+        success: false,
+        error: null
+      }
+    };
+    
     if (projectId) {
       console.log(`Updating crypto_projects_rated for ${symbol} with ID ${projectId}`);
       
@@ -1115,10 +1137,20 @@ serve(async (req) => {
           updateError = error;
           console.error(`Database update FAILED:`, error);
           console.error('Error details:', JSON.stringify(error, null, 2));
+          
+          // Update response data with error status
+          responseData.database_update.attempted = true;
+          responseData.database_update.success = false;
+          responseData.database_update.error = error.message;
         } else {
           updateSuccess = true;
           console.log(`✅ Database UPDATE SUCCESS for ${symbol}`);
           console.log('Updated record:', data?.[0]?.id, data?.[0]?.symbol);
+          
+          // Update response data with success status
+          responseData.database_update.attempted = true;
+          responseData.database_update.success = true;
+          responseData.message = 'Phase 1 extraction complete. Call with phase: 2 to score.';
           
           // Auto-trigger Phase 2 scoring - AWAIT it properly to ensure it runs
           console.log(`Phase 1 complete. Auto-triggering Phase 2 for ${symbol}...`);
@@ -1167,26 +1199,7 @@ serve(async (req) => {
     
     // Return Phase 1 extraction results (no scores)
     return new Response(
-      JSON.stringify({
-        success: true,
-        phase: 'extraction',
-        symbol,
-        websiteUrl,
-        extraction_complete: true,
-        signals_count: analysis.signals_found?.length || 0,
-        has_rich_summary: !!analysis.project_summary_rich,
-        signals_found: analysis.signals_found || [],
-        red_flags: analysis.red_flags || [],
-        project_summary: analysis.project_summary_rich,
-        token_type: analysis.token_type,
-        extraction_status: 'completed',
-        message: updateSuccess ? 'Phase 1 extraction complete. Call with phase: 2 to score.' : 'Phase 1 extraction complete.',
-        database_update: {
-          attempted: !!projectId,
-          success: updateSuccess,
-          error: updateError ? updateError.message : null
-        }
-      }),
+      JSON.stringify(responseData),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200

@@ -23,10 +23,10 @@ interface SignalEvaluation {
   assigned_tier: number;
   reasoning: string;
   progression?: {
-    tier_4_comparison: string;
-    tier_3_comparison: string;
-    tier_2_comparison: string;
-    tier_1_comparison: string;
+    tier_4_comparison: string | { why: string; result: string; compared_to: string };
+    tier_3_comparison: string | { why: string; result: string; compared_to: string };
+    tier_2_comparison: string | { why: string; result: string; compared_to: string };
+    tier_1_comparison: string | { why: string; result: string; compared_to: string };
   };
 }
 
@@ -452,10 +452,10 @@ export function SignalBasedTooltip({
                               <div>{evalSignal.reasoning}</div>
                               {evalSignal.progression && (
                                 <div className="mt-2 text-[9px]">
-                                  <div>• vs Tier 4: {evalSignal.progression.tier_4_comparison}</div>
-                                  <div>• vs Tier 3: {evalSignal.progression.tier_3_comparison}</div>
-                                  <div>• vs Tier 2: {evalSignal.progression.tier_2_comparison}</div>
-                                  <div>• vs Tier 1: {evalSignal.progression.tier_1_comparison}</div>
+                                  <div>• vs Tier 4: {typeof evalSignal.progression.tier_4_comparison === 'object' ? evalSignal.progression.tier_4_comparison.why : evalSignal.progression.tier_4_comparison}</div>
+                                  <div>• vs Tier 3: {typeof evalSignal.progression.tier_3_comparison === 'object' ? evalSignal.progression.tier_3_comparison.why : evalSignal.progression.tier_3_comparison}</div>
+                                  <div>• vs Tier 2: {typeof evalSignal.progression.tier_2_comparison === 'object' ? evalSignal.progression.tier_2_comparison.why : evalSignal.progression.tier_2_comparison}</div>
+                                  <div>• vs Tier 1: {typeof evalSignal.progression.tier_1_comparison === 'object' ? evalSignal.progression.tier_1_comparison.why : evalSignal.progression.tier_1_comparison}</div>
                                 </div>
                               )}
                               
