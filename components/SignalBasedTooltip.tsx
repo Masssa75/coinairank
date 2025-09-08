@@ -792,7 +792,7 @@ export function SignalBasedTooltip({
                                     </div>
                                     {displayText && displayText !== 'No text' && (
                                       <div className="text-[#666] italic truncate mt-0.5">
-                                        "{displayText}"
+                                        &ldquo;{displayText}&rdquo;
                                       </div>
                                     )}
                                   </div>
