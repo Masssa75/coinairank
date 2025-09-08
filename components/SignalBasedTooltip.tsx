@@ -60,6 +60,7 @@ interface SignalBasedTooltipProps {
   tokenId?: string;
   signalFeedback?: Record<string, any>;
   onFeedbackUpdate?: (feedback: Record<string, any>) => void;
+  stage2Resources?: Record<string, any>;  // Stage 2 resources for link selection display
   tooltip?: {
     one_liner: string;
     top_signals?: string[];
@@ -83,6 +84,7 @@ export function SignalBasedTooltip({
   tokenId,
   signalFeedback,
   onFeedbackUpdate,
+  stage2Resources,
   tooltip,
   children 
 }: SignalBasedTooltipProps) {
@@ -98,6 +100,7 @@ export function SignalBasedTooltip({
   const [editingFeedback, setEditingFeedback] = React.useState<Record<string, string>>({});
   const [saveSuccess, setSaveSuccess] = React.useState(false);
   const [isEditMode, setIsEditMode] = React.useState<Record<string, boolean>>({});
+  const [showLinksSection, setShowLinksSection] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
@@ -352,6 +355,63 @@ export function SignalBasedTooltip({
   const mainConcerns = tooltip?.main_concerns || 
                       (tooltip?.cons ? tooltip.cons.slice(0, 2) : null) ||
                       redFlags.filter(r => r.severity === 'high').slice(0, 2).map(r => r.flag);
+
+  // Process links for admin section
+  const processLinksData = () => {
+    if (!websiteAnalysis?.parsed_content?.links_with_context) return null;
+    
+    const discoveredLinks = websiteAnalysis.parsed_content.links_with_context;
+    const stage2 = stage2Resources || {};
+    
+    // Collect all Stage 2 selected URLs from different categories
+    const selectedUrls = new Set<string>();
+    
+    // Add GitHub repos
+    if (stage2.github_repos?.length) {
+      stage2.github_repos.forEach((url: string) => selectedUrls.add(url));
+    }
+    
+    // Add documentation URLs
+    if (stage2.documentation) {
+      Object.values(stage2.documentation).forEach((url: any) => {
+        if (typeof url === 'string') selectedUrls.add(url);
+      });
+    }
+    
+    // Add audit URLs
+    if (stage2.audits?.length) {
+      stage2.audits.forEach((audit: any) => {
+        if (audit.url) selectedUrls.add(audit.url);
+      });
+    }
+    
+    // Add team profile URLs
+    if (stage2.team_profiles?.length) {
+      stage2.team_profiles.forEach((profile: any) => {
+        if (profile.linkedin) selectedUrls.add(profile.linkedin);
+        if (profile.twitter) selectedUrls.add(profile.twitter);
+      });
+    }
+    
+    // Group links by type and add selection status
+    const linksByType: Record<string, Array<{url: string, text: string, selected: boolean}>> = {};
+    
+    discoveredLinks.forEach((link: {url: string, text: string, type: string}) => {
+      if (!linksByType[link.type]) {
+        linksByType[link.type] = [];
+      }
+      
+      linksByType[link.type].push({
+        url: link.url,
+        text: link.text,
+        selected: selectedUrls.has(link.url)
+      });
+    });
+    
+    return linksByType;
+  };
+
+  const linksData = processLinksData();
 
   return (
     <>
@@ -670,6 +730,88 @@ export function SignalBasedTooltip({
                 : '-top-2 border-l-[8px] border-l-transparent border-b-[8px] border-b-[#1a1c1f] border-r-[8px] border-r-transparent'
             }`}>
             </div>
+            {/* Admin Links Section - Expandable */}
+            {isAdmin && linksData && Object.keys(linksData).length > 0 && (
+              <div className="mt-3 pt-3 border-t border-[#2a2d31]">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowLinksSection(!showLinksSection);
+                  }}
+                  className="flex items-center gap-2 text-[10px] text-[#ff9500] font-bold hover:text-[#ffb033] transition-colors cursor-pointer"
+                >
+                  <span>{showLinksSection ? '▼' : '▶'}</span>
+                  <span>ADMIN: DISCOVERED LINKS ({Object.values(linksData).flat().length})</span>
+                </button>
+                
+                {showLinksSection && (
+                  <div className="mt-2 space-y-3 max-h-[300px] overflow-y-auto">
+                    {Object.entries(linksData).map(([type, links]) => {
+                      const selectedCount = links.filter(l => l.selected).length;
+                      const typeColor = type === 'github' ? 'text-[#8b5cf6]' : 
+                                       type === 'documentation' ? 'text-[#10b981]' :
+                                       type === 'social' ? 'text-[#3b82f6]' : 'text-[#6b7280]';
+                      
+                      return (
+                        <div key={type} className="bg-[#0f1011] p-2 rounded border border-[#333]">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className={`text-[10px] font-bold uppercase tracking-wider ${typeColor}`}>
+                              {type.replace('_', ' ')} ({links.length})
+                            </span>
+                            {selectedCount > 0 && (
+                              <span className="text-[9px] text-[#00ff88] bg-[#00ff88]/10 px-1.5 py-0.5 rounded">
+                                {selectedCount} chosen
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div className="space-y-1">
+                            {links.map((link, idx) => {
+                              // Shorten URL for display
+                              const displayUrl = link.url.length > 50 ? 
+                                link.url.substring(0, 47) + '...' : 
+                                link.url;
+                              
+                              // Shorten link text
+                              const displayText = link.text && link.text !== 'No text' && link.text.length > 30 ?
+                                link.text.substring(0, 27) + '...' :
+                                link.text;
+                              
+                              return (
+                                <div key={idx} className="flex items-start gap-2 text-[9px]">
+                                  <div className="flex-shrink-0 mt-0.5">
+                                    {link.selected ? (
+                                      <span className="text-[#00ff88]">✓</span>
+                                    ) : (
+                                      <span className="text-[#444]">○</span>
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="text-[#aaa] font-mono truncate">
+                                      {displayUrl}
+                                    </div>
+                                    {displayText && displayText !== 'No text' && (
+                                      <div className="text-[#666] italic truncate mt-0.5">
+                                        "{displayText}"
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    
+                    <div className="text-[9px] text-[#666] italic pt-2 border-t border-[#333]">
+                      ✓ = Selected for Stage 2 analysis • ○ = Discovered but not used
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Show click hint for admins */}
             {isPersistent && isAdmin && benchmarkComparison?.signal_evaluations && (
               <div className="mt-3 pt-3 border-t border-[#2a2d31] text-[10px] text-[#666]">

@@ -778,6 +778,7 @@ export default function ProjectsRatedPage() {
                                   p.id === project.id ? { ...p, signal_feedback: feedback } : p
                                 ));
                               }}
+                              stage2Resources={project.website_stage2_resources}
                               tooltip={project.website_stage1_tooltip}
                             >
                               <span 
