@@ -39,6 +39,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
   const [projectStatus, setProjectStatus] = useState<ProjectStatus | null>(null);
   const [projectStages, setProjectStages] = useState<ProjectStage[]>([]);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Fetch project status from database
   const fetchProjectStatus = useCallback(async (projectId: number) => {
@@ -51,7 +52,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
       if (!project) return null;
       
       const status = getProjectStatus(project);
-      const stages = getProjectStages(project);
+      const stages = getProjectStages(project, isAdmin);
       
       setProjectStatus(status);
       setProjectStages(stages);
@@ -83,7 +84,27 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
     }, 10000);
     
     setPollingInterval(interval);
-  }, [fetchProjectStatus]);
+  }, [fetchProjectStatus, isAdmin]);
+
+  // Check admin status when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      // Check admin status from localStorage or API
+      const checkAdminStatus = async () => {
+        try {
+          const response = await fetch('/api/admin/auth', { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}) 
+          });
+          setIsAdmin(response.ok);
+        } catch {
+          setIsAdmin(false);
+        }
+      };
+      checkAdminStatus();
+    }
+  }, [isOpen]);
 
   // Cleanup polling on unmount or modal close
   useEffect(() => {
@@ -301,8 +322,15 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
 
             {/* Detailed Stage Progress */}
             <div className="space-y-3">
-              <h3 className="text-sm font-medium text-gray-300">Processing Stages</h3>
-              <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-gray-300">Processing Stages</h3>
+                {isAdmin && (
+                  <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
+                    Admin View
+                  </span>
+                )}
+              </div>
+              <div className={`space-y-2 ${isAdmin ? 'max-h-64 overflow-y-auto pr-2 scrollbar-hide' : ''}`}>
                 {projectStages.map((stage, index) => (
                   <div key={stage.id} className="flex items-center gap-3">
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
