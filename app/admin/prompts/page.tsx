@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, FileCode2, RefreshCw } from 'lucide-react';
+import { ArrowLeft, FileCode2, RefreshCw, Copy, Check } from 'lucide-react';
 import Link from 'next/link';
 
 interface PromptsData {
@@ -24,6 +24,7 @@ export default function AdminPromptsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Check authentication
   useEffect(() => {
@@ -65,6 +66,18 @@ export default function AdminPromptsPage() {
       console.error('Error fetching prompts:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const copyPrompt = async () => {
+    if (!promptsData?.promptTemplate) return;
+    
+    try {
+      await navigator.clipboard.writeText(promptsData.promptTemplate);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy prompt:', err);
     }
   };
 
@@ -167,10 +180,29 @@ export default function AdminPromptsPage() {
 
             {/* Main Prompt Template */}
             <div className="bg-[#111214] border border-[#2a2d31] rounded-xl p-6">
-              <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
-                <span className="w-2 h-2 bg-[#00ff88] rounded-full"></span>
-                Main Analysis Prompt
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+                  <span className="w-2 h-2 bg-[#00ff88] rounded-full"></span>
+                  Main Analysis Prompt
+                </h2>
+                <button
+                  onClick={copyPrompt}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-[#1a1c1f] border border-[#2a2d31] text-white rounded-lg hover:bg-[#2a2d31] transition-colors text-sm"
+                  title="Copy prompt to clipboard"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-4 h-4 text-[#00ff88]" />
+                      <span className="text-[#00ff88]">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
               <div className="bg-[#0a0b0d] border border-[#2a2d31] rounded-lg p-4 overflow-x-auto">
                 <pre className="text-[#888] text-xs font-mono whitespace-pre-wrap">
                   {promptsData.promptTemplate}

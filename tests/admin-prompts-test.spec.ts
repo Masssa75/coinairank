@@ -2,6 +2,17 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Admin Prompts Page', () => {
   test('should load admin prompts without errors', async ({ page }) => {
+    // First authenticate
+    await page.goto('https://coinairank.com/admin');
+    
+    // Check if we need to login
+    const passwordInput = page.locator('input[type="password"]');
+    if (await passwordInput.count() > 0) {
+      await passwordInput.fill('donkey');
+      await page.locator('button:has-text("Access Admin")').click();
+      await page.waitForTimeout(1000);
+    }
+    
     // Navigate to admin prompts page
     await page.goto('https://coinairank.com/admin/prompts');
     
@@ -47,7 +58,7 @@ test.describe('Admin Prompts Page', () => {
     }
     
     // Check for successful prompts loading indicators
-    const promptContent = page.locator('text=EXTRACTION_PROMPT, text=TIER 1 SIGNALS, text=stage_2_resources');
+    const promptContent = page.locator('text=You are an expert crypto analyst, text=TIER 1 SIGNALS, text=Resource Extraction Instructions, text=Current Focus');
     const hasPromptContent = await promptContent.count() > 0;
     
     if (hasPromptContent) {
