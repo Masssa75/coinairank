@@ -151,8 +151,28 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
 
       if (!response.ok) {
         if (response.status === 409) {
-          // Token already exists
-          setError(`Token already exists (${data.symbol || 'Unknown'})`);
+          // Token already exists - but we can still show progress if analysis is ongoing
+          if (data.tokenId && data.symbol) {
+            console.log('Token exists but has tokenId - showing progress tracker');
+            setError(null);
+            setSuccessMessage(null);
+            setWarningMessage(null);
+            setShowWebsiteInput(false);
+            setPendingTokenData(null);
+            
+            // Start progress tracking for existing token
+            startProgressTracking(
+              data.tokenId,
+              data.symbol,
+              contractAddress.trim(),
+              network
+            );
+            setIsSubmitting(false);
+            return;
+          } else {
+            // No tokenId provided, show error
+            setError(`Token already exists (${data.symbol || 'Unknown'})`);
+          }
         } else if (response.status === 429) {
           // Rate limited
           setError('Too many requests. Please try again later.');
