@@ -274,31 +274,29 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
       ) : (
         /* Expanded State - Original Content */
         <>
-          {/* Header */}
-          <div className="p-5 border-b border-[#1a1c1f] relative">
-            {/* Collapse Button */}
-            <button
-              onClick={() => {
-                setIsSidebarCollapsed(true);
-                onSidebarToggle?.(true);
-              }}
-              className="absolute top-1/2 -translate-y-1/2 right-5 bg-[#1a1c1f] hover:bg-[#252729] rounded px-2 py-3 transition-all"
-              title="Hide Filters"
-            >
-              <ChevronLeft className="w-4 h-4 text-[#666] hover:text-[#00ff88] transition-colors" />
-            </button>
-          </div>
-
           {/* Filters Title */}
-          <div className="px-5 pt-5 pb-2 flex justify-between items-center">
-        <h2 className="text-sm uppercase tracking-[2px] text-[#666] font-semibold">FILTERS</h2>
-        <button
-          onClick={resetAllFilters}
-          className="text-xs text-[#666] hover:text-[#00ff88] transition-colors uppercase tracking-[1px] font-medium"
-        >
-          Reset
-        </button>
-      </div>
+          <div className="px-5 py-5 border-b border-[#1a1c1f] flex justify-between items-center">
+            <h2 className="text-sm uppercase tracking-[2px] text-[#666] font-semibold">FILTERS</h2>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={resetAllFilters}
+                className="text-xs text-[#666] hover:text-[#00ff88] transition-colors uppercase tracking-[1px] font-medium"
+              >
+                Reset
+              </button>
+              {/* Collapse Button */}
+              <button
+                onClick={() => {
+                  setIsSidebarCollapsed(true);
+                  onSidebarToggle?.(true);
+                }}
+                className="bg-[#1a1c1f] hover:bg-[#252729] rounded px-2 py-2 transition-all"
+                title="Hide Filters"
+              >
+                <ChevronLeft className="w-4 h-4 text-[#666] hover:text-[#00ff88] transition-colors" />
+              </button>
+            </div>
+          </div>
 
           {/* Token Type Filter */}
           <div className={`border-b border-[#1a1c1f] ${isTokenTypeCollapsed ? 'collapsed' : ''}`}>
