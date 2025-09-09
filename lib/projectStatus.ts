@@ -14,6 +14,7 @@ export interface ProjectStage {
   icon: string;
   status: 'complete' | 'in_progress' | 'pending' | 'failed';
   estimatedDuration?: string;
+  dbField?: string;
 }
 
 export function getProjectStatus(project: any): ProjectStatus {
