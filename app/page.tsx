@@ -9,7 +9,7 @@ import { AddTokenModal } from '@/components/AddTokenModal';
 import SearchInput from '@/components/SearchInput';
 // Removed useDebounce - using custom implementation for better control
 import { cleanupDeprecatedFilters } from '@/lib/cleanupLocalStorage';
-import { Settings, Menu, ChevronDown, ChevronUp, Shield, FileCode2, LogOut, MoreVertical, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Settings, Menu, ChevronDown, ChevronUp, Shield, FileCode2, LogOut, MoreVertical, AlertTriangle, CheckCircle, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -259,6 +259,47 @@ export default function ProjectsRatedPage() {
       setOpenActionMenu(null);
     }
   };
+
+  const handleDeleteProject = async (projectId: number, projectName: string) => {
+    // Confirmation dialog
+    const confirmed = window.confirm(`Are you sure you want to delete "${projectName}"? This action cannot be undone.`);
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch('/api/admin/delete-project', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId })
+      });
+
+      if (response.ok) {
+        // Remove project from local state
+        setProjects(prev => prev.filter(p => p.id !== projectId));
+        // Show success toast
+        setToast({
+          message: `Project "${projectName}" deleted successfully`,
+          type: 'success'
+        });
+        setTimeout(() => setToast(null), 3000);
+      } else {
+        setToast({
+          message: 'Failed to delete project',
+          type: 'error'
+        });
+        setTimeout(() => setToast(null), 3000);
+      }
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      setToast({
+        message: 'Error deleting project',
+        type: 'error'
+      });
+      setTimeout(() => setToast(null), 3000);
+    } finally {
+      setOpenActionMenu(null);
+    }
+  };
+
   const lastProjectRef = useCallback((node: HTMLDivElement | null) => {
     if (loading) return;
     if (observer.current) observer.current.disconnect();
@@ -896,10 +937,17 @@ export default function ProjectsRatedPage() {
                             <div className="absolute right-0 bottom-full mb-2 w-48 bg-[#111214] border border-[#2a2d31] rounded-lg shadow-lg z-40">
                               <button
                                 onClick={() => handleToggleImposter(project.id, project.is_imposter || false)}
-                                className="w-full px-4 py-2 text-left text-white hover:bg-[#1a1c1f] transition-colors flex items-center gap-2 text-sm rounded-lg"
+                                className="w-full px-4 py-2 text-left text-white hover:bg-[#1a1c1f] transition-colors flex items-center gap-2 text-sm rounded-t-lg"
                               >
                                 <AlertTriangle className="w-4 h-4 text-red-500" />
                                 {project.is_imposter ? 'Unmark as Imposter' : 'Mark as Imposter'}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteProject(project.id, project.symbol)}
+                                className="w-full px-4 py-2 text-left text-red-400 hover:bg-[#1a1c1f] hover:text-red-300 transition-colors flex items-center gap-2 text-sm border-t border-[#2a2d31] rounded-b-lg"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Remove Project
                               </button>
                             </div>
                           </>
