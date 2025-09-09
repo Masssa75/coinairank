@@ -369,21 +369,73 @@ export function SignalBasedTooltip({
       selectedUrlsMap.set(link.url, link.reasoning);
     });
     
-    // Group links by type and add selection status with reasoning
-    const linksByType: Record<string, Array<{url: string, text: string, selected: boolean, reasoning?: string}>> = {};
+    // Helper function to normalize URLs for comparison
+    const normalizeUrl = (url: string, baseUrl = 'https://www.brickken.com') => {
+      if (url.startsWith('http')) return url;
+      if (url.startsWith('/')) return baseUrl + url;
+      return url;
+    };
     
+    // Group discovered links by type and add selection status with reasoning
+    const linksByType: Record<string, Array<{url: string, text: string, selected: boolean, reasoning?: string}>> = {};
+    const processedUrls = new Set<string>();
+    
+    // First, process all discovered links
     discoveredLinks.forEach((link: {url: string, text: string, type: string}) => {
       if (!linksByType[link.type]) {
         linksByType[link.type] = [];
       }
       
-      const isSelected = selectedUrlsMap.has(link.url);
+      // Check if this discovered link matches any stage 2 link
+      const normalizedDiscovered = normalizeUrl(link.url);
+      let isSelected = selectedUrlsMap.has(link.url) || selectedUrlsMap.has(normalizedDiscovered);
+      let reasoning: string | undefined;
+      
+      // Find matching stage 2 link for reasoning
+      if (!isSelected) {
+        // Try reverse matching - check if any stage 2 link would normalize to this discovered link
+        for (const [stage2Url, stage2Reasoning] of selectedUrlsMap.entries()) {
+          const normalizedStage2 = normalizeUrl(stage2Url);
+          if (normalizedStage2 === normalizedDiscovered || 
+              stage2Url === normalizedDiscovered ||
+              normalizedStage2 === link.url) {
+            isSelected = true;
+            reasoning = stage2Reasoning;
+            processedUrls.add(stage2Url); // Mark this stage 2 URL as processed
+            break;
+          }
+        }
+      } else {
+        reasoning = selectedUrlsMap.get(link.url) || selectedUrlsMap.get(normalizedDiscovered);
+        if (selectedUrlsMap.has(link.url)) processedUrls.add(link.url);
+        if (selectedUrlsMap.has(normalizedDiscovered)) processedUrls.add(normalizedDiscovered);
+      }
+      
       linksByType[link.type].push({
         url: link.url,
         text: link.text,
         selected: isSelected,
-        reasoning: isSelected ? selectedUrlsMap.get(link.url) : undefined
+        reasoning: reasoning
       });
+    });
+    
+    // Then, add any stage 2 links that weren't found in discovered links
+    // These are AI-selected URLs that may not have been linked from the homepage
+    stage2Links.forEach((stage2Link: {url: string, reasoning: string}) => {
+      if (!processedUrls.has(stage2Link.url)) {
+        // This stage 2 link wasn't matched with any discovered link
+        // Add it as a new "other" type link
+        if (!linksByType['other']) {
+          linksByType['other'] = [];
+        }
+        
+        linksByType['other'].push({
+          url: stage2Link.url,
+          text: 'AI-selected link', // Generic text since we don't have original link text
+          selected: true,
+          reasoning: stage2Link.reasoning
+        });
+      }
     });
     
     return linksByType;
