@@ -73,8 +73,130 @@ async function scrapeWebsite(url: string) {
   }
 }
 
+// AI-powered link extraction - replaces complex regex
+async function extractLinksWithAI(html: string): Promise<Array<{url: string, text: string, type: string}>> {
+  try {
+    const truncatedHtml = html.length > 50000 ? html.substring(0, 50000) + '...' : html;
+    
+    const prompt = `Extract ALL clickable links from this HTML content. Find every <a>, <button>, and clickable element with URLs.
+
+IMPORTANT: Extract ALL links including:
+- Internal links (starting with / or relative paths) 
+- External links (full URLs)
+- News article links 
+- Social media links
+- Documentation links
+- Navigation links
+- Footer links
+- ANY clickable element with a URL
+
+Return as a JSON array ONLY, no extra text:
+[
+  {"url": "complete-url", "text": "link text or button text", "type": "category"}
+]
+
+Types: github, documentation, social, news, blog, about, other
+
+HTML:
+${truncatedHtml}`;
+
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('OPENROUTER_API_KEY')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'moonshotai/kimi-k1',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.1,
+        max_tokens: 3000,
+        response_format: { type: "json_object" }
+      }),
+    });
+
+    const data = await response.json();
+    const content = data.choices[0].message.content;
+    
+    // Parse the JSON response
+    let linksArray;
+    try {
+      const parsed = JSON.parse(content);
+      linksArray = parsed.links || parsed || [];
+    } catch {
+      // Fallback to regex if AI fails
+      console.warn('AI link extraction failed, falling back to regex');
+      return fallbackRegexExtraction(html);
+    }
+
+    // Clean up and validate results
+    const cleanedLinks: Array<{url: string, text: string, type: string}> = [];
+    const uniqueUrls = new Set<string>();
+
+    for (const link of linksArray) {
+      if (link.url && !link.url.startsWith('#') && !uniqueUrls.has(link.url)) {
+        uniqueUrls.add(link.url);
+        cleanedLinks.push({
+          url: link.url,
+          text: link.text || 'No text',
+          type: link.type || 'other'
+        });
+      }
+    }
+
+    return cleanedLinks;
+  } catch (error) {
+    console.error('AI link extraction failed:', error);
+    return fallbackRegexExtraction(html);
+  }
+}
+
+// Enhanced regex extraction with better categorization
+function fallbackRegexExtraction(html: string): Array<{url: string, text: string, type: string}> {
+  // More comprehensive regex that captures different href formats
+  const linkRegex = /<a[^>]*href\s*=\s*["']([^"']+)["'][^>]*>((?:[^<]+|<(?!\/a>))*)<\/a>/gi;
+  const links: Array<{url: string, text: string, type: string}> = [];
+  const uniqueUrls = new Set<string>();
+  let match;
+  
+  while ((match = linkRegex.exec(html)) !== null) {
+    const url = match[1];
+    const text = match[2].replace(/<[^>]+>/g, '').trim();
+    
+    if (!uniqueUrls.has(url) && !url.startsWith('#') && url !== 'javascript:void(0)') {
+      uniqueUrls.add(url);
+      
+      // Enhanced categorization
+      let type = 'other';
+      const combined = (url + ' ' + text).toLowerCase();
+      
+      if (url.includes('github.com') || url.includes('gitlab.com')) {
+        type = 'github';
+      } else if (url.includes('coindesk.com') || url.includes('decrypt.co') || url.includes('cointelegraph.com')) {
+        type = 'news';
+      } else if (url.includes('twitter.com') || url.includes('x.com') || url.includes('telegram') || url.includes('discord')) {
+        type = 'social';
+      } else if (/docs|documentation|whitepaper|guide|tutorial|developer|build|resources|learn|api/.test(combined)) {
+        type = 'documentation';
+      } else if (/about|team|partners|investors/.test(combined)) {
+        type = 'about';
+      } else if (/blog|news|updates|announcements/.test(combined)) {
+        type = 'blog';
+      }
+      
+      links.push({ 
+        url, 
+        text: text || 'No text', 
+        type
+      });
+    }
+  }
+  
+  return links;
+}
+
 // Function to parse HTML and extract content with enhanced detection
-function parseHtmlContent(html: string) {
+async function parseHtmlContent(html: string) {
   // Extract text content (remove scripts and styles first)
   const cleanHtml = html
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove scripts
@@ -122,51 +244,33 @@ function parseHtmlContent(html: string) {
     }
   }
   
-  // Extract ALL links with their text context
-  const linkRegex = /<a[^>]*href=["']([^"']+)["'][^>]*>([^<]*)<\/a>/gi;
-  const linksWithContext: Array<{url: string, text: string, type: string}> = [];
-  const uniqueUrls = new Set<string>();
-  let match;
+  // HYBRID APPROACH: Use regex first, then AI-enhance for better performance
+  const linksWithContext: Array<{url: string, text: string, type: string}> = fallbackRegexExtraction(cleanHtml);
   
-  while ((match = linkRegex.exec(cleanHtml)) !== null) {
-    const url = match[1];
-    const text = match[2].replace(/<[^>]+>/g, '').trim();
+  // Update features based on discovered links
+  linksWithContext.forEach(link => {
+    const url = link.url.toLowerCase();
+    const text = link.text.toLowerCase();
+    const combined = url + ' ' + text;
     
-    // Skip duplicates and anchors
-    if (!uniqueUrls.has(url) && !url.startsWith('#')) {
-      uniqueUrls.add(url);
-      
-      // Enhanced categorization with better patterns
-      let type = 'other';
-      if (/docs|documentation|whitepaper|guide|tutorial|developer|build|resources|learn|api/i.test(url + ' ' + text)) {
-        type = 'documentation';
-        features.hasDocs = true;
-      } else if (url.includes('github.com') || url.includes('gitlab.com')) {
-        type = 'github';
-        features.hasGitHub = true;
-      } else if (/twitter|x\.com|telegram|discord|medium|reddit|linkedin/i.test(url)) {
-        type = 'social';
-      } else if (/about|team|partners|investors/i.test(url + ' ' + text)) {
-        type = 'about';
-        if (/team/i.test(url + ' ' + text)) features.hasTeam = true;
-      } else if (/blog|news|updates|announcements/i.test(url + ' ' + text)) {
-        type = 'blog';
-      } else if (/whitepaper|litepaper/i.test(url + ' ' + text)) {
-        type = 'documentation';
-        features.hasWhitepaper = true;
-      } else if (/roadmap/i.test(url + ' ' + text)) {
-        features.hasRoadmap = true;
-      } else if (/tokenomics/i.test(url + ' ' + text)) {
-        features.hasTokenomics = true;
-      }
-      
-      linksWithContext.push({ url, text: text || 'No text', type });
+    if (link.type === 'github' || url.includes('github.com')) {
+      features.hasGitHub = true;
+    } else if (link.type === 'documentation' || /docs|documentation|whitepaper|guide|tutorial|developer|build|resources|learn|api/.test(combined)) {
+      features.hasDocs = true;
+      if (/whitepaper|litepaper/.test(combined)) features.hasWhitepaper = true;
+    } else if (/team/.test(combined)) {
+      features.hasTeam = true;
+    } else if (/roadmap/.test(combined)) {
+      features.hasRoadmap = true;
+    } else if (/tokenomics/.test(combined)) {
+      features.hasTokenomics = true;
     }
-  }
+  });
   
   // Also extract button links (modern sites use buttons for navigation)
   const buttonRegex = /<button[^>]*onclick=["'][^"']*["'][^>]*>([^<]*)<\/button>/gi;
   const buttonTexts: string[] = [];
+  let match;
   while ((match = buttonRegex.exec(cleanHtml)) !== null) {
     const buttonText = match[1].replace(/<[^>]+>/g, '').trim();
     if (buttonText) buttonTexts.push(buttonText);
@@ -527,7 +631,7 @@ IMPORTANT: Extract signals EXACTLY as they appear. Do NOT score or rate anything
     }
     
     // Add parsed content with links - this was missing!
-    const parsedContent = parseHtmlContent(html);
+    const parsedContent = await parseHtmlContent(html);
     result.parsed_content = parsedContent;
     
     return result;
