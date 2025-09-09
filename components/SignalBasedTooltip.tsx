@@ -746,6 +746,64 @@ export function SignalBasedTooltip({
                 
                 {showLinksSection && (
                   <div className="mt-2 space-y-3 max-h-[300px] overflow-y-auto">
+                    {/* Selected for Stage 2 section at top */}
+                    {(() => {
+                      const selectedLinks = Object.entries(linksData)
+                        .flatMap(([type, links]) => 
+                          links.filter(l => l.selected).map(l => ({ ...l, type }))
+                        );
+                      
+                      if (selectedLinks.length > 0) {
+                        return (
+                          <div className="bg-[#001a0d] p-3 rounded border border-[#00ff88]/30 mb-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-[#00ff88]">
+                                ✓ Selected for Stage 2 ({selectedLinks.length})
+                              </span>
+                            </div>
+                            <div className="space-y-1">
+                              {selectedLinks.map((link, idx) => {
+                                const displayUrl = link.url.length > 50 ? 
+                                  link.url.substring(0, 47) + '...' : 
+                                  link.url;
+                                const displayText = link.text && link.text !== 'No text' && link.text.length > 30 ?
+                                  link.text.substring(0, 27) + '...' :
+                                  link.text;
+                                const typeColor = link.type === 'github' ? 'text-[#8b5cf6]' : 
+                                                 link.type === 'documentation' ? 'text-[#10b981]' :
+                                                 link.type === 'social' ? 'text-[#3b82f6]' : 'text-[#6b7280]';
+                                
+                                return (
+                                  <div key={idx} className="flex items-start gap-2 text-[9px]">
+                                    <div className="flex-shrink-0 mt-0.5">
+                                      <span className="text-[#00ff88]">✓</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2">
+                                        <div className="text-[#aaa] font-mono truncate flex-1">
+                                          {displayUrl}
+                                        </div>
+                                        <span className={`text-[8px] px-1.5 py-0.5 rounded ${typeColor} bg-current/10`}>
+                                          {link.type}
+                                        </span>
+                                      </div>
+                                      {displayText && displayText !== 'No text' && (
+                                        <div className="text-[#666] italic truncate mt-0.5">
+                                          &ldquo;{displayText}&rdquo;
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+                    
+                    {/* All discovered links sections */}
                     {Object.entries(linksData).map(([type, links]) => {
                       const selectedCount = links.filter(l => l.selected).length;
                       const typeColor = type === 'github' ? 'text-[#8b5cf6]' : 
