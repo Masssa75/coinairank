@@ -356,55 +356,33 @@ export function SignalBasedTooltip({
                       (tooltip?.cons ? tooltip.cons.slice(0, 2) : null) ||
                       redFlags.filter(r => r.severity === 'high').slice(0, 2).map(r => r.flag);
 
-  // Process links for admin section
+  // Process links for admin section  
   const processLinksData = () => {
     if (!websiteAnalysis?.parsed_content?.links_with_context) return null;
     
     const discoveredLinks = websiteAnalysis.parsed_content.links_with_context;
-    const stage2 = stage2Resources || {};
+    const stage2Links = websiteAnalysis.stage_2_links || [];
     
-    // Collect all Stage 2 selected URLs from different categories
-    const selectedUrls = new Set<string>();
+    // Create a map of selected URLs with their reasoning
+    const selectedUrlsMap = new Map<string, string>();
+    stage2Links.forEach((link: {url: string, reasoning: string}) => {
+      selectedUrlsMap.set(link.url, link.reasoning);
+    });
     
-    // Add GitHub repos
-    if (stage2.github_repos?.length) {
-      stage2.github_repos.forEach((url: string) => selectedUrls.add(url));
-    }
-    
-    // Add documentation URLs
-    if (stage2.documentation) {
-      Object.values(stage2.documentation).forEach((url: any) => {
-        if (typeof url === 'string') selectedUrls.add(url);
-      });
-    }
-    
-    // Add audit URLs
-    if (stage2.audits?.length) {
-      stage2.audits.forEach((audit: any) => {
-        if (audit.url) selectedUrls.add(audit.url);
-      });
-    }
-    
-    // Add team profile URLs
-    if (stage2.team_profiles?.length) {
-      stage2.team_profiles.forEach((profile: any) => {
-        if (profile.linkedin) selectedUrls.add(profile.linkedin);
-        if (profile.twitter) selectedUrls.add(profile.twitter);
-      });
-    }
-    
-    // Group links by type and add selection status
-    const linksByType: Record<string, Array<{url: string, text: string, selected: boolean}>> = {};
+    // Group links by type and add selection status with reasoning
+    const linksByType: Record<string, Array<{url: string, text: string, selected: boolean, reasoning?: string}>> = {};
     
     discoveredLinks.forEach((link: {url: string, text: string, type: string}) => {
       if (!linksByType[link.type]) {
         linksByType[link.type] = [];
       }
       
+      const isSelected = selectedUrlsMap.has(link.url);
       linksByType[link.type].push({
         url: link.url,
         text: link.text,
-        selected: selectedUrls.has(link.url)
+        selected: isSelected,
+        reasoning: isSelected ? selectedUrlsMap.get(link.url) : undefined
       });
     });
     
@@ -761,7 +739,7 @@ export function SignalBasedTooltip({
                                 ✓ Selected for Stage 2 ({selectedLinks.length})
                               </span>
                             </div>
-                            <div className="space-y-1">
+                            <div className="space-y-2">
                               {selectedLinks.map((link, idx) => {
                                 const displayUrl = link.url.length > 50 ? 
                                   link.url.substring(0, 47) + '...' : 
@@ -774,24 +752,32 @@ export function SignalBasedTooltip({
                                                  link.type === 'social' ? 'text-[#3b82f6]' : 'text-[#6b7280]';
                                 
                                 return (
-                                  <div key={idx} className="flex items-start gap-2 text-[9px]">
-                                    <div className="flex-shrink-0 mt-0.5">
-                                      <span className="text-[#00ff88]">✓</span>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2">
-                                        <div className="text-[#aaa] font-mono truncate flex-1">
-                                          {displayUrl}
-                                        </div>
-                                        <span className={`text-[8px] px-1.5 py-0.5 rounded ${typeColor} bg-current/10`}>
-                                          {link.type}
-                                        </span>
+                                  <div key={idx} className="text-[9px]">
+                                    <div className="flex items-start gap-2">
+                                      <div className="flex-shrink-0 mt-0.5">
+                                        <span className="text-[#00ff88]">✓</span>
                                       </div>
-                                      {displayText && displayText !== 'No text' && (
-                                        <div className="text-[#666] italic truncate mt-0.5">
-                                          &ldquo;{displayText}&rdquo;
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <div className="text-[#aaa] font-mono truncate flex-1">
+                                            {displayUrl}
+                                          </div>
+                                          <span className={`text-[8px] px-1.5 py-0.5 rounded ${typeColor} bg-current/10`}>
+                                            {link.type}
+                                          </span>
                                         </div>
-                                      )}
+                                        {displayText && displayText !== 'No text' && (
+                                          <div className="text-[#666] italic truncate mt-0.5">
+                                            &ldquo;{displayText}&rdquo;
+                                          </div>
+                                        )}
+                                        {/* Show reasoning for why this link was selected */}
+                                        {link.reasoning && (
+                                          <div className="text-[#888] text-[8px] mt-1 pl-2 border-l border-[#00ff88]/30">
+                                            💡 {link.reasoning}
+                                          </div>
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
                                 );

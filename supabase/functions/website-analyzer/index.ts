@@ -332,14 +332,15 @@ CONTRACT VERIFICATION:
 Search for this exact contract address: ${contractAddress}
 Check everywhere - text, buttons, links, explorer URLs, hidden elements.
 
-EXTRACT RESOURCES:
-Find ALL resources for Stage 2 verification:
-- Smart contract addresses (with network and type)
-- Code repositories
-- Team member profiles (name, role, professional links)
-- Documentation (technical docs, whitepapers)
-- Audit reports (firm, URL, findings)
-- Social channels (all platforms)
+STEP 1: List all links found in the HTML.
+
+STEP 2: Stage 2 Analysis will scrape selected links to assess how legitimate and well-developed this project is.
+
+From your discovered links, select the most valuable ones for Stage 2 analysis. 
+
+For each selected link, explain WHY you chose it:
+- What information this link likely contains
+- How it helps assess project legitimacy/development quality
 
 DETERMINE TYPE:
 Is this a meme token (focus on community/viral) or utility token (real use case)?
@@ -412,41 +413,12 @@ Return detailed JSON with ONLY EXTRACTION (NO SCORES):
     "main_concerns": ["up to 2 biggest red flags, brief"]
   },
   
-  "stage_2_resources": {
-    "contract_addresses": [
-      {
-        "address": "full address",
-        "network": "ethereum/base/solana/etc",
-        "type": "token/liquidity/staking"
-      }
-    ],
-    "github_repos": ["urls"],
-    "team_profiles": [
-      {
-        "name": "name if found",
-        "role": "role",
-        "linkedin": "url if found",
-        "twitter": "url if found"
-      }
-    ],
-    "documentation": {
-      "whitepaper": "url if found",
-      "gitbook": "url if found",
-      "technical_docs": "url if found"
-    },
-    "audits": [
-      {
-        "auditor": "company name",
-        "url": "audit link",
-        "report": "report url if available"
-      }
-    ],
-    "social_channels": {
-      "twitter": "url",
-      "telegram": "url",
-      "discord": "url"
+  "stage_2_links": [
+    {
+      "url": "discovered link url",
+      "reasoning": "why this link was selected for Stage 2 analysis"
     }
-  }
+  ]
 }
 
 IMPORTANT: Extract signals EXACTLY as they appear. Do NOT score or rate anything - only extract and categorize.`;

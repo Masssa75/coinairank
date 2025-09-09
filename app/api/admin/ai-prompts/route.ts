@@ -32,14 +32,15 @@ export async function GET() {
     
     // Extract current signal-based scoring from the prompt
     const tier1SignalsMatch = promptTemplate.match(/🎯 TIER 1 SIGNALS.*?:([\s\S]*?)🔍 DEEP DIVE/);
-    const extractResourcesMatch = promptTemplate.match(/EXTRACT RESOURCES:([\s\S]*?)DETERMINE TYPE:/);
-    const stage2ResourcesMatch = promptTemplate.match(/"stage_2_resources": \{([\s\S]*?)\}/);
+    const step1Step2Match = promptTemplate.match(/STEP 1:([\s\S]*?)STEP 2:([\s\S]*?)From your discovered links/);
+    const stage2LinksMatch = promptTemplate.match(/"stage_2_links": \[([\s\S]*?)\]/);
     
     const scoringInfo = {
       tier1Signals: tier1SignalsMatch ? tier1SignalsMatch[1].trim().split('\n').filter(line => line.trim().startsWith('-')).map(line => line.trim()) : [],
-      extractionInstructions: extractResourcesMatch ? extractResourcesMatch[1].trim().split('\n').filter(line => line.trim().startsWith('-')).map(line => line.trim()) : [],
-      stage2Structure: stage2ResourcesMatch ? stage2ResourcesMatch[1].trim() : 'Not found',
-      currentFocus: 'Extraction-only (Phase 1) - No scoring in this prompt'
+      step1Instructions: step1Step2Match ? step1Step2Match[1].trim() : 'Not found',
+      step2Instructions: step1Step2Match ? step1Step2Match[2].trim() : 'Not found', 
+      stage2Structure: stage2LinksMatch ? `"stage_2_links": [${stage2LinksMatch[1].trim()}]` : 'Not found',
+      currentFocus: 'Stage 2 Link Selection (Phase 1) - 2-step process with reasoning'
     };
     
     // Extract the parseHtmlContent function to show what data is extracted
