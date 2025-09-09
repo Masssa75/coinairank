@@ -1,13 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
+
+// Verify admin authentication
+function verifyAdmin(request: NextRequest): boolean {
+  const authCookie = request.cookies.get('admin_auth');
+  if (!authCookie) return false;
+  
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) return false;
+  
+  const expectedToken = crypto
+    .createHash('sha256')
+    .update(adminPassword + (process.env.ADMIN_SECRET || 'default-secret'))
+    .digest('hex');
+    
+  return authCookie.value === expectedToken;
+}
 
 export async function DELETE(request: NextRequest) {
   try {
     // Check admin authentication
-    const authHeader = request.headers.get('cookie');
-    const isAuthenticated = authHeader?.includes('admin-authenticated=true');
-    
-    if (!isAuthenticated) {
+    if (!verifyAdmin(request)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -17,10 +31,17 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
     }
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-    
-    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+    // Initialize Supabase client with service role key
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
 
     // Delete the project from the database
     const { error } = await supabase
