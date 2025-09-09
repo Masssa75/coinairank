@@ -485,13 +485,12 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
               {isSubmitting ? 'Checking Token...' : 'Add Token'}
             </button>
           )}
-        </form>
+          </form>
 
-        <p className="mt-4 text-xs text-gray-500 text-center">
-          Token must be listed on a DEX with at least $100 liquidity
-        </p>
+          <p className="mt-4 text-xs text-gray-500 text-center">
+            Token must be listed on a DEX with at least $100 liquidity
+          </p>
         )}
-        
       </div>
     </div>
   );
