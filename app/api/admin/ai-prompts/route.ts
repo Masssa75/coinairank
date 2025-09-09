@@ -21,8 +21,8 @@ export async function GET() {
     const fileContent = fs.readFileSync(edgeFunctionPath, 'utf-8');
     
     // Extract the prompt from the analyzeWithAI function
-    // Find the prompt variable assignment
-    const promptMatch = fileContent.match(/const prompt = `([\s\S]*?)`;/);
+    // Find the EXTRACTION_PROMPT variable assignment
+    const promptMatch = fileContent.match(/const EXTRACTION_PROMPT = `([\s\S]*?)`;/);
     
     if (!promptMatch) {
       return NextResponse.json({ error: 'Could not find prompt in edge function' }, { status: 404 });
@@ -32,19 +32,14 @@ export async function GET() {
     
     // Extract current signal-based scoring from the prompt
     const tier1SignalsMatch = promptTemplate.match(/🎯 TIER 1 SIGNALS.*?:([\s\S]*?)🔍 DEEP DIVE/);
-    const scoringScaleMatch = promptTemplate.match(/CRITICAL - Score based on SUCCESS LIKELIHOOD INDICATORS:([\s\S]*?)Project:/);
-    const tierClassMatch = promptTemplate.match(/"tier": "TRASH\(.*?\)/);
+    const extractResourcesMatch = promptTemplate.match(/EXTRACT RESOURCES:([\s\S]*?)DETERMINE TYPE:/);
+    const stage2ResourcesMatch = promptTemplate.match(/"stage_2_resources": \{([\s\S]*?)\}/);
     
     const scoringInfo = {
       tier1Signals: tier1SignalsMatch ? tier1SignalsMatch[1].trim().split('\n').filter(line => line.trim().startsWith('-')).map(line => line.trim()) : [],
-      scoringScale: scoringScaleMatch ? scoringScaleMatch[1].trim().split('\n').filter(line => line.trim().startsWith('-')).map(line => line.trim()) : [],
-      tierClassifications: [
-        'TRASH (0-29): Poor quality, likely scam or very low effort',
-        'BASIC (30-59): Some effort, but missing key elements', 
-        'SOLID (60-84): Good quality, professional, most elements present',
-        'ALPHA (85-100): Exceptional success indicators, moon potential',
-        'DEAD: Website not accessible or parking page'
-      ]
+      extractionInstructions: extractResourcesMatch ? extractResourcesMatch[1].trim().split('\n').filter(line => line.trim().startsWith('-')).map(line => line.trim()) : [],
+      stage2Structure: stage2ResourcesMatch ? stage2ResourcesMatch[1].trim() : 'Not found',
+      currentFocus: 'Extraction-only (Phase 1) - No scoring in this prompt'
     };
     
     // Extract the parseHtmlContent function to show what data is extracted
