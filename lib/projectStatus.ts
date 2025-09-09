@@ -223,12 +223,12 @@ function getAdminProjectStages(project: any, status: ProjectStatus): ProjectStag
   // Set stage status based on ACTUAL database fields
   if (status.hasError) {
     // Handle error states - mark current stage as failed based on actual progress
-    if (progress <= 25) {
+    if (status.progress <= 25) {
       stages[0].status = 'failed'; // Website discovery failed
-    } else if (progress <= 50) {
+    } else if (status.progress <= 50) {
       stages[0].status = 'complete';
       stages[1].status = 'failed'; // Scraping failed
-    } else if (progress <= 75) {
+    } else if (status.progress <= 75) {
       stages[0].status = 'complete';
       stages[1].status = 'complete'; 
       stages[2].status = 'failed'; // AI analysis failed
