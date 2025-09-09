@@ -320,6 +320,18 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
               </div>
             )}
 
+            {/* Debug Info for Admin */}
+            {isAdmin && submittedProject && (
+              <div className="bg-gray-800/50 rounded p-2 text-xs space-y-1">
+                <div className="text-gray-400 font-mono">Database Fields:</div>
+                <div className="text-yellow-400">website_url: {submittedProject.website_url ? '✓' : '✗'}</div>
+                <div className="text-blue-400">extraction_status: {submittedProject.extraction_status || 'null'}</div>
+                <div className="text-purple-400">comparison_status: {submittedProject.comparison_status || 'null'}</div>
+                <div className="text-green-400">website_stage1_score: {submittedProject.website_stage1_score ?? 'null'}</div>
+                <div className="text-orange-400">website_status: {submittedProject.website_status || 'null'}</div>
+              </div>
+            )}
+
             {/* Detailed Stage Progress */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -330,7 +342,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
                   </span>
                 )}
               </div>
-              <div className={`space-y-2 ${isAdmin ? 'max-h-64 overflow-y-auto pr-2 scrollbar-hide' : ''}`}>
+              <div className={`space-y-2 ${isAdmin ? 'max-h-48 overflow-y-auto pr-2 scrollbar-hide' : ''}`}>
                 {projectStages.map((stage, index) => (
                   <div key={stage.id} className="flex items-center gap-3">
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${

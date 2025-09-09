@@ -167,196 +167,112 @@ export function getProjectStatus(project: any): ProjectStatus {
 }
 
 function getAdminProjectStages(project: any, status: ProjectStatus): ProjectStage[] {
+  // Only show REAL database-tracked steps for admin
   const stages: ProjectStage[] = [
-    // Phase 1: Website Discovery & Validation (5-15%)
     {
       id: 'website_discovery',
       name: 'Website Discovery',
       icon: '🔍',
       status: 'pending',
-      estimatedDuration: '10-30s'
+      estimatedDuration: '30-60s',
+      dbField: 'website_url'
     },
     {
-      id: 'website_validation',
-      name: 'Website Validation',
-      icon: '✓',
-      status: 'pending', 
-      estimatedDuration: '5-10s'
-    },
-    
-    // Phase 2: Content Scraping (15-40%) - Most time consuming
-    {
-      id: 'scraping_main_page',
-      name: 'Scraping Main Page',
+      id: 'website_scraping',
+      name: 'Website Content Scraping',
       icon: '📄',
       status: 'pending',
-      estimatedDuration: '20-40s'
+      estimatedDuration: '1-2m',
+      dbField: 'extraction_status'
     },
     {
-      id: 'scraping_docs',
-      name: 'Scraping Documentation',
-      icon: '📚',
+      id: 'ai_analysis',
+      name: 'AI Content Analysis',
+      icon: '🧠',
       status: 'pending',
-      estimatedDuration: '30-60s'
+      estimatedDuration: '30-60s',
+      dbField: 'extraction_status:processing'
     },
     {
-      id: 'scraping_social',
-      name: 'Social Media Analysis',
-      icon: '🔗',
-      status: 'pending',
-      estimatedDuration: '15-30s'
-    },
-    {
-      id: 'content_extraction',
-      name: 'Content Extraction & Cleaning',
-      icon: '🧹',
-      status: 'pending',
-      estimatedDuration: '10-20s'
-    },
-    
-    // Phase 3: AI Analysis (40-75%)
-    {
-      id: 'ai_preprocessing',
-      name: 'AI Data Preprocessing',
-      icon: '⚙️',
-      status: 'pending',
-      estimatedDuration: '10-15s'
-    },
-    {
-      id: 'ai_technical_analysis',
-      name: 'Technical Analysis',
-      icon: '🔬',
-      status: 'pending',
-      estimatedDuration: '30-45s'
-    },
-    {
-      id: 'ai_sentiment_analysis',
-      name: 'Sentiment Analysis',
-      icon: '💭',
-      status: 'pending',
-      estimatedDuration: '20-30s'
-    },
-    {
-      id: 'ai_quality_assessment',
-      name: 'Quality Assessment',
-      icon: '📊',
-      status: 'pending',
-      estimatedDuration: '25-35s'
-    },
-    
-    // Phase 4: Benchmarking & Scoring (75-95%)
-    {
-      id: 'benchmark_comparison',
-      name: 'Benchmark Comparison',
+      id: 'benchmark_scoring',
+      name: 'Quality Benchmarking',
       icon: '⚖️',
       status: 'pending',
-      estimatedDuration: '15-20s'
+      estimatedDuration: '20-30s',
+      dbField: 'comparison_status'
     },
     {
-      id: 'score_calculation',
-      name: 'Score Calculation',
-      icon: '🧮',
-      status: 'pending',
-      estimatedDuration: '5-10s'
-    },
-    {
-      id: 'tier_assignment',
-      name: 'Tier Assignment',
+      id: 'score_finalization',
+      name: 'Score & Tier Assignment',
       icon: '🏆',
       status: 'pending',
-      estimatedDuration: '3-5s'
-    },
-    
-    // Phase 5: Finalization (95-100%)
-    {
-      id: 'data_validation',
-      name: 'Data Validation',
-      icon: '✅',
-      status: 'pending',
-      estimatedDuration: '5s'
-    },
-    {
-      id: 'database_update',
-      name: 'Database Update',
-      icon: '💾',
-      status: 'pending',
-      estimatedDuration: '3-5s'
+      estimatedDuration: '5-10s',
+      dbField: 'website_stage1_score'
     },
     {
       id: 'complete',
       name: 'Analysis Complete',
-      icon: '🎉',
+      icon: '✅',
       status: 'pending',
-      estimatedDuration: ''
+      estimatedDuration: '',
+      dbField: 'complete'
     }
   ];
 
-  // Map the current status to detailed admin stages
-  const progress = status.progress;
-  let activeStageIndex = 0;
-
-  if (progress >= 100) {
-    // All complete
-    stages.forEach(stage => stage.status = 'complete');
-  } else if (status.hasError) {
-    // Mark failed based on progress
-    const failureIndex = Math.floor((progress / 100) * stages.length);
-    stages.forEach((stage, index) => {
-      if (index < failureIndex) stage.status = 'complete';
-      else if (index === failureIndex) stage.status = 'failed';
-      else stage.status = 'pending';
-    });
-  } else {
-    // Normal progression
-    activeStageIndex = Math.min(Math.floor((progress / 100) * stages.length), stages.length - 1);
-    
-    // Mark stages based on progress
-    stages.forEach((stage, index) => {
-      if (index < activeStageIndex) {
-        stage.status = 'complete';
-      } else if (index === activeStageIndex) {
-        stage.status = 'in_progress';
-      } else {
-        stage.status = 'pending';
-      }
-    });
-  }
-
-  // Fine-tune based on known database fields
-  if (!project.website_url && progress < 15) {
-    // Still discovering website
-    stages[0].status = 'in_progress';
-  } else if (project.website_url && !project.extraction_status) {
-    // In scraping phase 
-    const scrapingStages = stages.slice(2, 6); // Main page through content extraction
-    const scrapingProgress = Math.min(Math.max(progress - 15, 0) / 25, 1); // 15-40% range
-    const activeScrapingIndex = Math.floor(scrapingProgress * scrapingStages.length);
-    
-    stages[0].status = 'complete'; // Website discovery done
-    stages[1].status = 'complete'; // Website validation done
-    
-    scrapingStages.forEach((stage, index) => {
-      if (index < activeScrapingIndex) stage.status = 'complete';
-      else if (index === activeScrapingIndex) stage.status = 'in_progress';
-      else stage.status = 'pending';
-    });
-  } else if (project.extraction_status === 'processing') {
-    // AI analysis phase
-    const aiStart = 6;
-    const aiEnd = 10;
-    const aiProgress = Math.min(Math.max(progress - 40, 0) / 35, 1); // 40-75% range
-    const activeAiIndex = Math.floor(aiProgress * (aiEnd - aiStart)) + aiStart;
-    
-    // Mark previous stages complete
-    for (let i = 0; i < aiStart; i++) {
-      stages[i].status = 'complete';
+  // Set stage status based on ACTUAL database fields
+  if (status.hasError) {
+    // Handle error states - mark current stage as failed based on actual progress
+    if (progress <= 25) {
+      stages[0].status = 'failed'; // Website discovery failed
+    } else if (progress <= 50) {
+      stages[0].status = 'complete';
+      stages[1].status = 'failed'; // Scraping failed
+    } else if (progress <= 75) {
+      stages[0].status = 'complete';
+      stages[1].status = 'complete'; 
+      stages[2].status = 'failed'; // AI analysis failed
+    } else {
+      stages[0].status = 'complete';
+      stages[1].status = 'complete';
+      stages[2].status = 'complete';
+      stages[3].status = 'failed'; // Benchmarking failed
     }
+  } else {
+    // Normal progression based on actual database field values
     
-    // Mark AI stages
-    for (let i = aiStart; i < aiEnd; i++) {
-      if (i < activeAiIndex) stages[i].status = 'complete';
-      else if (i === activeAiIndex) stages[i].status = 'in_progress';
-      else stages[i].status = 'pending';
+    // Stage 0: Website Discovery
+    if (!project.website_url) {
+      stages[0].status = 'in_progress';
+    } else {
+      stages[0].status = 'complete';
+      
+      // Stage 1: Website Scraping
+      if (!project.extraction_status) {
+        stages[1].status = 'in_progress';
+      } else if (project.extraction_status === 'processing') {
+        stages[1].status = 'complete';
+        stages[2].status = 'in_progress'; // Stage 2: AI Analysis
+      } else if (project.extraction_status === 'completed') {
+        stages[1].status = 'complete';
+        stages[2].status = 'complete';
+        
+        // Stage 3: Benchmark Scoring
+        if (!project.comparison_status) {
+          stages[3].status = 'in_progress';
+        } else if (project.comparison_status === 'processing') {
+          stages[3].status = 'in_progress';
+        } else if (project.comparison_status === 'completed') {
+          stages[3].status = 'complete';
+          
+          // Stage 4: Score Finalization
+          if (project.website_stage1_score === null || project.website_stage1_score === undefined) {
+            stages[4].status = 'in_progress';
+          } else {
+            stages[4].status = 'complete';
+            stages[5].status = 'complete'; // Stage 5: Complete
+          }
+        }
+      }
     }
   }
 
