@@ -577,16 +577,15 @@ Return detailed JSON with ONLY EXTRACTION (NO SCORES):
 IMPORTANT: Extract signals EXACTLY as they appear. Do NOT score or rate anything - only extract and categorize.`;
 
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const response = await fetch('https://api.moonshot.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://coinairank.com',
-        'X-Title': 'CAR Website Analyzer'
+        'Authorization': `Bearer ${Deno.env.get('KIMI_K2_API_KEY')}`,
+        'Content-Type': 'application/json'
       },
+      signal: AbortSignal.timeout(180000), // 3 minute timeout for AI analysis
       body: JSON.stringify({
-        model: 'moonshotai/kimi-k2',
+        model: 'kimi-k2-turbo-preview',
         messages: [
           {
             role: 'user',

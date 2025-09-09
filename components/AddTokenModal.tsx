@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { NETWORKS, type NetworkKey } from '@/lib/validation';
+import { getProjectStatus, getProjectStages, type ProjectStatus, type ProjectStage } from '@/lib/projectStatus';
 
 interface AddTokenModalProps {
   isOpen: boolean;
@@ -16,6 +17,9 @@ interface TokenResponse {
   warning?: boolean;
   needsWebsite?: boolean;
   error?: string;
+  tokenId?: number; // This is the projectId from the API
+  contractAddress?: string;
+  network?: string;
 }
 
 export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps) {
@@ -28,6 +32,92 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
   const [showWebsiteInput, setShowWebsiteInput] = useState(false);
   const [manualWebsiteUrl, setManualWebsiteUrl] = useState('');
   const [pendingTokenData, setPendingTokenData] = useState<{address: string, network: string, symbol?: string} | null>(null);
+  
+  // Progress tracking states
+  const [showProgressTracker, setShowProgressTracker] = useState(false);
+  const [submittedProject, setSubmittedProject] = useState<any>(null);
+  const [projectStatus, setProjectStatus] = useState<ProjectStatus | null>(null);
+  const [projectStages, setProjectStages] = useState<ProjectStage[]>([]);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+
+  // Fetch project status from database
+  const fetchProjectStatus = useCallback(async (projectId: number) => {
+    try {
+      const response = await fetch(`/api/crypto-projects-rated?id=${projectId}`);
+      if (!response.ok) return null;
+      
+      const data = await response.json();
+      const project = data.projects?.[0];
+      if (!project) return null;
+      
+      const status = getProjectStatus(project);
+      const stages = getProjectStages(project);
+      
+      setProjectStatus(status);
+      setProjectStages(stages);
+      setSubmittedProject(project);
+      
+      return status;
+    } catch (err) {
+      console.error('Error fetching project status:', err);
+      return null;
+    }
+  }, []);
+
+  // Start progress tracking polling
+  const startProgressTracking = useCallback((projectId: number, symbol: string, contractAddress: string, network: string) => {
+    setShowProgressTracker(true);
+    setSubmittedProject({ id: projectId, symbol, contract_address: contractAddress, network });
+    
+    // Initial status fetch
+    fetchProjectStatus(projectId);
+    
+    // Set up polling every 10 seconds
+    const interval = setInterval(async () => {
+      const status = await fetchProjectStatus(projectId);
+      if (status?.isComplete || status?.hasError) {
+        // Stop polling when complete or failed
+        clearInterval(interval);
+        setPollingInterval(null);
+      }
+    }, 10000);
+    
+    setPollingInterval(interval);
+  }, [fetchProjectStatus]);
+
+  // Cleanup polling on unmount or modal close
+  useEffect(() => {
+    if (!isOpen && pollingInterval) {
+      clearInterval(pollingInterval);
+      setPollingInterval(null);
+    }
+    
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [isOpen, pollingInterval]);
+
+  // Handle modal close - clean up progress tracking
+  const handleClose = () => {
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      setPollingInterval(null);
+    }
+    setShowProgressTracker(false);
+    setSubmittedProject(null);
+    setProjectStatus(null);
+    setProjectStages([]);
+    setError(null);
+    setSuccessMessage(null);
+    setWarningMessage(null);
+    setShowWebsiteInput(false);
+    setPendingTokenData(null);
+    setContractAddress('');
+    setManualWebsiteUrl('');
+    onClose();
+  };
 
   if (!isOpen) return null;
 
@@ -85,19 +175,35 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
         return;
       }
 
-      // Success - token was added
-      const successMsg = data.message || `Token ${data.symbol} added successfully!`;
-      setSuccessMessage(successMsg);
-      setContractAddress('');
-      setManualWebsiteUrl('');
-      setShowWebsiteInput(false);
-      setPendingTokenData(null);
-      
-      // Close modal after 2 seconds
-      setTimeout(() => {
-        onClose();
-        if (onSuccess) onSuccess();
-      }, 2000);
+      // Success - token was added, start progress tracking
+      if (data.tokenId && data.symbol) {
+        setError(null);
+        setSuccessMessage(null);
+        setWarningMessage(null);
+        setShowWebsiteInput(false);
+        setPendingTokenData(null);
+        
+        // Start progress tracking instead of closing modal
+        startProgressTracking(
+          data.tokenId,
+          data.symbol,
+          contractAddress.trim(),
+          network
+        );
+      } else {
+        // Fallback to old behavior if no projectId
+        const successMsg = data.message || `Token ${data.symbol} added successfully!`;
+        setSuccessMessage(successMsg);
+        setContractAddress('');
+        setManualWebsiteUrl('');
+        setShowWebsiteInput(false);
+        setPendingTokenData(null);
+        
+        setTimeout(() => {
+          handleClose();
+          if (onSuccess) onSuccess();
+        }, 2000);
+      }
 
     } catch (err) {
       console.error('Error submitting token:', err);
@@ -111,9 +217,11 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-[#0d0e10] border border-[#1a1c1f] rounded-lg p-6 max-w-md w-full mx-4">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-white">Add Token</h2>
+          <h2 className="text-xl font-bold text-white">
+            {showProgressTracker ? 'Processing Your Submission' : 'Add Token'}
+          </h2>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="text-gray-400 hover:text-white text-2xl leading-none"
             aria-label="Close"
           >
@@ -121,7 +229,137 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {showProgressTracker ? (
+          // Progress Tracker UI
+          <div className="space-y-6">
+            {/* Project Info Header */}
+            {submittedProject && (
+              <div className="bg-[#1a1c1f] rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-[#00ff88] rounded-full flex items-center justify-center">
+                    <span className="text-black font-bold text-sm">
+                      {submittedProject.symbol?.charAt(0) || '?'}
+                    </span>
+                  </div>
+                  <div>
+                    <div className="text-white font-semibold">
+                      {submittedProject.symbol || 'Unknown Token'}
+                    </div>
+                    <div className="text-gray-400 text-sm">
+                      {submittedProject.network?.charAt(0).toUpperCase() + submittedProject.network?.slice(1) || 'Unknown Network'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Progress Overview */}
+            {projectStatus && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-300">Analysis Progress</span>
+                  <span className="text-sm text-[#00ff88]">{projectStatus.progress}%</span>
+                </div>
+                <div className="w-full bg-[#1a1c1f] rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full transition-all duration-500 ${
+                      projectStatus.hasError ? 'bg-red-500' : 'bg-[#00ff88]'
+                    }`}
+                    style={{ width: `${projectStatus.progress}%` }}
+                  />
+                </div>
+                <div className={`text-sm ${projectStatus.hasError ? 'text-red-400' : 'text-gray-300'}`}>
+                  {projectStatus.message}
+                  {projectStatus.estimatedTimeRemaining && !projectStatus.isComplete && !projectStatus.hasError && (
+                    <span className="text-gray-500 ml-2">
+                      (~{projectStatus.estimatedTimeRemaining} remaining)
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Detailed Stage Progress */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium text-gray-300">Processing Stages</h3>
+              <div className="space-y-2">
+                {projectStages.map((stage, index) => (
+                  <div key={stage.id} className="flex items-center gap-3">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
+                      stage.status === 'complete' ? 'bg-[#00ff88] text-black' :
+                      stage.status === 'in_progress' ? 'bg-blue-500 text-white animate-pulse' :
+                      stage.status === 'failed' ? 'bg-red-500 text-white' :
+                      'bg-[#2a2d31] text-gray-500'
+                    }`}>
+                      {stage.status === 'complete' ? '✓' :
+                       stage.status === 'in_progress' ? stage.icon :
+                       stage.status === 'failed' ? '✗' :
+                       index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <div className={`text-sm ${
+                        stage.status === 'complete' ? 'text-[#00ff88]' :
+                        stage.status === 'in_progress' ? 'text-blue-400' :
+                        stage.status === 'failed' ? 'text-red-400' :
+                        'text-gray-400'
+                      }`}>
+                        {stage.name}
+                        {stage.status === 'in_progress' && (
+                          <span className="ml-2 text-xs text-gray-500">
+                            {stage.estimatedDuration}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-4">
+              {projectStatus?.isComplete ? (
+                <button
+                  onClick={() => {
+                    handleClose();
+                    if (onSuccess) onSuccess();
+                  }}
+                  className="flex-1 py-2 px-4 rounded-lg font-medium bg-[#00ff88] text-black hover:bg-[#00cc66] transition-colors"
+                >
+                  View Project
+                </button>
+              ) : projectStatus?.hasError ? (
+                <button
+                  onClick={() => setShowProgressTracker(false)}
+                  className="flex-1 py-2 px-4 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                >
+                  Try Another Token
+                </button>
+              ) : (
+                <div className="flex-1 text-center text-gray-400 text-sm py-2">
+                  Keep this window open to track progress...
+                </div>
+              )}
+              
+              <button
+                onClick={handleClose}
+                className="py-2 px-4 rounded-lg font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+
+            {/* Error Details */}
+            {projectStatus?.hasError && projectStatus.errorMessage && (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-red-400 text-sm">
+                <div className="font-medium mb-1">Analysis Failed</div>
+                {projectStatus.errorMessage}
+              </div>
+            )}
+          </div>
+        ) : (
+          // Original Form UI
+          <form onSubmit={handleSubmit} className="space-y-4">
           {/* Network Selection */}
           <div>
             <label htmlFor="network" className="block text-sm font-medium text-gray-300 mb-1">
@@ -252,6 +490,8 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
         <p className="mt-4 text-xs text-gray-500 text-center">
           Token must be listed on a DEX with at least $100 liquidity
         </p>
+        )}
+        
       </div>
     </div>
   );
