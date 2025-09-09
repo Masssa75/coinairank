@@ -279,7 +279,6 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
             <div className="flex items-center justify-between">
               <h1 className="text-[32px] font-black tracking-[4px] text-[#00ff88] mb-1">CAR</h1>
             </div>
-            <p className="text-[#666] text-xs">High-Quality Crypto Projects</p>
             
             {/* Collapse Button - Inside the header */}
             <button
