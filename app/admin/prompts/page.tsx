@@ -9,8 +9,9 @@ interface PromptsData {
   promptTemplate: string;
   scoringInfo: {
     tier1Signals: string[];
-    scoringScale: string[];
-    tierClassifications: string[];
+    extractionInstructions: string[];
+    stage2Structure: string;
+    currentFocus: string;
   };
   config: Record<string, any>;
   lastModified: string;
@@ -195,27 +196,32 @@ export default function AdminPromptsPage() {
                 </div>
                 
                 <div>
-                  <h3 className="text-[#ff8800] font-semibold mb-2">📊 Success Likelihood Indicators</h3>
+                  <h3 className="text-[#ff8800] font-semibold mb-2">📦 Resource Extraction Instructions</h3>
                   <ul className="space-y-1">
-                    {promptsData.scoringInfo.scoringScale.map((scale, i) => (
-                      <li key={i} className="text-[#888] text-sm font-mono pl-4">{scale}</li>
+                    {promptsData.scoringInfo.extractionInstructions.map((instruction, i) => (
+                      <li key={i} className="text-[#888] text-sm font-mono pl-4">{instruction}</li>
                     ))}
                   </ul>
+                </div>
+                
+                <div>
+                  <h3 className="text-[#8b5cf6] font-semibold mb-2">🔧 Current Focus</h3>
+                  <p className="text-[#888] text-sm font-mono pl-4">{promptsData.scoringInfo.currentFocus}</p>
                 </div>
               </div>
             </div>
 
-            {/* Tier Classifications */}
+            {/* Stage 2 Structure */}
             <div className="bg-[#111214] border border-[#2a2d31] rounded-xl p-6">
               <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
                 <span className="w-2 h-2 bg-[#ff8800] rounded-full"></span>
-                Tier Classifications
+                Stage 2 Resources Structure
               </h2>
-              <ul className="space-y-2">
-                {promptsData.scoringInfo.tierClassifications.map((tier, i) => (
-                  <li key={i} className="text-[#888] font-mono text-sm pl-4">• {tier}</li>
-                ))}
-              </ul>
+              <div className="bg-[#0a0b0d] border border-[#2a2d31] rounded-lg p-4 overflow-x-auto">
+                <pre className="text-[#888] text-xs font-mono whitespace-pre-wrap">
+                  {promptsData.scoringInfo.stage2Structure}
+                </pre>
+              </div>
             </div>
           </div>
         )}
