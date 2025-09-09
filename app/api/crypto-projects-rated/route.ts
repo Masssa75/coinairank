@@ -27,10 +27,38 @@ export async function GET(request: NextRequest) {
     const includeUnverified = searchParams.get('includeUnverified') === 'true';
     const includeImposters = searchParams.get('includeImposters') === 'true';
     const reprocessedOnly = searchParams.get('reprocessedOnly') === 'true';
+    const projectId = searchParams.get('id'); // Add support for specific project ID
     
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
     
-    // Build query
+    // If requesting a specific project by ID, return just that project
+    if (projectId) {
+      const { data: project, error } = await supabase
+        .from('crypto_projects_rated')
+        .select('*')
+        .eq('id', parseInt(projectId))
+        .single();
+
+      if (error) {
+        console.error('Error fetching project by ID:', error);
+        return NextResponse.json({ 
+          error: 'Project not found',
+          projects: [],
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: 1 
+        }, { status: 404 });
+      }
+
+      return NextResponse.json({
+        projects: [project],
+        totalCount: 1,
+        totalPages: 1,
+        currentPage: 1
+      });
+    }
+    
+    // Build query for general listing
     let query = supabase
       .from('crypto_projects_rated')
       .select('*', { count: 'exact' });

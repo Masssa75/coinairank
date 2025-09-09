@@ -489,7 +489,7 @@ STEP 1: List all links found in the HTML.
 
 STEP 2: Stage 2 Analysis will scrape selected links to assess how legitimate and well-developed this project is.
 
-From your discovered links, select the most valuable ones for Stage 2 analysis. 
+From your discovered links, select ALL links that would provide substantial value for Stage 2 analysis. Include ANY link that contains meaningful project information - don't limit yourself to just a few. Better to include more comprehensive coverage than miss important details.
 
 For each selected link, explain WHY you chose it:
 - What information this link likely contains
