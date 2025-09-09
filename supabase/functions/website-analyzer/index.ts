@@ -22,6 +22,35 @@ const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_KEY!, {
   }
 });
 
+// Telegram notification helper
+async function sendTelegramNotification(message: string) {
+  try {
+    const telegramBotToken = Deno.env.get('TELEGRAM_BOT_TOKEN_CAR');
+    const telegramChatId = Deno.env.get('TELEGRAM_GROUP_ID_CAR');
+    
+    if (!telegramBotToken || !telegramChatId) {
+      console.log('Telegram credentials not configured, skipping notification');
+      return;
+    }
+    
+    await fetch(`https://api.telegram.org/bot${telegramBotToken}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: telegramChatId,
+        text: message,
+        parse_mode: 'Markdown',
+        disable_web_page_preview: true
+      })
+    });
+    
+    console.log('Telegram notification sent successfully');
+  } catch (error) {
+    console.error('Failed to send Telegram notification:', error);
+    // Don't throw - notification failure shouldn't break the main function
+  }
+}
+
 // Function to scrape website - always uses Browserless for consistency
 async function scrapeWebsite(url: string) {
   try {
@@ -40,19 +69,29 @@ async function scrapeWebsite(url: string) {
       },
       body: JSON.stringify({
         url: url,
-        waitForTimeout: 5000, // Wait 5 seconds for JS to render
-        waitForSelector: { selector: 'body', timeout: 5000 }, // Object format for selector
+        waitForTimeout: 8000, // Wait 8 seconds for JS to render
+        waitForSelector: { selector: 'body', timeout: 8000 }, // Object format for selector
         bestAttempt: true, // Continue even if selector not found
         rejectResourceTypes: ['image', 'media', 'font'], // Speed up by not loading these
         userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       }),
-      signal: AbortSignal.timeout(30000) // 30 second timeout for Browserless
+      signal: AbortSignal.timeout(120000) // 2 minute timeout for Browserless
     });
 
     if (!browserlessResponse.ok) {
       const errorText = await browserlessResponse.text();
       const errorMessage = `Browserless failed with status ${browserlessResponse.status}: ${errorText}`;
       console.error(errorMessage);
+      
+      // Send Telegram notification for Browserless failure
+      await sendTelegramNotification(
+        `🚨 *Website Analyzer Error*\n\n` +
+        `*Type:* Browserless Scraping Failure\n` +
+        `*URL:* ${url}\n` +
+        `*Status:* ${browserlessResponse.status}\n` +
+        `*Time:* ${new Date().toISOString()}`
+      );
+      
       return { html: '', status: 'error', reason: errorMessage };
     }
 
@@ -69,6 +108,16 @@ async function scrapeWebsite(url: string) {
     return { html, status: 'success' };
   } catch (error) {
     console.error(`Error scraping website: ${error}`);
+    
+    // Send Telegram notification for scraping error
+    await sendTelegramNotification(
+      `🚨 *Website Analyzer Error*\n\n` +
+      `*Type:* Scraping Exception\n` +
+      `*URL:* ${url}\n` +
+      `*Error:* ${error.message || error}\n` +
+      `*Time:* ${new Date().toISOString()}`
+    );
+    
     return { html: '', status: 'error', reason: `Scraping failed: ${error}` };
   }
 }
@@ -553,6 +602,17 @@ IMPORTANT: Extract signals EXACTLY as they appear. Do NOT score or rate anything
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`AI analysis failed: ${response.status} - ${errorText}`);
+      
+      // Send Telegram notification for AI analysis failure
+      await sendTelegramNotification(
+        `🚨 *Website Analyzer Error*\n\n` +
+        `*Type:* AI Analysis Failure\n` +
+        `*Symbol:* ${ticker}\n` +
+        `*Status:* ${response.status}\n` +
+        `*Model:* kimi-k2\n` +
+        `*Time:* ${new Date().toISOString()}`
+      );
+      
       throw new Error(`AI analysis failed: ${response.status}`);
     }
 
@@ -637,6 +697,17 @@ IMPORTANT: Extract signals EXACTLY as they appear. Do NOT score or rate anything
     return result;
   } catch (error) {
     console.error(`AI analysis error: ${error}`);
+    
+    // Send Telegram notification for AI analysis exception
+    await sendTelegramNotification(
+      `🚨 *Website Analyzer Error*\n\n` +
+      `*Type:* AI Analysis Exception\n` +
+      `*Symbol:* ${ticker}\n` +
+      `*Error:* ${error.message || error}\n` +
+      `*Model:* kimi-k2\n` +
+      `*Time:* ${new Date().toISOString()}`
+    );
+    
     throw error;
   }
 }
@@ -749,6 +820,17 @@ TIER RANGES:
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Phase 2 comparison failed: ${response.status} - ${errorText}`);
+      
+      // Send Telegram notification for Phase 2 failure
+      await sendTelegramNotification(
+        `🚨 *Website Analyzer Error*\n\n` +
+        `*Type:* Phase 2 Comparison Failure\n` +
+        `*Symbol:* ${symbol}\n` +
+        `*Status:* ${response.status}\n` +
+        `*Model:* kimi-k2\n` +
+        `*Time:* ${new Date().toISOString()}`
+      );
+      
       throw new Error(`Phase 2 comparison failed: ${response.status}`);
     }
 
@@ -786,6 +868,17 @@ TIER RANGES:
     return result;
   } catch (error) {
     console.error(`Phase 2 comparison error: ${error}`);
+    
+    // Send Telegram notification for Phase 2 exception
+    await sendTelegramNotification(
+      `🚨 *Website Analyzer Error*\n\n` +
+      `*Type:* Phase 2 Comparison Exception\n` +
+      `*Symbol:* ${symbol}\n` +
+      `*Error:* ${error.message || error}\n` +
+      `*Model:* kimi-k2\n` +
+      `*Time:* ${new Date().toISOString()}`
+    );
+    
     throw error;
   }
 }
@@ -890,6 +983,16 @@ serve(async (req) => {
       
       if (updateError) {
         console.error(`Failed to update Phase 2 results: ${updateError.message}`);
+        
+        // Send Telegram notification for Phase 2 database update failure
+        await sendTelegramNotification(
+          `🚨 *Website Analyzer Error*\n\n` +
+          `*Type:* Phase 2 Database Update Failed\n` +
+          `*Symbol:* ${symbol}\n` +
+          `*Error:* ${updateError.message}\n` +
+          `*Time:* ${new Date().toISOString()}`
+        );
+        
         return new Response(
           JSON.stringify({
             success: false,
@@ -1233,6 +1336,15 @@ serve(async (req) => {
           console.error(`Database update FAILED:`, error);
           console.error('Error details:', JSON.stringify(error, null, 2));
           
+          // Send Telegram notification for Phase 1 database update failure
+          await sendTelegramNotification(
+            `🚨 *Website Analyzer Error*\n\n` +
+            `*Type:* Phase 1 Database Update Failed\n` +
+            `*Symbol:* ${symbol}\n` +
+            `*Error:* ${error.message}\n` +
+            `*Time:* ${new Date().toISOString()}`
+          );
+          
           // Update response data with error status
           responseData.database_update.attempted = true;
           responseData.database_update.success = false;
@@ -1287,6 +1399,15 @@ serve(async (req) => {
       } catch (err) {
         updateError = err;
         console.error('Exception during update:', err);
+        
+        // Send Telegram notification for database update exception
+        await sendTelegramNotification(
+          `🚨 *Website Analyzer Error*\n\n` +
+          `*Type:* Database Update Exception\n` +
+          `*Symbol:* ${symbol}\n` +
+          `*Error:* ${err.message || err}\n` +
+          `*Time:* ${new Date().toISOString()}`
+        );
       }
     } else {
       console.log('No projectId provided, skipping database update');
@@ -1303,6 +1424,14 @@ serve(async (req) => {
     
   } catch (error) {
     console.error('Error in website-analyzer:', error);
+    
+    // Send Telegram notification for general function error
+    await sendTelegramNotification(
+      `🚨 *Website Analyzer Error*\n\n` +
+      `*Type:* General Function Error\n` +
+      `*Error:* ${error.message || error}\n` +
+      `*Time:* ${new Date().toISOString()}`
+    );
     
     return new Response(
       JSON.stringify({ 
