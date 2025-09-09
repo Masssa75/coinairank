@@ -779,7 +779,7 @@ export default function ProjectsRatedPage() {
                                 ));
                               }}
                               stage2Resources={project.website_stage2_resources}
-                              tooltip={project.website_stage1_tooltip}
+                              tooltip={project.website_stage1_analysis?.tooltip || project.website_stage1_tooltip}
                             >
                               <span 
                                 className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"
@@ -794,7 +794,7 @@ export default function ProjectsRatedPage() {
                           ) : (
                             <WebsiteAnalysisTooltip 
                               fullAnalysis={project.website_stage1_analysis}
-                              tooltip={project.website_stage1_tooltip}
+                              tooltip={project.website_stage1_analysis?.tooltip || project.website_stage1_tooltip}
                               tokenId={project.id.toString()}
                               signalFeedback={project.signal_feedback}
                               isAdmin={isAdmin}
