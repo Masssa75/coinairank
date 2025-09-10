@@ -364,9 +364,7 @@ export function SignalBasedTooltip({
                            websiteAnalysis?.parsed_content?.links_with_context || 
                            [];
                            
-    const stage2Links = websiteAnalysis?.stage_2_links || 
-                       websiteAnalysis?.website_stage1_analysis?.stage_2_links || 
-                       [];
+    const stage2Links = websiteAnalysis?.stage_2_links || [];
     
     // Create a map of selected URLs with their reasoning
     const selectedUrlsMap = new Map<string, string>();
