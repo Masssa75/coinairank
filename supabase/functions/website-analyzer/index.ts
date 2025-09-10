@@ -167,23 +167,10 @@ function intelligentlyReduceHtml(html: string): string {
 async function analyzeWithAI(html: string, ticker: string, contractAddress: string, network: string, isDead: boolean = false) {
   let processedHtml = html;
   
-  // Check if HTML exceeds kimi-k2 model limits (131,071 chars max, leave room for prompt)
-  const MAX_HTML_LENGTH = 120000;
-  
-  // ONLY process if we exceed the limit
-  if (html.length > MAX_HTML_LENGTH) {
-    console.log(`HTML too large (${html.length} chars), attempting intelligent reduction...`);
-    processedHtml = intelligentlyReduceHtml(html);
-    console.log(`After parsing: ${processedHtml.length} chars (${Math.round((1 - processedHtml.length/html.length) * 100)}% reduction)`);
-    
-    // If STILL too large after parsing, truncate as last resort
-    if (processedHtml.length > MAX_HTML_LENGTH) {
-      console.log(`Still too large after parsing, truncating from ${processedHtml.length} to ${MAX_HTML_LENGTH} chars`);
-      processedHtml = processedHtml.substring(0, MAX_HTML_LENGTH);
-    }
-  } else {
-    console.log(`HTML size OK (${html.length} chars), using original content`);
-  }
+  // With 256K context window and 200K max_tokens, we have plenty of room  
+  // Skip HTML processing to preserve ALL links including footer/legal ones
+  console.log(`Sending full HTML to AI: ${html.length} chars (no preprocessing)`);
+  // processedHtml = html; // Already set above
   
   const EXTRACTION_PROMPT = `You are an expert crypto analyst specializing in identifying high-potential projects through website analysis.
 
