@@ -811,8 +811,8 @@ export default function ProjectsRatedPage() {
                               comparisonStatus={project.comparison_status}
                               websiteAnalysis={{
                                 ...project.website_stage1_analysis,
-                                discovered_links: project.discovered_links || [],
-                                stage_2_links: project.stage_2_links || []
+                                discovered_links: (project as any).discovered_links || [],
+                                stage_2_links: (project as any).stage_2_links || []
                               }}
                               isAdmin={isAdmin}
                               tokenId={project.id.toString()}
