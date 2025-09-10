@@ -226,12 +226,15 @@ Search for this exact contract address: ${contractAddress}
 Check everywhere - text, buttons, links, explorer URLs, hidden elements.
 
 STEP 1: Extract ALL links found in the HTML and return them in discovered_links array.
+Find every <a>, <button>, and clickable element with URLs.
 
 STEP 2: From your discovered links, select the most valuable links for Stage 2 analysis.
 
-For discovered_links: Include ALL clickable links you find (minimal structure for performance).
+CRITICAL: You MUST return BOTH arrays in your JSON response:
+- discovered_links: ALL clickable links found (minimal structure)
+- stage_2_links: Selected links for deeper analysis (with reasoning)
 
-For stage_2_links: Select only the most valuable links and explain WHY you chose each one:
+For stage_2_links selection, explain WHY you chose each one:
 - What information this link likely contains  
 - How it helps assess project legitimacy/development quality
 
