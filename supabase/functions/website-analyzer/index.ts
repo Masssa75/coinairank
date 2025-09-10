@@ -346,7 +346,7 @@ IMPORTANT: Extract signals EXACTLY as they appear. Do NOT score or rate anything
           }
         ],
         temperature: 0.4,
-        max_tokens: 16000,
+        max_tokens: 24000,
         response_format: { type: "json_object" }
       })
     });
@@ -398,6 +398,8 @@ IMPORTANT: Extract signals EXACTLY as they appear. Do NOT score or rate anything
     console.log(`AI Response first 500 chars: ${contentStr.substring(0, 500)}`);
     console.log(`AI Response last 500 chars: ${contentStr.substring(contentStr.length - 500)}`);
     console.log(`Contains stage_2_links: ${contentStr.includes('stage_2_links')}`);
+    console.log(`Contains all_discovered_links: ${contentStr.includes('all_discovered_links')}`);
+    console.log(`Contains prompt_version: ${contentStr.includes('prompt_version')}`);
     if (tokenUsage) {
       console.log(`Token usage: ${tokenUsage.total_tokens} total (${tokenUsage.prompt_tokens} prompt + ${tokenUsage.completion_tokens} completion)`);
     }
@@ -429,6 +431,12 @@ IMPORTANT: Extract signals EXACTLY as they appear. Do NOT score or rate anything
         throw new Error(`Failed to parse AI response: ${e2.message}`);
       }
     }
+    
+    // DEBUG: Log parsed result fields to check what AI actually returned
+    console.log(`Parsed result fields: ${Object.keys(result).join(', ')}`);
+    console.log(`prompt_version in result: ${result.prompt_version || 'NOT_FOUND'}`);
+    console.log(`all_discovered_links in result: ${result.all_discovered_links ? 'YES' : 'NO'}`);
+    console.log(`selected_stage_2_links in result: ${result.selected_stage_2_links ? 'YES' : 'NO'}`);
     
     // Use the final_score which should match strongest_signal.score
     if (!result.final_score && result.strongest_signal) {
@@ -1017,6 +1025,10 @@ serve(async (req) => {
       extraction_status: 'completed',
       message: 'Phase 1 extraction complete.',
       stage_2_links: analysis.stage_2_links || [], // FORCE INCLUDE stage_2_links!
+      // DEBUG: Include new fields to verify AI response
+      prompt_version: analysis.prompt_version || 'NOT_FOUND',
+      all_discovered_links: analysis.all_discovered_links || [],
+      selected_stage_2_links: analysis.selected_stage_2_links || [],
       database_update: {
         attempted: false,
         success: false,
@@ -1045,9 +1057,10 @@ serve(async (req) => {
           contract_verification: analysis.contract_verification,
           
           // NEW: Structured link data
-          discovered_links: analysis.all_discovered_links || analysis.discovered_links || [],
-          stage_2_links: analysis.selected_stage_2_links || analysis.stage_2_links || [],
+          discovered_links: analysis.all_discovered_links || [],
+          stage_2_links: analysis.selected_stage_2_links || [],
           links_discovered_at: new Date().toISOString(),
+          prompt_version: analysis.prompt_version || null,
           
           // Keep for backward compatibility (for now)
           website_stage2_resources: analysis.stage_2_resources,

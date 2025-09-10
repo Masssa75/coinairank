@@ -148,7 +148,7 @@ test('Enable unverified filter and verify BKN stage 2 links', async ({ page }) =
     console.log('❌ Still no BKN found after enabling unverified filter');
     
     // Debug: Show all visible project symbols
-    const projectElements = page.locator('[data-testid*="symbol"], .symbol, text=/^[A-Z]{2,6}$/');
+    const projectElements = page.locator('[data-testid*="symbol"], .symbol');
     const projectCount = await projectElements.count();
     console.log(`Debug: Found ${projectCount} potential project symbols`);
     
