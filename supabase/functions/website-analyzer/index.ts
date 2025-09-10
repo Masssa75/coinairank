@@ -225,14 +225,14 @@ CONTRACT VERIFICATION:
 Search for this exact contract address: ${contractAddress}
 Check everywhere - text, buttons, links, explorer URLs, hidden elements.
 
-STEP 1: List all links found in the HTML.
+STEP 1: Extract ALL links found in the HTML and return them in discovered_links array.
 
-STEP 2: Stage 2 Analysis will scrape selected links to assess how legitimate and well-developed this project is.
+STEP 2: From your discovered links, select the most valuable links for Stage 2 analysis.
 
-From your discovered links, select ALL links that would provide substantial value for Stage 2 analysis. Include ANY link that contains meaningful project information - don't limit yourself to just a few. Better to include more comprehensive coverage than miss important details.
+For discovered_links: Include ALL clickable links you find (minimal structure for performance).
 
-For each selected link, explain WHY you chose it:
-- What information this link likely contains
+For stage_2_links: Select only the most valuable links and explain WHY you chose each one:
+- What information this link likely contains  
 - How it helps assess project legitimacy/development quality
 
 DETERMINE TYPE:
@@ -305,6 +305,14 @@ Return detailed JSON with ONLY EXTRACTION (NO SCORES):
     "top_signals": ["up to 3 best discoveries, brief"],
     "main_concerns": ["up to 2 biggest red flags, brief"]
   },
+  
+  "discovered_links": [
+    {
+      "url": "complete-url",
+      "text": "link text or button text", 
+      "type": "documentation/social/github/other"
+    }
+  ],
   
   "stage_2_links": [
     {
@@ -1030,6 +1038,13 @@ serve(async (req) => {
           project_summary_rich: analysis.project_summary_rich || {},
           token_type: analysis.token_type,
           contract_verification: analysis.contract_verification,
+          
+          // NEW: Structured link data
+          discovered_links: analysis.discovered_links || [],
+          stage_2_links: analysis.stage_2_links || [],
+          links_discovered_at: new Date().toISOString(),
+          
+          // Keep for backward compatibility (for now)
           website_stage2_resources: analysis.stage_2_resources,
           extraction_status: 'completed',
           extraction_completed_at: new Date().toISOString(),
