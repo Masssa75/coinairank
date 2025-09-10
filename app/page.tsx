@@ -809,7 +809,11 @@ export default function ProjectsRatedPage() {
                               benchmarkComparison={project.benchmark_comparison}
                               extractionStatus={project.extraction_status}
                               comparisonStatus={project.comparison_status}
-                              websiteAnalysis={project.website_stage1_analysis}
+                              websiteAnalysis={{
+                                ...project.website_stage1_analysis,
+                                discovered_links: project.discovered_links || [],
+                                stage_2_links: project.stage_2_links || []
+                              }}
                               isAdmin={isAdmin}
                               tokenId={project.id.toString()}
                               signalFeedback={project.signal_feedback}
