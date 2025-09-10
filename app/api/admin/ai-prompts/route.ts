@@ -37,9 +37,13 @@ export async function GET() {
     
     const scoringInfo = {
       tier1Signals: tier1SignalsMatch ? tier1SignalsMatch[1].trim().split('\n').filter(line => line.trim().startsWith('-')).map(line => line.trim()) : [],
-      step1Instructions: step1Step2Match ? step1Step2Match[1].trim() : 'Not found',
-      step2Instructions: step1Step2Match ? step1Step2Match[2].trim() : 'Not found', 
-      stage2Structure: stage2LinksMatch ? `"stage_2_links": [${stage2LinksMatch[1].trim()}]` : 'Not found',
+      extractionInstructions: [
+        'Extract ALL links found in the HTML and return them in discovered_links array',
+        'Find every <a>, <button>, and clickable element with URLs',
+        'From discovered links, select most valuable for Stage 2 analysis',
+        'Explain WHY each stage_2_link was selected for deeper analysis'
+      ],
+      stage2Structure: stage2LinksMatch ? `"stage_2_links": [${stage2LinksMatch[1].trim()}]` : '"stage_2_links": [{ "url": "link-url", "reasoning": "why selected" }]',
       currentFocus: 'Stage 2 Link Selection (Phase 1) - 2-step process with reasoning'
     };
     

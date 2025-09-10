@@ -225,14 +225,14 @@ CONTRACT VERIFICATION:
 Search for this exact contract address: ${contractAddress}
 Check everywhere - text, buttons, links, explorer URLs, hidden elements.
 
-STEP 1: Extract ALL links found in the HTML and return them in discovered_links array.
-Find every <a>, <button>, and clickable element with URLs.
+⚡ CRITICAL DATABASE UPDATE: This prompt version requires BOTH link arrays ⚡
 
-STEP 2: From your discovered links, select the most valuable links for Stage 2 analysis.
+STEP 1: MANDATORY - Extract ALL links and return in "all_discovered_links" array
+STEP 2: MANDATORY - Select best links and return in "selected_stage_2_links" array
 
-CRITICAL: You MUST return BOTH arrays in your JSON response:
-- discovered_links: ALL clickable links found (minimal structure)
-- stage_2_links: Selected links for deeper analysis (with reasoning)
+🚨 BREAKING CHANGE: You MUST return BOTH link arrays or the database update will FAIL
+- all_discovered_links: Every single clickable element found  
+- selected_stage_2_links: Your curated selection with reasoning
 
 For stage_2_links selection, explain WHY you chose each one:
 - What information this link likely contains  
@@ -309,7 +309,7 @@ Return detailed JSON with ONLY EXTRACTION (NO SCORES):
     "main_concerns": ["up to 2 biggest red flags, brief"]
   },
   
-  "discovered_links": [
+  "all_discovered_links": [
     {
       "url": "complete-url",
       "text": "link text or button text", 
@@ -317,12 +317,14 @@ Return detailed JSON with ONLY EXTRACTION (NO SCORES):
     }
   ],
   
-  "stage_2_links": [
+  "selected_stage_2_links": [
     {
       "url": "discovered link url",
       "reasoning": "why this link was selected for Stage 2 analysis"
     }
-  ]
+  ],
+  
+  "prompt_version": "v2.1_database_restructure"
 }
 
 IMPORTANT: Extract signals EXACTLY as they appear. Do NOT score or rate anything - only extract and categorize.`;
@@ -1043,8 +1045,8 @@ serve(async (req) => {
           contract_verification: analysis.contract_verification,
           
           // NEW: Structured link data
-          discovered_links: analysis.discovered_links || [],
-          stage_2_links: analysis.stage_2_links || [],
+          discovered_links: analysis.all_discovered_links || analysis.discovered_links || [],
+          stage_2_links: analysis.selected_stage_2_links || analysis.stage_2_links || [],
           links_discovered_at: new Date().toISOString(),
           
           // Keep for backward compatibility (for now)

@@ -358,10 +358,15 @@ export function SignalBasedTooltip({
 
   // Process links for admin section  
   const processLinksData = () => {
-    if (!websiteAnalysis?.parsed_content?.links_with_context) return null;
-    
-    const discoveredLinks = websiteAnalysis.parsed_content.links_with_context;
-    const stage2Links = websiteAnalysis.stage_2_links || [];
+    // Try new database fields first, then fall back to old nested structure
+    const discoveredLinks = websiteAnalysis?.discovered_links || 
+                           websiteAnalysis?.parsed_content?.navigation?.all_links ||
+                           websiteAnalysis?.parsed_content?.links_with_context || 
+                           [];
+                           
+    const stage2Links = websiteAnalysis?.stage_2_links || 
+                       websiteAnalysis?.website_stage1_analysis?.stage_2_links || 
+                       [];
     
     // Create a map of selected URLs with their reasoning
     const selectedUrlsMap = new Map<string, string>();
