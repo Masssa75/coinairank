@@ -820,20 +820,6 @@ serve(async (req) => {
           }
         },
         
-        // Add empty parsed content for consistency
-        parsed_content: {
-          text_content: 'Instagram URL - analysis blocked',
-          navigation: { documentation: [], github: [], social: [websiteUrl], all_links: [{url: websiteUrl, text: 'Instagram', type: 'social'}] },
-          links_with_context: [{url: websiteUrl, text: 'Instagram', type: 'social'}],
-          headers: [],
-          button_texts: [],
-          meta_tags: { description: 'Instagram profile', keywords: '', og_title: '', og_description: '' },
-          content_length: 0,
-          text_length: 0,
-          has_documentation: false,
-          has_github: false,
-          has_social: true
-        }
       };
 
       // Update database if projectId provided
@@ -886,11 +872,8 @@ serve(async (req) => {
           },
           content_stats: {
             content_length: 0,
-            text_length: 0,
-            total_links: 0,
-            has_documentation: false,
-            has_github: false,
-            has_social: true
+            analysis_blocked: true,
+            reason: 'Instagram blocks automated analysis'
           }
         }),
         {
