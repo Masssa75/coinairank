@@ -346,7 +346,7 @@ IMPORTANT: Extract signals EXACTLY as they appear. Do NOT score or rate anything
           }
         ],
         temperature: 0.4,
-        max_tokens: 24000,
+        max_tokens: 100000,
         response_format: { type: "json_object" }
       })
     });
