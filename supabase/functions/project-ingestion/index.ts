@@ -204,9 +204,9 @@ async function getPoolAddressFromDiscovery(
 }
 
 // Trigger website analysis
-async function triggerWebsiteAnalysis(projectId: number, contractAddress: string, websiteUrl: string, symbol: string) {
+async function triggerWebsiteAnalysis(projectId: number, contractAddress: string, websiteUrl: string, symbol: string, network: string = 'ethereum') {
   try {
-    const functionUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/website-analyzer`;
+    const functionUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/website-analyzer-v2`;
     
     const response = await fetch(functionUrl, {
       method: 'POST',
@@ -215,10 +215,13 @@ async function triggerWebsiteAnalysis(projectId: number, contractAddress: string
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        phase: 1,  // Start with Phase 1
         projectId,
         contractAddress,
         websiteUrl,
-        symbol
+        symbol,
+        network,
+        source: 'ingestion'
       })
     });
     
@@ -290,7 +293,8 @@ serve(async (req) => {
           existing.id, 
           body.contract_address, 
           body.website_url, 
-          existing.symbol || body.symbol || 'UNKNOWN'
+          existing.symbol || body.symbol || 'UNKNOWN',
+          body.network || 'ethereum'
         ).catch(error => {
           console.error('Background website analysis failed for existing project:', error);
         });
@@ -503,7 +507,8 @@ serve(async (req) => {
         newProject.id,
         body.contract_address,
         projectData.website_url,
-        newProject.symbol
+        newProject.symbol,
+        body.network || 'ethereum'
       ).catch(error => {
         console.error('Background website analysis failed:', error);
       });

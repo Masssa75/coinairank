@@ -4,8 +4,12 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 // Constants
 const BROWSERLESS_API_KEY = Deno.env.get('BROWSERLESS_API_KEY') || '';
 const OPENROUTER_API_KEY = Deno.env.get('OPEN_ROUTER_MANAGEMENT_API_KEY') || '';
+const KIMI_K2_API_KEY = Deno.env.get('KIMI_K2_API_KEY') || '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+// Hard limits for safety
+const MAX_PROMPT_SIZE = 250000; // 250K chars - safe buffer under kimi-k2's 262K context window
 
 // Check for required environment variables
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
@@ -51,51 +55,40 @@ async function sendTelegramNotification(message: string) {
   }
 }
 
-// Function to scrape website - always uses Browserless for consistency
+// Function to scrape website - temporarily use ScraperAPI to match local tests
 async function scrapeWebsite(url: string) {
   try {
-    console.log(`Scraping website with Browserless: ${url}`);
+    console.log(`Scraping website with ScraperAPI: ${url}`);
     
-    if (!BROWSERLESS_API_KEY) {
-      throw new Error('BROWSERLESS_API_KEY not configured');
+    const scraperApiKey = Deno.env.get('SCRAPERAPI_KEY');
+    if (!scraperApiKey) {
+      throw new Error('SCRAPERAPI_KEY not configured');
     }
     
-    // Use Browserless API to render the page
-    const browserlessResponse = await fetch(`https://production-sfo.browserless.io/content?token=${BROWSERLESS_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Cache-Control': 'no-cache',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        url: url,
-        waitForTimeout: 8000, // Wait 8 seconds for JS to render
-        waitForSelector: { selector: 'body', timeout: 8000 }, // Object format for selector
-        bestAttempt: true, // Continue even if selector not found
-        rejectResourceTypes: ['image', 'media', 'font'], // Speed up by not loading these
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      }),
-      signal: AbortSignal.timeout(120000) // 2 minute timeout for Browserless
+    // Use ScraperAPI to match our working local tests exactly
+    const scraperUrl = `http://api.scraperapi.com/?api_key=${scraperApiKey}&url=${encodeURIComponent(url)}`;
+    const scraperResponse = await fetch(scraperUrl, {
+      signal: AbortSignal.timeout(120000) // 2 minute timeout
     });
 
-    if (!browserlessResponse.ok) {
-      const errorText = await browserlessResponse.text();
-      const errorMessage = `Browserless failed with status ${browserlessResponse.status}: ${errorText}`;
+    if (!scraperResponse.ok) {
+      const errorText = await scraperResponse.text();
+      const errorMessage = `ScraperAPI failed with status ${scraperResponse.status}: ${errorText}`;
       console.error(errorMessage);
       
-      // Send Telegram notification for Browserless failure
+      // Send Telegram notification for scraping failure
       await sendTelegramNotification(
         `🚨 *Website Analyzer Error*\n\n` +
-        `*Type:* Browserless Scraping Failure\n` +
+        `*Type:* ScraperAPI Scraping Failure\n` +
         `*URL:* ${url}\n` +
-        `*Status:* ${browserlessResponse.status}\n` +
+        `*Status:* ${scraperResponse.status}\n` +
         `*Time:* ${new Date().toISOString()}`
       );
       
       return { html: '', status: 'error', reason: errorMessage };
     }
 
-    const html = await browserlessResponse.text();
+    const html = await scraperResponse.text();
     
     // Check if we got content
     const textContent = html.replace(/<[^>]+>/g, '').trim();
@@ -125,52 +118,57 @@ async function scrapeWebsite(url: string) {
 
 
 
-// Function to intelligently reduce HTML size by removing useless content
-function intelligentlyReduceHtml(html: string): string {
-  let reduced = html;
+// HTML cleanup function for large websites (>150K chars) - WORKING VERSION
+function cleanLargeHTML(html: string, originalSize: number): string {
+  if (originalSize <= 150000) return html;
   
-  // 1. Remove base64 encoded images (can be massive)
-  reduced = reduced.replace(/data:image\/[^;]+;base64,[^"'\s]*/g, 'data:image/removed');
+  console.log(`🧹 Applying HTML cleanup (${originalSize} > 150K chars)...`);
   
-  // 2. Remove inline SVG path data (keep structure)
-  reduced = reduced.replace(/<path\s+d="[^"]+"/g, '<path d="..."');
-  
-  // 3. Remove tracking/analytics scripts (keep useful scripts)
-  const trackingPatterns = [
-    /<!-- Google Analytics -->[\s\S]*?<!-- End Google Analytics -->/g,
-    /<!-- Facebook Pixel Code -->[\s\S]*?<!-- End Facebook Pixel Code -->/g,
-    /<script[^>]*google-analytics[^>]*>[\s\S]*?<\/script>/gi,
-    /<script[^>]*gtag[^>]*>[\s\S]*?<\/script>/gi,
-    /<script[^>]*fbevents\.js[^>]*>[\s\S]*?<\/script>/gi,
-    /<script[^>]*analytics[^>]*>[\s\S]*?<\/script>/gi,
-  ];
-  trackingPatterns.forEach(pattern => {
-    reduced = reduced.replace(pattern, '');
-  });
-  
-  // 4. Remove CSS style blocks (keep class names)
-  reduced = reduced.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
-  
-  // 5. Remove non-essential JSON-LD (keep schema.org)
-  reduced = reduced.replace(/<script type="application\/ld\+json">(?!.*"@context":\s*"https?:\/\/schema\.org)[\s\S]*?<\/script>/gi, '');
-  
-  // 6. Remove HTML comments
-  reduced = reduced.replace(/<!--[\s\S]*?-->/g, '');
-  
-  // 7. Collapse excessive whitespace
-  reduced = reduced.replace(/\s+/g, ' ').replace(/>\s+</g, '><');
-  
-  return reduced;
+  let cleaned = html
+    .replace(/\sclass="[^"]*"/g, '')           // CSS classes  
+    .replace(/\ssrcset="[^"]*"/g, '')         // Responsive images
+    .replace(/\sid="[^"]*"/g, '')             // CSS/JS IDs
+    .replace(/\sdata-wf-[^=]*="[^"]*"/g, '') // Webflow metadata
+    .replace(/\saria-label="[^"]*"/g, '')     // Accessibility
+    .replace(/https:\/\/cdn\.prod\.website-files\.com\/[^\s"<>]+/g, '[CDN]') // CDN URLs
+    .replace(/\s{2,}/g, ' ')                  // Extra whitespace
+    .replace(/>\s+</g, '><');                 // Tag whitespace
+    
+  console.log(`✅ HTML cleaned: ${originalSize} → ${cleaned.length} (-${originalSize - cleaned.length} chars, ${Math.round((1 - cleaned.length/originalSize) * 100)}% reduction)`);
+  return cleaned;
 }
 
-// Function to analyze with AI - Phase 1: Pure extraction without scoring
-async function analyzeWithAI(html: string, ticker: string, contractAddress: string, network: string, isDead: boolean = false) {
-  let processedHtml = html;
+// Hard limit validation - WORKING VERSION
+function validatePromptSize(html: string): { success: boolean; error?: string; htmlSize?: number; totalSize?: number } {
+  const basePromptSize = 1500; // Base prompt without HTML
+  const totalSize = basePromptSize + html.length;
   
-  // With 256K context window and 200K max_tokens, we have plenty of room  
-  // Skip HTML processing to preserve ALL links including footer/legal ones
-  console.log(`Sending full HTML to AI: ${html.length} chars (no preprocessing)`);
-  // processedHtml = html; // Already set above
+  if (totalSize > MAX_PROMPT_SIZE) {
+    return {
+      success: false,
+      error: 'PROMPT_TOO_LARGE',
+      htmlSize: html.length,
+      totalSize: totalSize
+    };
+  }
+  
+  return { success: true };
+}
+
+// Function to analyze with AI - WORKING VERSION (matches local tests exactly)
+async function analyzeWithAI(html: string, ticker: string, contractAddress: string, network: string, isDead: boolean = false) {
+  const originalSize = html.length;
+  console.log(`Starting AI analysis: ${originalSize} chars`);
+  
+  // Apply HTML cleanup if needed - EXACTLY as in working local tests
+  let processedHtml = cleanLargeHTML(html, originalSize);
+  
+  // Hard limit check - EXACTLY as in working local tests  
+  const validation = validatePromptSize(processedHtml);
+  if (!validation.success) {
+    console.error(`Prompt too large: ${validation.totalSize} chars (limit: ${MAX_PROMPT_SIZE})`);
+    throw new Error(`Content too large for analysis. HTML: ${validation.htmlSize} chars, Total: ${validation.totalSize} chars`);
+  }
   
   const EXTRACTION_PROMPT = `You are an expert crypto analyst specializing in identifying high-potential projects through website analysis.
 
@@ -320,12 +318,12 @@ IMPORTANT: Extract signals EXACTLY as they appear. Do NOT score or rate anything
     const response = await fetch('https://api.moonshot.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('KIMI_K2_API_KEY')}`,
+        'Authorization': `Bearer ${KIMI_K2_API_KEY}`,
         'Content-Type': 'application/json'
       },
-      signal: AbortSignal.timeout(180000), // 3 minute timeout for AI analysis
+      signal: AbortSignal.timeout(300000), // 5 minute timeout for AI analysis
       body: JSON.stringify({
-        model: 'kimi-k2-turbo-preview',
+        model: 'kimi-k2-0905-preview',
         messages: [
           {
             role: 'user',
@@ -341,6 +339,9 @@ IMPORTANT: Extract signals EXACTLY as they appear. Do NOT score or rate anything
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`AI analysis failed: ${response.status} - ${errorText}`);
+      console.error(`Prompt length: ${EXTRACTION_PROMPT.length}`);
+      console.error(`API Key present: ${KIMI_K2_API_KEY ? 'YES' : 'NO'}`);
+      console.error(`Full error response: ${errorText}`);
       
       // Send Telegram notification for AI analysis failure
       await sendTelegramNotification(
@@ -348,11 +349,13 @@ IMPORTANT: Extract signals EXACTLY as they appear. Do NOT score or rate anything
         `*Type:* AI Analysis Failure\n` +
         `*Symbol:* ${ticker}\n` +
         `*Status:* ${response.status}\n` +
+        `*Error:* ${errorText}\n` +
+        `*Prompt Length:* ${EXTRACTION_PROMPT.length}\n` +
         `*Model:* kimi-k2\n` +
         `*Time:* ${new Date().toISOString()}`
       );
       
-      throw new Error(`AI analysis failed: ${response.status}`);
+      throw new Error(`AI analysis failed: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -1031,6 +1034,8 @@ serve(async (req) => {
         const fullAnalysis = {
           ...analysis,
           html_length: html.length,
+          original_html_size: originalSize,
+          html_cleaned: originalSize > 150000,
           extracted_at: new Date().toISOString()
         };
         
@@ -1039,7 +1044,7 @@ serve(async (req) => {
           // Phase 1 extraction results
           signals_found: analysis.signals_found || [],
           red_flags: analysis.red_flags || [],
-          project_summary_rich: analysis.project_summary_rich || {},
+          project_summary_rich: analysis.project_summary_rich || '',
           token_type: analysis.token_type,
           contract_verification: analysis.contract_verification,
           
@@ -1047,16 +1052,14 @@ serve(async (req) => {
           discovered_links: analysis.all_discovered_links || [],
           stage_2_links: analysis.selected_stage_2_links || [],
           links_discovered_at: new Date().toISOString(),
-          prompt_version: analysis.prompt_version || null,
-          
-          // Keep for backward compatibility (for now)
-          website_stage2_resources: analysis.stage_2_resources,
-          extraction_status: 'completed',
-          extraction_completed_at: new Date().toISOString(),
           
           // Store full extraction data
           website_stage1_analysis: fullAnalysis,
-          website_stage1_tooltip: analysis.tooltip,
+          website_stage1_tooltip: analysis.website_stage1_tooltip || '',
+          
+          // Extraction status
+          extraction_status: 'completed',
+          extraction_completed_at: new Date().toISOString(),
           
           // Clear scoring fields (will be set by Phase 2)
           website_stage1_score: null,
@@ -1064,9 +1067,7 @@ serve(async (req) => {
           
           // Keep for backward compatibility
           website_status: 'active',
-          website_stage1_analyzed_at: new Date().toISOString(),
-          // Don't auto-set is_imposter - this should only be set by admin manual verification
-          // is_imposter field is reserved for admin-confirmed imposters only
+          website_stage1_analyzed_at: new Date().toISOString()
         };
         
         console.log('Update payload ready, executing...');
