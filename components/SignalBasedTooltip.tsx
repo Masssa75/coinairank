@@ -511,13 +511,14 @@ export function SignalBasedTooltip({
 
 
             {/* Key Signals - Use Phase 2 data if available, otherwise Phase 1 */}
-            {benchmarkComparison?.signal_evaluations && benchmarkComparison.signal_evaluations.length > 0 ? (
+            {((benchmarkComparison?.signal_evaluations && benchmarkComparison.signal_evaluations.length > 0) || 
+              (websiteAnalysis?.signal_evaluations && websiteAnalysis.signal_evaluations.length > 0)) ? (
               <div className="mb-3">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-[#666] text-xs font-bold">KEY SIGNALS</span>
                 </div>
                 <ul className="space-y-1.5">
-                  {benchmarkComparison.signal_evaluations
+                  {(benchmarkComparison?.signal_evaluations || websiteAnalysis?.signal_evaluations || [])
                     .slice(0, 4) // Take top 4 signals
                     .sort((a, b) => a.assigned_tier - b.assigned_tier) // Sort by tier (best first)
                     .map((evalSignal, idx) => {
@@ -709,7 +710,7 @@ export function SignalBasedTooltip({
                     })}
                 </ul>
               </div>
-            ) : topSignals.length > 0 && (
+            ) : (topSignals && topSignals.length > 0) ? (
               // Fallback to Phase 1 signals if Phase 2 not available
               <div className="mb-3">
                 <div className="flex items-center gap-2 mb-2">
@@ -735,6 +736,56 @@ export function SignalBasedTooltip({
                   })}
                 </ul>
               </div>
+            ) : (
+              // Fallback to simple pros/cons display if no signals
+              (tooltip?.pros || tooltip?.cons) && (
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  {/* PROS Section */}
+                  {tooltip?.pros && (
+                    <div>
+                      <div className="flex items-center gap-1 mb-2">
+                        <span className="text-[#00ff88] text-xs font-bold">✓ PROS</span>
+                      </div>
+                      <ul className="space-y-1">
+                        {tooltip.pros.slice(0, 5).map((pro, idx) => {
+                          const shortPro = pro.length > 50 ? pro.substring(0, 47) + '...' : pro;
+                          return (
+                            <li key={idx} className="text-[11px] text-[#aaa] flex items-start">
+                              <span className="text-[#00ff88] mr-1.5">•</span>
+                              <span>{shortPro}</span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* CONS Section */}
+                  {tooltip?.cons && (
+                    <div>
+                      <div className="flex items-center gap-1 mb-2">
+                        <span className="text-[#ff4444] text-xs font-bold">✗ CONS</span>
+                      </div>
+                      <ul className="space-y-1">
+                        {tooltip.cons.slice(0, 3).map((con, idx) => {
+                          let cleanCon = con;
+                          if (cleanCon.toLowerCase().startsWith('no ')) {
+                            cleanCon = cleanCon.substring(3);
+                          }
+                          const shortCon = cleanCon.length > 50 ? cleanCon.substring(0, 47) + '...' : cleanCon;
+                          
+                          return (
+                            <li key={idx} className="text-[11px] text-[#aaa] flex items-start">
+                              <span className="text-[#ff4444] mr-1.5">•</span>
+                              <span>{shortCon}</span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )
             )}
 
             {/* Concerns - No scores, just list */}

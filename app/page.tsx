@@ -798,70 +798,41 @@ export default function ProjectsRatedPage() {
                     </div>
                     <div className="text-right relative z-10">
                       {project.website_stage1_tier && (
-                        <>
-                          {/* Use SignalBasedTooltip if signals are available */}
-                          {project.website_stage1_analysis?.signals_found ? (
-                            <SignalBasedTooltip
-                              projectDescription={project.website_stage1_analysis?.project_description}
-                              signals={project.website_stage1_analysis?.signals_found}
-                              redFlags={project.website_stage1_analysis?.red_flags}
-                              strongestSignal={project.website_stage1_analysis?.strongest_signal}
-                              benchmarkComparison={project.benchmark_comparison}
-                              extractionStatus={project.extraction_status}
-                              comparisonStatus={project.comparison_status}
-                              websiteAnalysis={{
-                                ...project.website_stage1_analysis,
-                                discovered_links: (project as any).discovered_links || [],
-                                stage_2_links: (project as any).stage_2_links || []
-                              }}
-                              isAdmin={isAdmin}
-                              tokenId={project.id.toString()}
-                              signalFeedback={project.signal_feedback}
-                              onFeedbackUpdate={(feedback) => {
-                                // Update local state to reflect feedback changes
-                                setProjects(prev => prev.map(p => 
-                                  p.id === project.id ? { ...p, signal_feedback: feedback } : p
-                                ));
-                              }}
-                              stage2Resources={project.website_stage2_resources}
-                              tooltip={project.website_stage1_analysis?.tooltip || project.website_stage1_tooltip}
-                            >
-                              <span 
-                                className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"
-                                style={{ 
-                                  backgroundColor: getTierColor(project.website_stage1_tier).bg,
-                                  color: getTierColor(project.website_stage1_tier).text
-                                }}
-                              >
-                                {project.website_stage1_tier}
-                              </span>
-                            </SignalBasedTooltip>
-                          ) : (
-                            <WebsiteAnalysisTooltip 
-                              fullAnalysis={project.website_stage1_analysis}
-                              tooltip={project.website_stage1_analysis?.tooltip || project.website_stage1_tooltip}
-                              tokenId={project.id.toString()}
-                              signalFeedback={project.signal_feedback}
-                              isAdmin={isAdmin}
-                              onFeedbackUpdate={(feedback) => {
-                                // Update local state to reflect feedback changes
-                                setProjects(prev => prev.map(p => 
-                                  p.id === project.id ? { ...p, signal_feedback: feedback } : p
-                                ));
-                              }}
-                            >
-                              <span 
-                                className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"
-                                style={{ 
-                                  backgroundColor: getTierColor(project.website_stage1_tier).bg,
-                                  color: getTierColor(project.website_stage1_tier).text
-                                }}
-                              >
-                                {project.website_stage1_tier}
-                              </span>
-                            </WebsiteAnalysisTooltip>
-                          )}
-                        </>
+                        <SignalBasedTooltip
+                          projectDescription={project.website_stage1_analysis?.project_description}
+                          signals={project.website_stage1_analysis?.signals_found}
+                          redFlags={project.website_stage1_analysis?.red_flags}
+                          strongestSignal={project.website_stage1_analysis?.strongest_signal || project.website_stage1_analysis?.strongest_signal}
+                          benchmarkComparison={project.benchmark_comparison}
+                          extractionStatus={project.extraction_status}
+                          comparisonStatus={project.comparison_status}
+                          websiteAnalysis={{
+                            ...project.website_stage1_analysis,
+                            discovered_links: (project as any).discovered_links || [],
+                            stage_2_links: (project as any).stage_2_links || []
+                          }}
+                          isAdmin={isAdmin}
+                          tokenId={project.id.toString()}
+                          signalFeedback={project.signal_feedback}
+                          onFeedbackUpdate={(feedback) => {
+                            // Update local state to reflect feedback changes
+                            setProjects(prev => prev.map(p => 
+                              p.id === project.id ? { ...p, signal_feedback: feedback } : p
+                            ));
+                          }}
+                          stage2Resources={project.website_stage2_resources}
+                          tooltip={project.website_stage1_analysis?.tooltip || project.website_stage1_tooltip}
+                        >
+                          <span 
+                            className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"
+                            style={{ 
+                              backgroundColor: getTierColor(project.website_stage1_tier).bg,
+                              color: getTierColor(project.website_stage1_tier).text
+                            }}
+                          >
+                            {project.website_stage1_tier}
+                          </span>
+                        </SignalBasedTooltip>
                       )}
                       <p className="text-xs text-[#666] mt-1">{formatDate(project.created_at)}</p>
                     </div>
