@@ -482,6 +482,12 @@ export function SignalBasedTooltip({
               </div>
             )}
             
+            {websiteAnalysis?.html_length > 250000 && (
+              <div className="text-[#f59e0b] text-sm mb-3 p-2 bg-[#f59e0b]/10 rounded">
+                ⚠️ Website too large ({Math.round(websiteAnalysis.html_length / 1000)}K chars) - analysis skipped
+              </div>
+            )}
+            
             {websiteAnalysis && extractionStatus !== 'completed' && (
               <div className="text-[#ef4444] text-sm mb-3 p-2 bg-[#ef4444]/10 rounded">
                 ⚠️ Phase 1 extraction missing
