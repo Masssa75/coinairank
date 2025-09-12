@@ -800,22 +800,20 @@ export default function ProjectsRatedPage() {
                     </div>
                     <div className="text-right relative z-10">
                       {(() => {
-                        // Determine if we should show dash tier
+                        // Simple rule: Show tier if it exists, otherwise show dash
+                        const displayTier = project.website_stage1_tier || '—';
+                        
+                        // Get HTML length for warning displays
                         const htmlLength = project.website_stage1_analysis?.html_length;
                         const hasLargeHtml = htmlLength && htmlLength > 240000;
-                        const hasNoAnalysis = !project.website_stage1_analysis || 
-                                            (!project.website_stage1_analysis?.signals_found && 
-                                             !project.website_stage1_analysis?.technical_assessment);
-                        const hasInvalidScore = project.website_stage1_score === 0 || project.website_stage1_score === null;
-                        const shouldShowDash = hasLargeHtml || hasNoAnalysis || (!project.website_stage1_tier && hasInvalidScore);
                         
-                        // Determine display tier
-                        const displayTier = shouldShowDash ? '—' : project.website_stage1_tier;
-                        
-                        // Determine if CSR with incomplete analysis
+                        // Determine if CSR with incomplete analysis  
                         const isCSR = project.ssr_csr_classification === 'CSR' || 
                                      project.website_stage1_analysis?.ssr_csr_classification === 'CSR';
                         const needsProperScraping = isCSR && htmlLength && htmlLength <= 240000;
+                        
+                        // Check if has no analysis for warning display
+                        const hasNoAnalysis = !project.website_stage1_tier;
                         
                         // Show tooltip for any project with tier or dash
                         if (!displayTier) return null;
