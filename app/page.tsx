@@ -479,9 +479,11 @@ export default function ProjectsRatedPage() {
       ALPHA: { bg: '#00ff8822', text: '#00ff88' },  // Green for ALPHA
       SOLID: { bg: '#ffcc0022', text: '#ffcc00' },  // Yellow for SOLID
       BASIC: { bg: '#ff880022', text: '#ff8800' },  // Orange for BASIC
-      TRASH: { bg: '#ff444422', text: '#ff4444' }   // Red for TRASH
+      TRASH: { bg: '#ff444422', text: '#ff4444' },  // Red for TRASH
+      '-': { bg: '#66666622', text: '#999' },       // Gray for pending/unanalyzed
+      '—': { bg: '#66666622', text: '#999' }        // Support both dash types
     };
-    return colors[tier.toUpperCase()] || { bg: '#88888822', text: '#888' };
+    return colors[tier.toUpperCase()] || colors[tier] || { bg: '#88888822', text: '#888' };
   };
 
   const getScoreBadgeColor = (score: number) => {
@@ -796,7 +798,7 @@ export default function ProjectsRatedPage() {
                       </div>
                     </div>
                     <div className="text-right relative z-10">
-                      {project.website_stage1_tier && (
+                      {(project.website_stage1_tier || project.website_stage1_analysis?.html_length > 250000) && (
                         <SignalBasedTooltip
                           projectDescription={project.website_stage1_analysis?.project_description}
                           signals={project.website_stage1_analysis?.signals_found}
@@ -825,11 +827,11 @@ export default function ProjectsRatedPage() {
                           <span 
                             className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"
                             style={{ 
-                              backgroundColor: getTierColor(project.website_stage1_tier).bg,
-                              color: getTierColor(project.website_stage1_tier).text
+                              backgroundColor: getTierColor(project.website_stage1_tier || (project.website_stage1_analysis?.html_length > 250000 ? '-' : null)).bg,
+                              color: getTierColor(project.website_stage1_tier || (project.website_stage1_analysis?.html_length > 250000 ? '-' : null)).text
                             }}
                           >
-                            {project.website_stage1_tier}
+                            {project.website_stage1_tier || (project.website_stage1_analysis?.html_length > 250000 ? '—' : '')}
                           </span>
                         </SignalBasedTooltip>
                       )}
