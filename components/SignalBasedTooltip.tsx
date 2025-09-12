@@ -520,8 +520,8 @@ export function SignalBasedTooltip({
                 <ul className="space-y-1.5">
                   {(benchmarkComparison?.signal_evaluations || websiteAnalysis?.signal_evaluations || [])
                     .slice(0, 4) // Take top 4 signals
-                    .sort((a, b) => a.assigned_tier - b.assigned_tier) // Sort by tier (best first)
-                    .map((evalSignal, idx) => {
+                    .sort((a: SignalEvaluation, b: SignalEvaluation) => a.assigned_tier - b.assigned_tier) // Sort by tier (best first)
+                    .map((evalSignal: SignalEvaluation, idx: number) => {
                       const score = tierToScore(evalSignal.assigned_tier);
                       const isExpanded = selectedSignalIdx === idx;
                       return (
