@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { WebsiteAnalysisTooltip } from '@/components/WebsiteAnalysisTooltip';
 import { SignalBasedTooltip } from '@/components/SignalBasedTooltip';
 import { ContractVerificationTooltip } from '@/components/ContractVerificationTooltip';
 import FilterSidebar from '@/components/FilterSidebar';
