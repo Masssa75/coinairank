@@ -488,15 +488,15 @@ export function SignalBasedTooltip({
               </div>
             )}
             
-            {extractionStatus === 'completed' && !benchmarkComparison && (
+            {extractionStatus === 'completed' && !benchmarkComparison && !websiteAnalysis?.signal_evaluations && (
               <div className="text-[#ef4444] text-sm mb-3 p-2 bg-[#ef4444]/10 rounded">
                 ⚠️ Phase 2 scoring not complete
               </div>
             )}
             
-            {benchmarkComparison && !benchmarkComparison.signal_evaluations && (
+            {benchmarkComparison && !benchmarkComparison.signal_evaluations && !websiteAnalysis?.signal_evaluations && (
               <div className="text-[#ef4444] text-sm mb-3 p-2 bg-[#ef4444]/10 rounded">
-                ⚠️ Benchmark comparison not available
+                ⚠️ Signal evaluations not available
               </div>
             )}
 
