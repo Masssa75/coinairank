@@ -34,6 +34,7 @@ interface CryptoProject {
   extraction_status?: string;  // Phase 1 extraction status
   comparison_status?: string;  // Phase 2 comparison status
   signal_feedback?: Record<string, any>;  // Admin signal feedback
+  ssr_csr_classification?: string;  // SSR or CSR classification
   current_liquidity_usd: number | null;
   current_market_cap: number | null;
   current_price_usd: number | null;
