@@ -89,6 +89,7 @@ const TRADING_PLATFORM_DOMAINS = [
   // Other non-project sites
   'medium.com',
   'msn.com',
+  'testingcatalog.com',  // Testing/demo site - not a real project
   // Government/regulatory sites - ALL .gov domains are excluded
   '.gov'  // This will block ALL government domains (dhs.gov, sec.gov, etc.)
 ];

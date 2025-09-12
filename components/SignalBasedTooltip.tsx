@@ -68,6 +68,9 @@ interface SignalBasedTooltipProps {
     pros?: string[];  // Support old format
     cons?: string[];  // Support old format
   } | null;
+  hasLargeHtml?: boolean;
+  needsProperScraping?: boolean;
+  hasNoAnalysis?: boolean;
   children: React.ReactNode;
 }
 
@@ -86,6 +89,9 @@ export function SignalBasedTooltip({
   onFeedbackUpdate,
   stage2Resources,
   tooltip,
+  hasLargeHtml = false,
+  needsProperScraping = false,
+  hasNoAnalysis = false,
   children 
 }: SignalBasedTooltipProps) {
   const [showTooltip, setShowTooltip] = React.useState(false);
@@ -476,13 +482,25 @@ export function SignalBasedTooltip({
           <div className="bg-[#1a1c1f] rounded-lg shadow-2xl border border-[#333] p-4 min-w-[400px] max-w-[500px] max-h-[80vh] overflow-y-auto scrollbar-hide">
             
             {/* Error States for Incomplete Data */}
-            {!websiteAnalysis && (
-              <div className="text-[#ef4444] text-sm mb-3 p-2 bg-[#ef4444]/10 rounded">
-                ⚠️ Website analysis not available
+            {hasLargeHtml && (
+              <div className="text-[#f59e0b] text-sm mb-3 p-2 bg-[#f59e0b]/10 rounded">
+                ⚠️ Website too large ({websiteAnalysis?.html_length ? Math.round(websiteAnalysis.html_length / 1000) : '>240'}K chars) - parsing not yet implemented
               </div>
             )}
             
-            {websiteAnalysis?.html_length > 250000 && (
+            {needsProperScraping && (
+              <div className="text-[#3b82f6] text-sm mb-3 p-2 bg-[#3b82f6]/10 rounded">
+                ℹ️ Client-side rendered website - full browser scraping not yet implemented
+              </div>
+            )}
+            
+            {hasNoAnalysis && !hasLargeHtml && (
+              <div className="text-[#ef4444] text-sm mb-3 p-2 bg-[#ef4444]/10 rounded">
+                ⚠️ Website analysis pending
+              </div>
+            )}
+            
+            {!hasLargeHtml && !needsProperScraping && !hasNoAnalysis && websiteAnalysis?.html_length > 250000 && (
               <div className="text-[#f59e0b] text-sm mb-3 p-2 bg-[#f59e0b]/10 rounded">
                 ⚠️ Website too large ({Math.round(websiteAnalysis.html_length / 1000)}K chars) - analysis skipped
               </div>

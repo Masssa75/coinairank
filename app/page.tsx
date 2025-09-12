@@ -798,8 +798,29 @@ export default function ProjectsRatedPage() {
                       </div>
                     </div>
                     <div className="text-right relative z-10">
-                      {(project.website_stage1_tier || project.website_stage1_analysis?.html_length > 250000) && (
-                        <SignalBasedTooltip
+                      {(() => {
+                        // Determine if we should show dash tier
+                        const htmlLength = project.website_stage1_analysis?.html_length;
+                        const hasLargeHtml = htmlLength && htmlLength > 240000;
+                        const hasNoAnalysis = !project.website_stage1_analysis || 
+                                            (!project.website_stage1_analysis?.signals_found && 
+                                             !project.website_stage1_analysis?.technical_assessment);
+                        const hasInvalidScore = project.website_stage1_score === 0 || project.website_stage1_score === null;
+                        const shouldShowDash = hasLargeHtml || hasNoAnalysis || (!project.website_stage1_tier && hasInvalidScore);
+                        
+                        // Determine display tier
+                        const displayTier = shouldShowDash ? '—' : project.website_stage1_tier;
+                        
+                        // Determine if CSR with incomplete analysis
+                        const isCSR = project.ssr_csr_classification === 'CSR' || 
+                                     project.website_stage1_analysis?.ssr_csr_classification === 'CSR';
+                        const needsProperScraping = isCSR && htmlLength && htmlLength <= 240000;
+                        
+                        // Show tooltip for any project with tier or dash
+                        if (!displayTier) return null;
+                        
+                        return (
+                          <SignalBasedTooltip
                           projectDescription={project.website_stage1_analysis?.project_description}
                           signals={project.website_stage1_analysis?.signals_found}
                           redFlags={project.website_stage1_analysis?.red_flags}
@@ -810,8 +831,12 @@ export default function ProjectsRatedPage() {
                           websiteAnalysis={{
                             ...project.website_stage1_analysis,
                             discovered_links: (project as any).discovered_links || [],
-                            stage_2_links: (project as any).stage_2_links || []
+                            stage_2_links: (project as any).stage_2_links || [],
+                            html_length: htmlLength
                           }}
+                          hasLargeHtml={hasLargeHtml}
+                          needsProperScraping={needsProperScraping}
+                          hasNoAnalysis={hasNoAnalysis}
                           isAdmin={isAdmin}
                           tokenId={project.id.toString()}
                           signalFeedback={project.signal_feedback}
@@ -824,17 +849,18 @@ export default function ProjectsRatedPage() {
                           stage2Resources={project.website_stage2_resources}
                           tooltip={project.website_stage1_analysis?.tooltip || project.website_stage1_tooltip}
                         >
-                          <span 
-                            className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"
-                            style={{ 
-                              backgroundColor: getTierColor(project.website_stage1_tier || (project.website_stage1_analysis?.html_length > 250000 ? '-' : null)).bg,
-                              color: getTierColor(project.website_stage1_tier || (project.website_stage1_analysis?.html_length > 250000 ? '-' : null)).text
-                            }}
-                          >
-                            {project.website_stage1_tier || (project.website_stage1_analysis?.html_length > 250000 ? '—' : '')}
-                          </span>
-                        </SignalBasedTooltip>
-                      )}
+                            <span 
+                              className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"
+                              style={{ 
+                                backgroundColor: getTierColor(displayTier).bg,
+                                color: getTierColor(displayTier).text
+                              }}
+                            >
+                              {displayTier}
+                            </span>
+                          </SignalBasedTooltip>
+                        );
+                      })()}
                       <p className="text-xs text-[#666] mt-1">{formatDate(project.created_at)}</p>
                     </div>
                   </div>
