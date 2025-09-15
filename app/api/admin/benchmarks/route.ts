@@ -11,7 +11,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 export async function GET(request: NextRequest) {
   try {
     // Check authentication
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const adminAuth = cookieStore.get('admin_auth');
 
     if (!adminAuth?.value) {
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const adminAuth = cookieStore.get('admin_auth');
 
     if (!adminAuth?.value) {

@@ -14,7 +14,7 @@ export async function PUT(
 ) {
   try {
     // Check authentication
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const adminAuth = cookieStore.get('admin_auth');
 
     if (!adminAuth?.value) {
@@ -65,7 +65,7 @@ export async function DELETE(
 ) {
   try {
     // Check authentication
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const adminAuth = cookieStore.get('admin_auth');
 
     if (!adminAuth?.value) {

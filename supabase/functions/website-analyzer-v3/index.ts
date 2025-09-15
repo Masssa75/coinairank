@@ -265,7 +265,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: false,
-          function: 'website-analyzer-v2',
+          function: 'website-analyzer-v3',
           test_type: 'phase1_full_analysis_with_stage2_links',
           phase: 1,
           error: 'Missing websiteUrl or symbol' 
@@ -284,7 +284,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          function: 'website-analyzer-v2',
+          function: 'website-analyzer-v3',
           test_type: 'phase1_full_analysis_with_stage2_links',
           phase: 1,
           symbol,
@@ -296,57 +296,77 @@ serve(async (req) => {
       );
     }
     
-    const html = await fetchResponse.text();
-    console.log(`📄 Fetched ${html.length} chars of raw HTML`);
+    let html = await fetchResponse.text();
+    const originalLength = html.length;
+    console.log(`📄 Fetched ${originalLength} chars of raw HTML`);
 
-    // Check 240K threshold
+    // Check 240K threshold and parse if needed
+    let wasParsed = false;
+    let parsingNote = '';
+    
     if (html.length > 240000) {
-      console.log(`⚠️ HTML too large: ${html.length} chars > 240K threshold - marking for parsing`);
+      console.log(`⚠️ HTML too large: ${html.length} chars > 240K threshold - applying parser`);
       
-      // Store in database with needs_parsing flag
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      // Parse the HTML to extract content
+      const parsedHTML = parseAndSimplifyHTML(html);
+      const parsedLength = parsedHTML.length;
       
-      const { data: insertData, error: dbError } = await supabase
-        .from('crypto_projects_test')
-        .insert({
-          symbol: symbol,
-          website_url: websiteUrl,
-          needs_parsing: true,
-          website_status: 'needs_parsing',
-          contract_address: contractAddress || 'pending',
-          network: network || 'unknown'
-        })
-        .select();
+      console.log(`✅ Parsed HTML: ${originalLength} chars → ${parsedLength} chars (${Math.round(parsedLength/originalLength*100)}% of original)`);
       
-      const totalDuration = Date.now() - startTime;
+      // Check if parsed version is still too large
+      if (parsedLength > 240000) {
+        console.log(`❌ Even after parsing, HTML is still too large: ${parsedLength} chars`);
+        
+        // Store error in database
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+        
+        const { data: insertData, error: dbError } = await supabase
+          .from('crypto_projects_test')
+          .insert({
+            symbol: symbol,
+            website_url: websiteUrl,
+            needs_parsing: true,
+            website_status: 'failed_parsing_still_too_large',
+            contract_address: contractAddress || 'pending',
+            network: network || 'unknown',
+            original_html_length: originalLength,
+            parsed_html_length: parsedLength
+          })
+          .select();
+        
+        const totalDuration = Date.now() - startTime;
+        
+        return new Response(
+          JSON.stringify({
+            success: false,
+            function: 'website-analyzer-v3',
+            test_type: 'phase1_full_analysis_with_stage2_links',
+            phase: 1,
+            symbol,
+            websiteUrl,
+            parsing_attempted: true,
+            original_length: originalLength,
+            parsed_length: parsedLength,
+            threshold: 240000,
+            total_duration_ms: totalDuration,
+            error: 'HTML still too large after parsing',
+            message: 'Website content exceeds processing limits even after simplification'
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
       
-      return new Response(
-        JSON.stringify({
-          success: true,
-          function: 'website-analyzer-v2',
-          test_type: 'phase1_full_analysis_with_stage2_links',
-          phase: 1,
-          symbol,
-          websiteUrl,
-          needs_parsing: true,
-          html_length: html.length,
-          threshold: 240000,
-          total_duration_ms: totalDuration,
-          database_storage: {
-            attempted: true,
-            success: !dbError,
-            error: dbError?.message || null,
-            record_id: insertData?.[0]?.id || null
-          },
-          message: 'HTML too large for direct AI analysis - marked for parsing'
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      // Use parsed HTML and add context note
+      html = parsedHTML;
+      wasParsed = true;
+      parsingNote = `NOTE: This HTML was preprocessed due to size (original: ${Math.round(originalLength/1024)}KB). All visible text content is preserved but scripts, styles, and attributes have been removed. Structure is simplified to semantic tags only. Framework detection may be limited.\n\n`;
     }
 
     // Step 2: Create prompt with ALL 9 fields + complex instructions
+    // Add parsing note if HTML was parsed
+    const htmlForAnalysis = wasParsed ? parsingNote + html : html;
     const prompt = `You are an expert crypto analyst specializing in identifying high-potential projects through website analysis.
 
 HUNT FOR ALPHA in this HTML. Look for:
@@ -431,7 +451,7 @@ Return JSON:
   ]
 }
 
-HTML: ${html}`;
+HTML: ${htmlForAnalysis}`;
 
     console.log(`📏 Minimal prompt length: ${prompt.length} chars`);
 
@@ -497,7 +517,7 @@ HTML: ${html}`;
       return new Response(
         JSON.stringify({
           success: false,
-          function: 'website-analyzer-v2',
+          function: 'website-analyzer-v3',
           symbol,
           websiteUrl,
           error: 'Failed to parse AI response',
@@ -550,7 +570,9 @@ HTML: ${html}`;
       phase: 1,
       symbol,
       websiteUrl,
-      html_length: html.length,
+      html_length: wasParsed ? originalLength : html.length,
+      parsed_html_length: wasParsed ? html.length : undefined,
+      was_parsed: wasParsed,
       website_status: parsedData.website_status,
       token_type: parsedData.token_type,
       project_description: parsedData.project_description,
@@ -585,7 +607,7 @@ HTML: ${html}`;
       await new Promise(resolve => setTimeout(resolve, 500));
       
       try {
-        const phase2Response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/website-analyzer-v2`, {
+        const phase2Response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/website-analyzer-v3`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
@@ -632,7 +654,7 @@ HTML: ${html}`;
       return new Response(
         JSON.stringify({ 
           success: false,
-          function: 'website-analyzer-v2',
+          function: 'website-analyzer-v3',
           test_type: 'phase1_full_analysis_with_stage2_links',
           phase: 1,
           error: 'AI analysis timeout after 3 minutes',
