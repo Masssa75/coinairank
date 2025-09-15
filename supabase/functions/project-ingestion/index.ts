@@ -206,7 +206,7 @@ async function getPoolAddressFromDiscovery(
 // Trigger website analysis
 async function triggerWebsiteAnalysis(projectId: number, contractAddress: string, websiteUrl: string, symbol: string, network: string = 'ethereum') {
   try {
-    const functionUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/website-analyzer-v2`;
+    const functionUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/website-analyzer-v3`;
     
     const response = await fetch(functionUrl, {
       method: 'POST',
