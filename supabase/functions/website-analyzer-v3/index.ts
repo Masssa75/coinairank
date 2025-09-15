@@ -411,7 +411,7 @@ After listing all links, identify up to 3 critical resources for deeper analysis
 Only use Twitter/social as last resort if technical resources unavailable.
 
 Technical Assessment: 2-3 sentences describing how this website was built
-SSR/CSR Classification: Classify as CSR if the main content/navigation requires JavaScript to load (even if initial HTML is server-rendered). Classify as SSR if all important content is visible in the initial HTML without JavaScript.${contractAddress ? `
+SSR/CSR Classification: SSR (content visible without JavaScript) or CSR (requires JavaScript for content)${contractAddress ? `
 
 CONTRACT VERIFICATION:${contractAddress.startsWith('native:') ? `
 This is a native L1 blockchain token (${contractAddress}).
