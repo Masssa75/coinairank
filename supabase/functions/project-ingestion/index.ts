@@ -100,13 +100,13 @@ function normalizeNetwork(network: string): string {
     'pulsechain': 'pulsechain',
     'pulse': 'pulsechain',
   };
-  const normalized = mapping[network.toLowerCase()] || network;
-  
-  const validNetworks = ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'];
-  if (!validNetworks.includes(normalized)) {
-    throw new Error(`Invalid network: ${network}. Must be one of: ${validNetworks.join(', ')}`);
-  }
-  
+
+  // Use mapping if exists, otherwise use the network as-is (for L1s like bittensor)
+  const normalized = mapping[network.toLowerCase()] || network.toLowerCase();
+
+  // Don't validate - accept any network name
+  console.log(`Network normalized: ${network} -> ${normalized}`);
+
   return normalized;
 }
 

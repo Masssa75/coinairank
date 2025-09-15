@@ -400,7 +400,11 @@ DETERMINE TYPE:
 Is this a meme token (focus on community/viral) or utility token (real use case)?
 
 STAGE 2 LINK SELECTION:
-Identify ALL links that would meaningfully help a crypto analyst deeply evaluate this project's legitimacy, technical substance, and real-world adoption.
+Identify up to 3 critical resources for deeper analysis. ALWAYS prioritize in this order:
+1. WHITEPAPER/TECHNICAL DOCS (if found) - Essential for understanding tokenomics and tech
+2. GITHUB/CODE REPOS - For verifying technical claims
+3. OFFICIAL DOCS/GITBOOK - For comprehensive project details
+Only use Twitter/social as last resort if technical resources unavailable.
 
 Technical Assessment: 2-3 sentences describing how this website was built
 SSR/CSR Classification: SSR or CSR${contractAddress ? `
@@ -533,9 +537,8 @@ HTML: ${htmlForAnalysis}`;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { data: insertData, error: dbError } = await supabase
-      .from('crypto_projects_rated')
-      .update({
+    // Build update object, only including contract/network if provided
+    const updateData: any = {
         symbol: symbol,
         website_url: websiteUrl,
         website_status: parsedData.website_status,
@@ -548,11 +551,23 @@ HTML: ${htmlForAnalysis}`;
         red_flags: parsedData.red_flags,
         stage_2_links: parsedData.selected_stage_2_links,  // Changed from selected_stage_2_links
         contract_verification: parsedData.contract_verification,
-        contract_address: contractAddress || 'pending',
-        network: network || 'unknown',
+        original_html_length: originalLength,
+        parsed_html_length: wasParsed ? html.length : null,
         extraction_status: 'completed',
         extraction_completed_at: new Date().toISOString()
-      })
+    };
+
+    // Only update contract/network if they were explicitly provided
+    if (contractAddress) {
+        updateData.contract_address = contractAddress;
+    }
+    if (network) {
+        updateData.network = network;
+    }
+
+    const { data: insertData, error: dbError } = await supabase
+      .from('crypto_projects_rated')
+      .update(updateData)
       .eq('id', projectId)
       .select();
 

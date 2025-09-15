@@ -34,7 +34,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     // Default state - include all available networks
     return {
       tokenType: 'all',
-      networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'],
+      networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain', 'other'],
       includeImposters: false,  // Default: hide imposters
       includeUnverified: false,  // Default: hide unverified
       minWebsiteScore: 1,
@@ -92,7 +92,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
   const [isNetworksCollapsed, setIsNetworksCollapsed] = useState(sectionStates.networks)
   const [selectedNetworks, setSelectedNetworks] = useState<string[]>(() => {
     const initial = getInitialFilterState()
-    return initial.networks || ['ethereum', 'solana', 'bsc', 'base', 'pulsechain']
+    return initial.networks || ['ethereum', 'solana', 'bsc', 'base', 'pulsechain', 'other']
   })
   const [isSafetyCollapsed, setIsSafetyCollapsed] = useState(sectionStates.safety || true)
   const [includeImposters, setIncludeImposters] = useState(() => {
@@ -149,7 +149,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
   const resetAllFilters = () => {
     const defaultState = {
       tokenType: 'all' as const,
-      networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'],
+      networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain', 'other'],
       includeImposters: false,
       includeUnverified: false,
       minWebsiteScore: 1,
@@ -159,7 +159,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     // Update all individual states
     setIncludeUtility(true)
     setIncludeMeme(true)
-    setSelectedNetworks(['ethereum', 'solana', 'bsc', 'base', 'pulsechain'])
+    setSelectedNetworks(['ethereum', 'solana', 'bsc', 'base', 'pulsechain', 'other'])
     setIncludeImposters(false)
     setIncludeUnverified(false)
     setMinWebsiteScore(1)
@@ -426,7 +426,8 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
               { id: 'solana', label: 'Solana', color: '#00ffa3' },
               { id: 'bsc', label: 'BSC', color: '#ffcc00' },
               { id: 'base', label: 'Base', color: '#0052ff' },
-              { id: 'pulsechain', label: 'PulseChain', color: '#ff00ff' }
+              { id: 'pulsechain', label: 'PulseChain', color: '#ff00ff' },
+              { id: 'other', label: 'Other', color: '#888888' }
             ].map(network => (
               <label 
                 key={network.id}

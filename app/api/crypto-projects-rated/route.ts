@@ -86,7 +86,24 @@ export async function GET(request: NextRequest) {
     if (networks) {
       // Multiple networks via comma-separated string
       const networkList = networks.split(',').filter(n => n.trim());
-      if (networkList.length > 0) {
+
+      // Check if "other" is included
+      const hasOther = networkList.includes('other');
+      const standardNetworks = ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'];
+
+      if (hasOther) {
+        // Remove "other" from the list
+        const withoutOther = networkList.filter(n => n !== 'other');
+
+        if (withoutOther.length > 0) {
+          // Include specific networks AND all non-standard networks
+          query = query.or(`network.in.(${withoutOther.join(',')}),not.network.in.(${standardNetworks.join(',')})`);
+        } else {
+          // Only "other" selected - get all non-standard networks
+          query = query.not('network', 'in', `(${standardNetworks.join(',')})`);
+        }
+      } else if (networkList.length > 0) {
+        // No "other" - just filter by selected networks
         query = query.in('network', networkList);
       }
     } else if (network && network !== 'all') {
