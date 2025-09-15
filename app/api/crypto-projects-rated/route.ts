@@ -103,8 +103,9 @@ export async function GET(request: NextRequest) {
           query = query.or(`network.in.(${withoutOther.join(',')}),${otherNetworksFilter}`);
         } else {
           // Only "other" selected - get all non-standard networks
-          // Fixed syntax: pass array with proper formatting
-          query = query.not('network', 'in', `(${standardNetworks.join(',')})`);
+          // Use filter syntax that excludes standard networks
+          const filters = standardNetworks.map(n => `network.neq.${n}`).join(',');
+          query = query.or(filters);
         }
       } else if (networkList.length > 0) {
         // No "other" - just filter by selected networks
