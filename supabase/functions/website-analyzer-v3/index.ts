@@ -399,11 +399,15 @@ If dead/blocked, stop analysis and return minimal response with website_status o
 DETERMINE TYPE:
 Is this a meme token (focus on community/viral) or utility token (real use case)?
 
+DEBUG STEP - LIST ALL LINKS:
+FIRST, before anything else, scan the ENTIRE HTML and list EVERY SINGLE link you can find (all href attributes, onclick handlers, button links, navigation items, footer links, etc.) in the "all_links_found" array. Include relative and absolute URLs.
+
 STAGE 2 LINK SELECTION:
-Identify up to 3 critical resources for deeper analysis. ALWAYS prioritize in this order:
+After listing all links, identify up to 3 critical resources for deeper analysis. ALWAYS prioritize in this order:
 1. WHITEPAPER/TECHNICAL DOCS (if found) - Essential for understanding tokenomics and tech
 2. GITHUB/CODE REPOS - For verifying technical claims
 3. OFFICIAL DOCS/GITBOOK - For comprehensive project details
+4. ABOUT/TEAM pages - For credibility assessment
 Only use Twitter/social as last resort if technical resources unavailable.
 
 Technical Assessment: 2-3 sentences describing how this website was built
@@ -449,6 +453,9 @@ Return JSON:
       "flag": "concern if any",
       "severity": "high/medium/low"
     }
+  ],
+  "all_links_found": [
+    "List EVERY single link you can find in the HTML (hrefs, buttons, navigation, footer, etc.)"
   ],
   "selected_stage_2_links": [
     {
