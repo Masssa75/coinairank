@@ -98,14 +98,19 @@ export async function GET(request: NextRequest) {
 
         if (withoutOther.length > 0) {
           // Include specific networks AND all non-standard networks
-          // Use proper Supabase filter syntax
-          const otherNetworksFilter = standardNetworks.map(n => `network.neq.${n}`).join(',');
-          query = query.or(`network.in.(${withoutOther.join(',')}),${otherNetworksFilter}`);
+          // Build a list of all networks to include: specified ones + anything not in standardNetworks
+          // This is complex with Supabase filters, so we'll use a different approach
+          // Get all networks EXCEPT the standard ones we DON'T want
+          const excludedNetworks = standardNetworks.filter(n => !withoutOther.includes(n));
+          for (const net of excludedNetworks) {
+            query = query.neq('network', net);
+          }
         } else {
           // Only "other" selected - get all non-standard networks
-          // Use filter syntax that excludes standard networks
-          const filters = standardNetworks.map(n => `network.neq.${n}`).join(',');
-          query = query.or(filters);
+          // Chain multiple neq conditions (they are AND by default)
+          for (const net of standardNetworks) {
+            query = query.neq('network', net);
+          }
         }
       } else if (networkList.length > 0) {
         // No "other" - just filter by selected networks
