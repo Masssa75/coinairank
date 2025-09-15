@@ -10,7 +10,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 // PUT /api/admin/benchmarks/[id] - Update benchmark
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication
@@ -22,6 +22,7 @@ export async function PUT(
     }
 
     const body = await request.json();
+    const params = await context.params;
     const benchmarkId = parseInt(params.id);
 
     if (isNaN(benchmarkId)) {
@@ -60,7 +61,7 @@ export async function PUT(
 // DELETE /api/admin/benchmarks/[id] - Delete benchmark
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication
@@ -71,6 +72,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const params = await context.params;
     const benchmarkId = parseInt(params.id);
 
     if (isNaN(benchmarkId)) {
