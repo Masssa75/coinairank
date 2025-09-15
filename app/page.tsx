@@ -662,13 +662,13 @@ export default function ProjectsRatedPage() {
                     {/* Admin-only options */}
                     {isAdmin && (
                       <>
-                        <Link 
-                          href="/admin/prompts"
+                        <Link
+                          href="/admin/dashboard"
                           className="w-full px-4 py-2 text-left text-[#00ff88] hover:bg-[#1a1c1f] transition-colors flex items-center gap-3 text-sm block"
                           onClick={() => setIsMenuOpen(false)}
                         >
                           <FileCode2 className="w-4 h-4" />
-                          AI Analysis Prompts
+                          Admin Panel
                         </Link>
                         
                         <button 

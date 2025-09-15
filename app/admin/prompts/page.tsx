@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, FileCode2, RefreshCw, Copy, Check } from 'lucide-react';
+import { ArrowLeft, FileCode2, RefreshCw, Copy, Check, LogOut } from 'lucide-react';
 import Link from 'next/link';
+import AdminSidebar from '@/components/AdminSidebar';
 
 interface PromptsData {
   promptTemplate: string;
@@ -89,20 +90,19 @@ export default function AdminPromptsPage() {
     );
   }
 
+  const handleLogout = async () => {
+    await fetch('/api/admin/auth', { method: 'DELETE' });
+    router.push('/');
+  };
+
   return (
-    <div className="min-h-screen bg-[#0a0b0d]">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#0f0f0f] border-b border-[#2a2d31] px-6 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link 
-            href="/"
-            className="p-2 rounded hover:bg-[#1a1c1f] transition-colors"
-            title="Back to dashboard"
-          >
-            <ArrowLeft className="w-5 h-5 text-white" />
-          </Link>
-          <span className="text-xl font-semibold tracking-tight text-white">AI Analysis Prompts</span>
-        </div>
+    <div className="min-h-screen bg-[#0a0b0d] flex">
+      <AdminSidebar activePage="prompts" />
+
+      <div className="flex-1">
+        {/* Header */}
+        <header className="sticky top-0 z-40 bg-[#0f0f0f] border-b border-[#2a2d31] px-6 h-14 flex items-center justify-between">
+          <h1 className="text-xl font-semibold text-white">AI Analysis Prompts</h1>
         
         <div className="flex items-center gap-3">
           <Link 
@@ -257,6 +257,7 @@ export default function AdminPromptsPage() {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
