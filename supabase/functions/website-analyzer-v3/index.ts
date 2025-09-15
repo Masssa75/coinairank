@@ -409,9 +409,12 @@ Only use Twitter/social as last resort if technical resources unavailable.
 Technical Assessment: 2-3 sentences describing how this website was built
 SSR/CSR Classification: SSR or CSR${contractAddress ? `
 
-CONTRACT VERIFICATION:
+CONTRACT VERIFICATION:${contractAddress.startsWith('native:') ? `
+This is a native L1 blockchain token (${contractAddress}).
+Native tokens don't have contract addresses since they're the base currency of their blockchain.
+Mark as verified if this is clearly the official website for the L1 blockchain mentioned.` : `
 Search the HTML for this contract address: ${contractAddress}
-Check if it appears anywhere on the website (footer, docs, token info, etc.)` : ''}
+Check if it appears anywhere on the website (footer, docs, token info, etc.)`}` : ''}
 
 PROJECT DESCRIPTION: Write a 60-character MAX description of what this project actually does. Be specific and factual, no marketing fluff.
 
@@ -428,7 +431,8 @@ Return JSON:
   "ssr_csr_classification": "SSR or CSR"${contractAddress ? `,
   "contract_verification": {
     "found_on_site": true/false,
-    "note": "where/how found or why not found"
+    "note": "${contractAddress.startsWith('native:') ? 'Native L1 token - verified if official blockchain website' : 'where/how found or why not found'}",
+    "confidence": "high/medium/low"
   }` : ''},
   "signals_found": [
     {
