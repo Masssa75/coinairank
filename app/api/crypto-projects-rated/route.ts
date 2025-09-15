@@ -83,6 +83,7 @@ export async function GET(request: NextRequest) {
     query = query.or('website_status.eq.active,website_status.eq.pending,website_status.is.null');
     
     // Apply network filter - support both single and multiple networks
+    // By default (no filter), show ALL networks including custom ones
     if (networks) {
       // Multiple networks via comma-separated string
       const networkList = networks.split(',').filter(n => n.trim());
@@ -97,10 +98,12 @@ export async function GET(request: NextRequest) {
 
         if (withoutOther.length > 0) {
           // Include specific networks AND all non-standard networks
-          query = query.or(`network.in.(${withoutOther.join(',')}),not.network.in.(${standardNetworks.join(',')})`);
+          // Use proper Supabase filter syntax
+          query = query.or(`network.in.(${withoutOther.join(',')}),not(network).in.(${standardNetworks.join(',')})`);
         } else {
           // Only "other" selected - get all non-standard networks
-          query = query.not('network', 'in', `(${standardNetworks.join(',')})`);
+          // Fixed syntax: pass array directly to not.in
+          query = query.not('network', 'in', standardNetworks);
         }
       } else if (networkList.length > 0) {
         // No "other" - just filter by selected networks
@@ -110,6 +113,7 @@ export async function GET(request: NextRequest) {
       // Single network (legacy support)
       query = query.eq('network', network);
     }
+    // If no network filter specified, return ALL projects (default behavior)
     
     // Apply tier filter
     if (tier && tier !== 'all') {
