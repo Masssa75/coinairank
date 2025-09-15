@@ -99,7 +99,8 @@ export async function GET(request: NextRequest) {
         if (withoutOther.length > 0) {
           // Include specific networks AND all non-standard networks
           // Use proper Supabase filter syntax
-          query = query.or(`network.in.(${withoutOther.join(',')}),not(network).in.(${standardNetworks.join(',')})`);
+          const otherNetworksFilter = standardNetworks.map(n => `network.neq.${n}`).join(',');
+          query = query.or(`network.in.(${withoutOther.join(',')}),${otherNetworksFilter}`);
         } else {
           // Only "other" selected - get all non-standard networks
           // Fixed syntax: pass array directly to not.in
