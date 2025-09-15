@@ -431,8 +431,7 @@ Return JSON:
   "ssr_csr_classification": "SSR or CSR"${contractAddress ? `,
   "contract_verification": {
     "found_on_site": true/false,
-    "note": "${contractAddress.startsWith('native:') ? 'Native L1 token - verified if official blockchain website' : 'where/how found or why not found'}",
-    "confidence": "high/medium/low"
+    "note": "${contractAddress.startsWith('native:') ? 'Native L1 token - verified if official blockchain website' : 'where/how found or why not found'}"
   }` : ''},
   "signals_found": [
     {
