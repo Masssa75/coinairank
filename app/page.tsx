@@ -833,6 +833,7 @@ export default function ProjectsRatedPage() {
                             stage_2_links: (project as any).stage_2_links || [],
                             html_length: htmlLength
                           }}
+                          technicalAssessment={project.technical_assessment}
                           hasLargeHtml={hasLargeHtml}
                           needsProperScraping={needsProperScraping}
                           hasNoAnalysis={hasNoAnalysis}

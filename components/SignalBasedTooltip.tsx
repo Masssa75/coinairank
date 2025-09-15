@@ -68,6 +68,7 @@ interface SignalBasedTooltipProps {
     pros?: string[];  // Support old format
     cons?: string[];  // Support old format
   } | null;
+  technicalAssessment?: string;  // Add technical assessment field
   hasLargeHtml?: boolean;
   needsProperScraping?: boolean;
   hasNoAnalysis?: boolean;
@@ -89,6 +90,7 @@ export function SignalBasedTooltip({
   onFeedbackUpdate,
   stage2Resources,
   tooltip,
+  technicalAssessment,
   hasLargeHtml = false,
   needsProperScraping = false,
   hasNoAnalysis = false,
@@ -828,6 +830,18 @@ export function SignalBasedTooltip({
                     </li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {/* Technical Assessment - Available to all users */}
+            {(technicalAssessment || websiteAnalysis?.technical_assessment) && (
+              <div className="mt-3 pt-3 border-t border-[#2a2d31]">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[#666] text-xs font-bold">TECHNICAL ASSESSMENT</span>
+                </div>
+                <div className="text-[11px] text-[#aaa] leading-relaxed">
+                  {technicalAssessment || websiteAnalysis?.technical_assessment}
+                </div>
               </div>
             )}
 

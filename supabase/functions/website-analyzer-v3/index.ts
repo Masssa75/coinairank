@@ -420,7 +420,7 @@ Return JSON:
   "token_type": "meme/utility",
   "project_description": "60 chars max description",
   "project_summary": "75 word summary of the project",
-  "technical_assessment": "2-3 sentences about website build quality",
+  "technical_assessment": "4-5 sentences: First describe the technical implementation (framework, SSR/CSR, responsiveness, performance). Then assess WHO likely built this (amateur solo, mid-tier agency, elite team) and EFFORT level (weekend project vs months of polish). Estimate implied INVESTMENT based on execution quality ($1K template vs $50K professional vs $100K+ enterprise). Finally, evaluate if the content and claimed innovations appear genuine or AI-generated, and explain your reasoning.",
   "ssr_csr_classification": "SSR or CSR"${contractAddress ? `,
   "contract_verification": {
     "found_on_site": true/false,
