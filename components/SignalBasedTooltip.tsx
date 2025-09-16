@@ -109,6 +109,7 @@ export function SignalBasedTooltip({
   const [saveSuccess, setSaveSuccess] = React.useState(false);
   const [isEditMode, setIsEditMode] = React.useState<Record<string, boolean>>({});
   const [showLinksSection, setShowLinksSection] = React.useState(false);
+  const [showResourcesSection, setShowResourcesSection] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
@@ -372,9 +373,15 @@ export function SignalBasedTooltip({
                            websiteAnalysis?.parsed_content?.links_with_context || 
                            [];
                            
+    // Get new resource fields
+    const whitepaper_url = websiteAnalysis?.whitepaper_url;
+    const github_url = websiteAnalysis?.github_url;
+    const docs_url = websiteAnalysis?.docs_url;
+    const social_urls = websiteAnalysis?.social_urls || [];
+    const important_resources = websiteAnalysis?.important_resources || [];
+
+    // For backwards compatibility with old stage_2_links
     const stage2Links = websiteAnalysis?.stage_2_links || [];
-    
-    // Create a map of selected URLs with their reasoning
     const selectedUrlsMap = new Map<string, string>();
     stage2Links.forEach((link: {url: string, reasoning: string}) => {
       selectedUrlsMap.set(link.url, link.reasoning);
@@ -852,6 +859,82 @@ export function SignalBasedTooltip({
                 : '-top-2 border-l-[8px] border-l-transparent border-b-[8px] border-b-[#1a1c1f] border-r-[8px] border-r-transparent'
             }`}>
             </div>
+
+            {/* Critical Resources Section - New */}
+            {isAdmin && (whitepaper_url || github_url || docs_url || social_urls.length > 0 || important_resources.length > 0) && (
+              <div className="mt-3 pt-3 border-t border-[#2a2d31]">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowResourcesSection(!showResourcesSection);
+                  }}
+                  className="flex items-center gap-2 text-[10px] text-[#00ff88] font-bold hover:text-[#00ff99] transition-colors cursor-pointer"
+                >
+                  <span>{showResourcesSection ? '▼' : '▶'}</span>
+                  <span>CRITICAL RESOURCES</span>
+                </button>
+
+                {showResourcesSection && (
+                  <div className="mt-2 space-y-2">
+                    {/* Whitepaper */}
+                    <div className="flex items-center gap-2 text-[9px]">
+                      <span className="text-[#ff9500] w-20">📄 Whitepaper:</span>
+                      {whitepaper_url ? (
+                        <span className="text-[#aaa] font-mono truncate flex-1">
+                          {whitepaper_url.length > 40 ? whitepaper_url.substring(0, 37) + '...' : whitepaper_url}
+                          <span className="text-[#00ff88] ml-2">→ Stage 2</span>
+                        </span>
+                      ) : (
+                        <span className="text-[#666]">Not found</span>
+                      )}
+                    </div>
+
+                    {/* Documentation */}
+                    <div className="flex items-center gap-2 text-[9px]">
+                      <span className="text-[#10b981] w-20">📚 Docs:</span>
+                      {docs_url ? (
+                        <span className="text-[#aaa] font-mono truncate flex-1">
+                          {docs_url.length > 40 ? docs_url.substring(0, 37) + '...' : docs_url}
+                          <span className="text-[#00ff88] ml-2">→ Stage 3</span>
+                        </span>
+                      ) : (
+                        <span className="text-[#666]">Not found</span>
+                      )}
+                    </div>
+
+                    {/* GitHub */}
+                    <div className="flex items-center gap-2 text-[9px]">
+                      <span className="text-[#8b5cf6] w-20">💻 GitHub:</span>
+                      {github_url ? (
+                        <span className="text-[#aaa] font-mono truncate flex-1">
+                          {github_url.length > 40 ? github_url.substring(0, 37) + '...' : github_url}
+                          <span className="text-[#00ff88] ml-2">→ Stage 4</span>
+                        </span>
+                      ) : (
+                        <span className="text-[#666]">Not found</span>
+                      )}
+                    </div>
+
+                    {/* Social Links */}
+                    {social_urls.length > 0 && (
+                      <div className="flex items-center gap-2 text-[9px]">
+                        <span className="text-[#3b82f6] w-20">🔗 Social:</span>
+                        <span className="text-[#aaa]">({social_urls.length} links)</span>
+                      </div>
+                    )}
+
+                    {/* Important Resources */}
+                    {important_resources.length > 0 && (
+                      <div className="flex items-center gap-2 text-[9px]">
+                        <span className="text-[#fbbf24] w-20">⭐ Other:</span>
+                        <span className="text-[#aaa]">({important_resources.length} resources)</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Admin Links Section - Expandable */}
             {isAdmin && linksData && Object.keys(linksData).length > 0 && (
               <div className="mt-3 pt-3 border-t border-[#2a2d31]">
@@ -868,89 +951,18 @@ export function SignalBasedTooltip({
                 
                 {showLinksSection && (
                   <div className="mt-2 space-y-3 max-h-[300px] overflow-y-auto">
-                    {/* Selected for Stage 2 section at top */}
-                    {(() => {
-                      const selectedLinks = Object.entries(linksData)
-                        .flatMap(([type, links]) => 
-                          links.filter(l => l.selected).map(l => ({ ...l, type }))
-                        );
-                      
-                      if (selectedLinks.length > 0) {
-                        return (
-                          <div className="bg-[#001a0d] p-3 rounded border border-[#00ff88]/30 mb-4">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-[#00ff88]">
-                                ✓ Selected for Stage 2 ({selectedLinks.length})
-                              </span>
-                            </div>
-                            <div className="space-y-2">
-                              {selectedLinks.map((link, idx) => {
-                                const displayUrl = link.url.length > 50 ? 
-                                  link.url.substring(0, 47) + '...' : 
-                                  link.url;
-                                const displayText = link.text && link.text !== 'No text' && link.text.length > 30 ?
-                                  link.text.substring(0, 27) + '...' :
-                                  link.text;
-                                const typeColor = link.type === 'github' ? 'text-[#8b5cf6]' : 
-                                                 link.type === 'documentation' ? 'text-[#10b981]' :
-                                                 link.type === 'social' ? 'text-[#3b82f6]' : 'text-[#6b7280]';
-                                
-                                return (
-                                  <div key={idx} className="text-[9px]">
-                                    <div className="flex items-start gap-2">
-                                      <div className="flex-shrink-0 mt-0.5">
-                                        <span className="text-[#00ff88]">✓</span>
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2">
-                                          <div className="text-[#aaa] font-mono truncate flex-1">
-                                            {displayUrl}
-                                          </div>
-                                          <span className={`text-[8px] px-1.5 py-0.5 rounded ${typeColor} bg-current/10`}>
-                                            {link.type}
-                                          </span>
-                                        </div>
-                                        {displayText && displayText !== 'No text' && (
-                                          <div className="text-[#666] italic truncate mt-0.5">
-                                            &ldquo;{displayText}&rdquo;
-                                          </div>
-                                        )}
-                                        {/* Show reasoning for why this link was selected */}
-                                        {link.reasoning && (
-                                          <div className="text-[#888] text-[8px] mt-1 pl-2 border-l border-[#00ff88]/30">
-                                            💡 {link.reasoning}
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      }
-                      return null;
-                    })()}
-                    
                     {/* All discovered links sections */}
                     {Object.entries(linksData).map(([type, links]) => {
-                      const selectedCount = links.filter(l => l.selected).length;
-                      const typeColor = type === 'github' ? 'text-[#8b5cf6]' : 
+                      const typeColor = type === 'github' ? 'text-[#8b5cf6]' :
                                        type === 'documentation' ? 'text-[#10b981]' :
                                        type === 'social' ? 'text-[#3b82f6]' : 'text-[#6b7280]';
-                      
+
                       return (
                         <div key={type} className="bg-[#0f1011] p-2 rounded border border-[#333]">
                           <div className="flex items-center justify-between mb-2">
                             <span className={`text-[10px] font-bold uppercase tracking-wider ${typeColor}`}>
                               {type.replace('_', ' ')} ({links.length})
                             </span>
-                            {selectedCount > 0 && (
-                              <span className="text-[9px] text-[#00ff88] bg-[#00ff88]/10 px-1.5 py-0.5 rounded">
-                                {selectedCount} chosen
-                              </span>
-                            )}
                           </div>
                           
                           <div className="space-y-1">
@@ -968,11 +980,7 @@ export function SignalBasedTooltip({
                               return (
                                 <div key={idx} className="flex items-start gap-2 text-[9px]">
                                   <div className="flex-shrink-0 mt-0.5">
-                                    {link.selected ? (
-                                      <span className="text-[#00ff88]">✓</span>
-                                    ) : (
-                                      <span className="text-[#444]">○</span>
-                                    )}
+                                    <span className="text-[#444]">•</span>
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <div className="text-[#aaa] font-mono truncate">

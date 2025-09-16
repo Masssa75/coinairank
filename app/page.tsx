@@ -832,7 +832,12 @@ export default function ProjectsRatedPage() {
                             ...project.website_stage1_analysis,
                             discovered_links: (project as any).discovered_links || [],
                             stage_2_links: (project as any).stage_2_links || [],
-                            html_length: htmlLength
+                            html_length: htmlLength,
+                            whitepaper_url: (project as any).whitepaper_url,
+                            github_url: (project as any).github_url,
+                            docs_url: (project as any).docs_url,
+                            social_urls: (project as any).social_urls || [],
+                            important_resources: (project as any).important_resources || []
                           }}
                           technicalAssessment={project.technical_assessment}
                           hasLargeHtml={hasLargeHtml}
