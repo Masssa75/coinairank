@@ -373,12 +373,7 @@ export function SignalBasedTooltip({
                            websiteAnalysis?.parsed_content?.links_with_context || 
                            [];
                            
-    // Get new resource fields
-    const whitepaper_url = websiteAnalysis?.whitepaper_url;
-    const github_url = websiteAnalysis?.github_url;
-    const docs_url = websiteAnalysis?.docs_url;
-    const social_urls = websiteAnalysis?.social_urls || [];
-    const important_resources = websiteAnalysis?.important_resources || [];
+    // Resource fields are accessed directly from websiteAnalysis
 
     // For backwards compatibility with old stage_2_links
     const stage2Links = websiteAnalysis?.stage_2_links || [];
@@ -861,7 +856,7 @@ export function SignalBasedTooltip({
             </div>
 
             {/* Critical Resources Section - New */}
-            {isAdmin && (whitepaper_url || github_url || docs_url || social_urls.length > 0 || important_resources.length > 0) && (
+            {isAdmin && (websiteAnalysis?.whitepaper_url || websiteAnalysis?.github_url || websiteAnalysis?.docs_url || (websiteAnalysis?.social_urls && websiteAnalysis.social_urls.length > 0) || (websiteAnalysis?.important_resources && websiteAnalysis.important_resources.length > 0)) && (
               <div className="mt-3 pt-3 border-t border-[#2a2d31]">
                 <button
                   onClick={(e) => {
@@ -879,9 +874,9 @@ export function SignalBasedTooltip({
                     {/* Whitepaper */}
                     <div className="flex items-center gap-2 text-[9px]">
                       <span className="text-[#ff9500] w-20">📄 Whitepaper:</span>
-                      {whitepaper_url ? (
+                      {websiteAnalysis?.whitepaper_url ? (
                         <span className="text-[#aaa] font-mono truncate flex-1">
-                          {whitepaper_url.length > 40 ? whitepaper_url.substring(0, 37) + '...' : whitepaper_url}
+                          {websiteAnalysis.whitepaper_url.length > 40 ? websiteAnalysis.whitepaper_url.substring(0, 37) + '...' : websiteAnalysis.whitepaper_url}
                           <span className="text-[#00ff88] ml-2">→ Stage 2</span>
                         </span>
                       ) : (
@@ -892,9 +887,9 @@ export function SignalBasedTooltip({
                     {/* Documentation */}
                     <div className="flex items-center gap-2 text-[9px]">
                       <span className="text-[#10b981] w-20">📚 Docs:</span>
-                      {docs_url ? (
+                      {websiteAnalysis?.docs_url ? (
                         <span className="text-[#aaa] font-mono truncate flex-1">
-                          {docs_url.length > 40 ? docs_url.substring(0, 37) + '...' : docs_url}
+                          {websiteAnalysis.docs_url.length > 40 ? websiteAnalysis.docs_url.substring(0, 37) + '...' : websiteAnalysis.docs_url}
                           <span className="text-[#00ff88] ml-2">→ Stage 3</span>
                         </span>
                       ) : (
@@ -905,9 +900,9 @@ export function SignalBasedTooltip({
                     {/* GitHub */}
                     <div className="flex items-center gap-2 text-[9px]">
                       <span className="text-[#8b5cf6] w-20">💻 GitHub:</span>
-                      {github_url ? (
+                      {websiteAnalysis?.github_url ? (
                         <span className="text-[#aaa] font-mono truncate flex-1">
-                          {github_url.length > 40 ? github_url.substring(0, 37) + '...' : github_url}
+                          {websiteAnalysis.github_url.length > 40 ? websiteAnalysis.github_url.substring(0, 37) + '...' : websiteAnalysis.github_url}
                           <span className="text-[#00ff88] ml-2">→ Stage 4</span>
                         </span>
                       ) : (
@@ -916,18 +911,18 @@ export function SignalBasedTooltip({
                     </div>
 
                     {/* Social Links */}
-                    {social_urls.length > 0 && (
+                    {websiteAnalysis?.social_urls && websiteAnalysis.social_urls.length > 0 && (
                       <div className="flex items-center gap-2 text-[9px]">
                         <span className="text-[#3b82f6] w-20">🔗 Social:</span>
-                        <span className="text-[#aaa]">({social_urls.length} links)</span>
+                        <span className="text-[#aaa]">({websiteAnalysis.social_urls.length} links)</span>
                       </div>
                     )}
 
                     {/* Important Resources */}
-                    {important_resources.length > 0 && (
+                    {websiteAnalysis?.important_resources && websiteAnalysis.important_resources.length > 0 && (
                       <div className="flex items-center gap-2 text-[9px]">
                         <span className="text-[#fbbf24] w-20">⭐ Other:</span>
-                        <span className="text-[#aaa]">({important_resources.length} resources)</span>
+                        <span className="text-[#aaa]">({websiteAnalysis.important_resources.length} resources)</span>
                       </div>
                     )}
                   </div>
