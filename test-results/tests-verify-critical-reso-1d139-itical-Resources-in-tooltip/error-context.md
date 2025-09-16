@@ -1,0 +1,518 @@
+# Page snapshot
+
+```yaml
+- generic [active]:
+  - generic [ref=e1]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - heading "FILTERS" [level=2] [ref=e5]
+        - generic [ref=e6]:
+          - button "Reset" [ref=e7]
+          - button "Hide Filters" [ref=e8]:
+            - img [ref=e9]
+      - generic [ref=e11]:
+        - generic [ref=e12] [cursor=pointer]:
+          - heading "Token Type" [level=3] [ref=e13] [cursor=pointer]
+          - img [ref=e14] [cursor=pointer]
+        - generic [ref=e17]:
+          - generic [ref=e18] [cursor=pointer]:
+            - generic [ref=e20] [cursor=pointer]: ✓
+            - generic [ref=e21] [cursor=pointer]: Utility Tokens
+          - generic [ref=e22] [cursor=pointer]:
+            - generic [ref=e24] [cursor=pointer]: ✓
+            - generic [ref=e25] [cursor=pointer]: Meme Tokens
+      - generic [ref=e26]:
+        - generic [ref=e27] [cursor=pointer]:
+          - heading "Safety" [level=3] [ref=e28] [cursor=pointer]
+          - img [ref=e29] [cursor=pointer]
+        - generic [ref=e31]:
+          - generic [ref=e34] [cursor=pointer]: Include Imposters
+          - generic [ref=e35]: When checked, shows tokens marked as having inauthentic websites
+          - generic [ref=e38] [cursor=pointer]: Include Unverified
+          - generic [ref=e39]: When checked, also shows tokens whose contract is not found on their website
+      - generic [ref=e40]:
+        - generic [ref=e41] [cursor=pointer]:
+          - heading "Networks" [level=3] [ref=e42] [cursor=pointer]
+          - img [ref=e43] [cursor=pointer]
+        - generic [ref=e45]:
+          - generic [ref=e46] [cursor=pointer]:
+            - generic [ref=e48] [cursor=pointer]: ✓
+            - generic [ref=e49] [cursor=pointer]: Ethereum
+          - generic [ref=e50] [cursor=pointer]:
+            - generic [ref=e52] [cursor=pointer]: ✓
+            - generic [ref=e53] [cursor=pointer]: Solana
+          - generic [ref=e54] [cursor=pointer]:
+            - generic [ref=e56] [cursor=pointer]: ✓
+            - generic [ref=e57] [cursor=pointer]: BSC
+          - generic [ref=e58] [cursor=pointer]:
+            - generic [ref=e60] [cursor=pointer]: ✓
+            - generic [ref=e61] [cursor=pointer]: Base
+          - generic [ref=e62] [cursor=pointer]:
+            - generic [ref=e64] [cursor=pointer]: ✓
+            - generic [ref=e65] [cursor=pointer]: PulseChain
+          - generic [ref=e66] [cursor=pointer]:
+            - generic [ref=e68] [cursor=pointer]: ✓
+            - generic [ref=e69] [cursor=pointer]: Other
+      - generic [ref=e70]:
+        - generic [ref=e71] [cursor=pointer]:
+          - heading "Website Score" [level=3] [ref=e72] [cursor=pointer]
+          - img [ref=e73] [cursor=pointer]
+        - generic [ref=e76]:
+          - generic [ref=e77]:
+            - generic [ref=e78]: Min Website Score
+            - generic [ref=e79]: "1"
+          - slider [ref=e80] [cursor=pointer]: "1"
+          - generic [ref=e81]:
+            - generic [ref=e82]: "1"
+            - generic [ref=e83]: "5"
+            - generic [ref=e84]: "10"
+      - generic [ref=e85]:
+        - generic [ref=e86] [cursor=pointer]:
+          - heading "Analysis Status" [level=3] [ref=e87] [cursor=pointer]
+          - img [ref=e88] [cursor=pointer]
+        - generic [ref=e91]:
+          - generic [ref=e94] [cursor=pointer]: Show Only Reprocessed
+          - generic [ref=e95]: Filters to only show tokens with completed Phase 1 & 2 analysis
+          - generic [ref=e96]:
+            - generic [ref=e97]: TEMPORARY FILTER
+            - generic [ref=e98]: This filter shows tokens where comparison_status = 'completed'
+    - generic [ref=e99]:
+      - banner [ref=e100]:
+        - generic [ref=e101]:
+          - link "CoinAiRank" [ref=e102] [cursor=pointer]:
+            - /url: /
+          - generic [ref=e103]:
+            - img [ref=e104]
+            - text: Admin
+        - generic [ref=e106]:
+          - button "Column Settings" [ref=e107]:
+            - img [ref=e108]
+          - button "Search" [ref=e111]:
+            - img [ref=e112]
+        - generic [ref=e115]:
+          - generic [ref=e116]: "Sort by:"
+          - combobox [ref=e117] [cursor=pointer]:
+            - option "Date Called" [selected]
+            - option "AI Score"
+            - option "Market Cap"
+            - option "Liquidity"
+            - option "ROI %"
+          - button "Sort descending" [ref=e118]:
+            - img [ref=e119]
+        - button "Menu" [ref=e122]:
+          - img [ref=e123]
+      - generic [ref=e125]:
+        - generic [ref=e127]:
+          - img "TAO screenshot" [ref=e130]
+          - generic [ref=e131]:
+            - generic [ref=e132]:
+              - generic [ref=e133]:
+                - link "TAO" [ref=e134] [cursor=pointer]:
+                  - /url: /project/TAO
+                  - heading "TAO" [level=3] [ref=e135] [cursor=pointer]:
+                    - generic [ref=e136] [cursor=pointer]:
+                      - generic [ref=e137] [cursor=pointer]: TAO
+                      - img [ref=e138]
+                - generic [ref=e141]: other
+              - generic [ref=e142]:
+                - generic [ref=e144]: BASIC
+                - paragraph [ref=e145]: Today
+            - generic [ref=e146]:
+              - generic [ref=e147]:
+                - paragraph [ref=e148]: Market Cap
+                - paragraph [ref=e149]: N/A
+              - generic [ref=e150]:
+                - paragraph [ref=e151]: Liquidity
+                - paragraph [ref=e152]: N/A
+              - generic [ref=e153]:
+                - paragraph [ref=e154]: ROI
+                - paragraph [ref=e155]: N/A
+            - generic [ref=e156]:
+              - link "Visit Website ↗" [ref=e157] [cursor=pointer]:
+                - /url: https://bittensor.com
+              - link "Chart 📊" [ref=e158] [cursor=pointer]:
+                - /url: https://dexscreener.com/other/native:bittensor
+              - button [ref=e160]:
+                - img [ref=e161]
+        - generic [ref=e166]:
+          - img "fumi / SOL screenshot" [ref=e169]
+          - generic [ref=e170]:
+            - generic [ref=e171]:
+              - generic [ref=e172]:
+                - link "fumi" [ref=e173] [cursor=pointer]:
+                  - /url: /project/fumi
+                  - heading "fumi" [level=3] [ref=e174] [cursor=pointer]:
+                    - generic [ref=e175] [cursor=pointer]:
+                      - generic [ref=e176] [cursor=pointer]: fumi
+                      - img [ref=e177]
+                - generic [ref=e180]: solana
+              - generic [ref=e181]:
+                - generic [ref=e183]: BASIC
+                - paragraph [ref=e184]: Today
+            - generic [ref=e185]:
+              - generic [ref=e186]:
+                - paragraph [ref=e187]: Market Cap
+                - paragraph [ref=e188]: $7K
+              - generic [ref=e189]:
+                - paragraph [ref=e190]: Liquidity
+                - paragraph [ref=e191]: N/A
+              - generic [ref=e192]:
+                - paragraph [ref=e193]: ROI
+                - paragraph [ref=e194]: N/A
+            - generic [ref=e195]:
+              - link "Visit Website ↗" [ref=e196] [cursor=pointer]:
+                - /url: https://fumisolana.my.canva.site/
+              - link "Chart 📊" [ref=e197] [cursor=pointer]:
+                - /url: https://dexscreener.com/solana/915essckqkx2emimp9ry54fkmvelapj2bgftjsgcejda
+              - button [ref=e199]:
+                - img [ref=e200]
+        - generic [ref=e205]:
+          - img "polybro / SOL screenshot" [ref=e208]
+          - generic [ref=e209]:
+            - generic [ref=e210]:
+              - generic [ref=e211]:
+                - link "polybro" [ref=e212] [cursor=pointer]:
+                  - /url: /project/polybro
+                  - heading "polybro" [level=3] [ref=e213] [cursor=pointer]:
+                    - generic [ref=e214] [cursor=pointer]:
+                      - generic [ref=e215] [cursor=pointer]: polybro
+                      - img [ref=e216]
+                - generic [ref=e219]: solana
+              - generic [ref=e220]:
+                - generic [ref=e222]: SOLID
+                - paragraph [ref=e223]: Today
+            - generic [ref=e224]:
+              - generic [ref=e225]:
+                - paragraph [ref=e226]: Market Cap
+                - paragraph [ref=e227]: $35K
+              - generic [ref=e228]:
+                - paragraph [ref=e229]: Liquidity
+                - paragraph [ref=e230]: $24K
+              - generic [ref=e231]:
+                - paragraph [ref=e232]: ROI
+                - paragraph [ref=e233]: "-13%"
+            - generic [ref=e234]:
+              - link "Visit Website ↗" [ref=e235] [cursor=pointer]:
+                - /url: https://www.polybro.app/
+              - link "Chart 📊" [ref=e236] [cursor=pointer]:
+                - /url: https://dexscreener.com/solana/8rpw6v6klz44paydumw6njrgz5jrtxaqpgugqmzapump
+              - button [ref=e238]:
+                - img [ref=e239]
+        - generic [ref=e244]:
+          - img "POOP / USDC screenshot" [ref=e247]
+          - generic [ref=e248]:
+            - generic [ref=e249]:
+              - generic [ref=e250]:
+                - link "POOP" [ref=e251] [cursor=pointer]:
+                  - /url: /project/POOP
+                  - heading "POOP" [level=3] [ref=e252] [cursor=pointer]:
+                    - generic [ref=e253] [cursor=pointer]:
+                      - generic [ref=e254] [cursor=pointer]: POOP
+                      - img [ref=e255]
+                - generic [ref=e258]: solana
+              - generic [ref=e259]:
+                - generic [ref=e261]: BASIC
+                - paragraph [ref=e262]: Today
+            - generic [ref=e263]:
+              - generic [ref=e264]:
+                - paragraph [ref=e265]: Market Cap
+                - paragraph [ref=e266]: $4.8M
+              - generic [ref=e267]:
+                - paragraph [ref=e268]: Liquidity
+                - paragraph [ref=e269]: $40K
+              - generic [ref=e270]:
+                - paragraph [ref=e271]: ROI
+                - paragraph [ref=e272]: N/A
+            - generic [ref=e273]:
+              - link "Visit Website ↗" [ref=e274] [cursor=pointer]:
+                - /url: https://doopapp.com/
+              - link "Chart 📊" [ref=e275] [cursor=pointer]:
+                - /url: https://dexscreener.com/solana/7uwnjamrj9fzuubmzguu8a4cr15ykpbymhaivjeftjz5
+              - button [ref=e277]:
+                - img [ref=e278]
+        - generic [ref=e283]:
+          - img "KINDLY / SOL screenshot" [ref=e286]
+          - generic [ref=e287]:
+            - generic [ref=e288]:
+              - generic [ref=e289]:
+                - link "KINDLY" [ref=e290] [cursor=pointer]:
+                  - /url: /project/KINDLY
+                  - heading "KINDLY" [level=3] [ref=e291] [cursor=pointer]:
+                    - generic [ref=e292] [cursor=pointer]:
+                      - generic [ref=e293] [cursor=pointer]: KINDLY
+                      - img [ref=e294]
+                - generic [ref=e297]: solana
+              - generic [ref=e298]:
+                - generic [ref=e300]: TRASH
+                - paragraph [ref=e301]: Today
+            - generic [ref=e302]:
+              - generic [ref=e303]:
+                - paragraph [ref=e304]: Market Cap
+                - paragraph [ref=e305]: $53K
+              - generic [ref=e306]:
+                - paragraph [ref=e307]: Liquidity
+                - paragraph [ref=e308]: $104K
+              - generic [ref=e309]:
+                - paragraph [ref=e310]: ROI
+                - paragraph [ref=e311]: +5%
+            - generic [ref=e312]:
+              - link "Visit Website ↗" [ref=e313] [cursor=pointer]:
+                - /url: https://kindlycoin.xyz/
+              - link "Chart 📊" [ref=e314] [cursor=pointer]:
+                - /url: https://dexscreener.com/solana/dvr9fqfq8ta9ply39erigigsfrfvfcuyjucjrfvkqn9q
+              - button [ref=e316]:
+                - img [ref=e317]
+        - generic [ref=e322]:
+          - img "BNBFrog / USDT screenshot" [ref=e325]
+          - generic [ref=e326]:
+            - generic [ref=e327]:
+              - generic [ref=e328]:
+                - link "BNBFrog" [ref=e329] [cursor=pointer]:
+                  - /url: /project/BNBFrog
+                  - heading "BNBFrog" [level=3] [ref=e330] [cursor=pointer]:
+                    - generic [ref=e331] [cursor=pointer]:
+                      - generic [ref=e332] [cursor=pointer]: BNBFrog
+                      - img [ref=e333]
+                - generic [ref=e336]: bsc
+              - generic [ref=e337]:
+                - generic [ref=e339]: BASIC
+                - paragraph [ref=e340]: Today
+            - generic [ref=e341]:
+              - generic [ref=e342]:
+                - paragraph [ref=e343]: Market Cap
+                - paragraph [ref=e344]: $617K
+              - generic [ref=e345]:
+                - paragraph [ref=e346]: Liquidity
+                - paragraph [ref=e347]: $2K
+              - generic [ref=e348]:
+                - paragraph [ref=e349]: ROI
+                - paragraph [ref=e350]: +11%
+            - generic [ref=e351]:
+              - link "Visit Website ↗" [ref=e352] [cursor=pointer]:
+                - /url: https://bnbfrog.top/
+              - link "Chart 📊" [ref=e353] [cursor=pointer]:
+                - /url: https://dexscreener.com/bsc/0x64da67a12a46f1ddf337393e2da12ed0a507ad3d
+              - button [ref=e355]:
+                - img [ref=e356]
+        - generic [ref=e361]:
+          - img "SURF / YAKS screenshot" [ref=e364]
+          - generic [ref=e365]:
+            - generic [ref=e366]:
+              - generic [ref=e367]:
+                - link "SURF" [ref=e368] [cursor=pointer]:
+                  - /url: /project/SURF
+                  - heading "SURF" [level=3] [ref=e369] [cursor=pointer]:
+                    - generic [ref=e370] [cursor=pointer]:
+                      - generic [ref=e371] [cursor=pointer]: SURF
+                      - img [ref=e372]
+                - generic [ref=e375]: pulsechain
+              - generic [ref=e376]:
+                - generic [ref=e378]: BASIC
+                - paragraph [ref=e379]: Today
+            - generic [ref=e380]:
+              - generic [ref=e381]:
+                - paragraph [ref=e382]: Market Cap
+                - paragraph [ref=e383]: $219K
+              - generic [ref=e384]:
+                - paragraph [ref=e385]: Liquidity
+                - paragraph [ref=e386]: $3K
+              - generic [ref=e387]:
+                - paragraph [ref=e388]: ROI
+                - paragraph [ref=e389]: +58%
+            - generic [ref=e390]:
+              - link "Visit Website ↗" [ref=e391] [cursor=pointer]:
+                - /url: https://cryptoparadise.net/surf/
+              - link "Chart 📊" [ref=e392] [cursor=pointer]:
+                - /url: https://dexscreener.com/pulsechain/0x12828d4cda7cbfacd7586e54708a9b9674641bed
+              - button [ref=e394]:
+                - img [ref=e395]
+        - generic [ref=e400]:
+          - img "MADSANTA / SOL screenshot" [ref=e403]
+          - generic [ref=e404]:
+            - generic [ref=e405]:
+              - generic [ref=e406]:
+                - link "MADSANTA" [ref=e407] [cursor=pointer]:
+                  - /url: /project/MADSANTA
+                  - heading "MADSANTA" [level=3] [ref=e408] [cursor=pointer]:
+                    - generic [ref=e409] [cursor=pointer]:
+                      - generic [ref=e410] [cursor=pointer]: MADSANTA
+                      - img [ref=e411]
+                - generic [ref=e414]: solana
+              - generic [ref=e415]:
+                - generic [ref=e417]: TRASH
+                - paragraph [ref=e418]: Today
+            - generic [ref=e419]:
+              - generic [ref=e420]:
+                - paragraph [ref=e421]: Market Cap
+                - paragraph [ref=e422]: $7K
+              - generic [ref=e423]:
+                - paragraph [ref=e424]: Liquidity
+                - paragraph [ref=e425]: N/A
+              - generic [ref=e426]:
+                - paragraph [ref=e427]: ROI
+                - paragraph [ref=e428]: N/A
+            - generic [ref=e429]:
+              - link "Visit Website ↗" [ref=e430] [cursor=pointer]:
+                - /url: https://madsanta.xyz/
+              - link "Chart 📊" [ref=e431] [cursor=pointer]:
+                - /url: https://dexscreener.com/solana/c7jnwqzeu8nuyugj9r8bjhubeocxjvpwvhxmfzr8pump
+              - button [ref=e433]:
+                - img [ref=e434]
+        - generic [ref=e439]:
+          - img "mfer / WETH screenshot" [ref=e442]
+          - generic [ref=e443]:
+            - generic [ref=e444]:
+              - generic [ref=e445]:
+                - link "mfer" [ref=e446] [cursor=pointer]:
+                  - /url: /project/mfer
+                  - heading "mfer" [level=3] [ref=e447] [cursor=pointer]:
+                    - generic [ref=e448] [cursor=pointer]:
+                      - generic [ref=e449] [cursor=pointer]: mfer
+                      - img [ref=e450]
+                - generic [ref=e453]: base
+              - generic [ref=e454]:
+                - generic [ref=e456]: BASIC
+                - paragraph [ref=e457]: Today
+            - generic [ref=e458]:
+              - generic [ref=e459]:
+                - paragraph [ref=e460]: Market Cap
+                - paragraph [ref=e461]: $128K
+              - generic [ref=e462]:
+                - paragraph [ref=e463]: Liquidity
+                - paragraph [ref=e464]: $40K
+              - generic [ref=e465]:
+                - paragraph [ref=e466]: ROI
+                - paragraph [ref=e467]: +81%
+            - generic [ref=e468]:
+              - link "Visit Website ↗" [ref=e469] [cursor=pointer]:
+                - /url: https://mfer.ink/
+              - link "Chart 📊" [ref=e470] [cursor=pointer]:
+                - /url: https://dexscreener.com/base/0xd6302c6a0909977decb4cbc9d7e51248a576ec38
+              - button [ref=e472]:
+                - img [ref=e473]
+        - generic [ref=e478]:
+          - img "GURUG / SOL screenshot" [ref=e481]
+          - generic [ref=e482]:
+            - generic [ref=e483]:
+              - generic [ref=e484]:
+                - link "GURUG" [ref=e485] [cursor=pointer]:
+                  - /url: /project/GURUG
+                  - heading "GURUG" [level=3] [ref=e486] [cursor=pointer]:
+                    - generic [ref=e487] [cursor=pointer]:
+                      - generic [ref=e488] [cursor=pointer]: GURUG
+                      - img [ref=e489]
+                - generic [ref=e492]: solana
+              - generic [ref=e493]:
+                - generic [ref=e495]: BASIC
+                - paragraph [ref=e496]: Today
+            - generic [ref=e497]:
+              - generic [ref=e498]:
+                - paragraph [ref=e499]: Market Cap
+                - paragraph [ref=e500]: $12K
+              - generic [ref=e501]:
+                - paragraph [ref=e502]: Liquidity
+                - paragraph [ref=e503]: $2K
+              - generic [ref=e504]:
+                - paragraph [ref=e505]: ROI
+                - paragraph [ref=e506]: +0%
+            - generic [ref=e507]:
+              - link "Visit Website ↗" [ref=e508] [cursor=pointer]:
+                - /url: https://gurugcoin.xyz
+              - link "Chart 📊" [ref=e509] [cursor=pointer]:
+                - /url: https://dexscreener.com/solana/3k8hu963e7sqjz73amtbkzmsivwmprhpnfzvntdepump
+              - button [ref=e511]:
+                - img [ref=e512]
+        - generic [ref=e517]:
+          - img "$Runner / SOL screenshot" [ref=e520]
+          - generic [ref=e521]:
+            - generic [ref=e522]:
+              - generic [ref=e523]:
+                - link "$Runner" [ref=e524] [cursor=pointer]:
+                  - /url: /project/$Runner
+                  - heading "$Runner" [level=3] [ref=e525] [cursor=pointer]:
+                    - generic [ref=e526] [cursor=pointer]:
+                      - generic [ref=e527] [cursor=pointer]: $Runner
+                      - img [ref=e528]
+                - generic [ref=e531]: solana
+              - generic [ref=e532]:
+                - generic [ref=e534]: TRASH
+                - paragraph [ref=e535]: Today
+            - generic [ref=e536]:
+              - generic [ref=e537]:
+                - paragraph [ref=e538]: Market Cap
+                - paragraph [ref=e539]: $1.7M
+              - generic [ref=e540]:
+                - paragraph [ref=e541]: Liquidity
+                - paragraph [ref=e542]: $6K
+              - generic [ref=e543]:
+                - paragraph [ref=e544]: ROI
+                - paragraph [ref=e545]: +95%
+            - generic [ref=e546]:
+              - link "Visit Website ↗" [ref=e547] [cursor=pointer]:
+                - /url: https://pumprunner.com/
+              - link "Chart 📊" [ref=e548] [cursor=pointer]:
+                - /url: https://dexscreener.com/solana/fyb8vxxyaavvchagbb1kvjwdw26ovad4ipwv1j8epump
+              - button [ref=e550]:
+                - img [ref=e551]
+        - generic [ref=e556]:
+          - img "HUNT / USDC screenshot" [ref=e559]
+          - generic [ref=e560]:
+            - generic [ref=e561]:
+              - generic [ref=e562]:
+                - link "HUNT" [ref=e563] [cursor=pointer]:
+                  - /url: /project/HUNT
+                  - heading "HUNT" [level=3] [ref=e564] [cursor=pointer]:
+                    - generic [ref=e565] [cursor=pointer]:
+                      - generic [ref=e566] [cursor=pointer]: HUNT
+                      - img [ref=e567]
+                - generic [ref=e570]: base
+              - generic [ref=e571]:
+                - generic [ref=e573]: SOLID
+                - paragraph [ref=e574]: Today
+            - generic [ref=e575]:
+              - generic [ref=e576]:
+                - paragraph [ref=e577]: Market Cap
+                - paragraph [ref=e578]: $2.3M
+              - generic [ref=e579]:
+                - paragraph [ref=e580]: Liquidity
+                - paragraph [ref=e581]: $113K
+              - generic [ref=e582]:
+                - paragraph [ref=e583]: ROI
+                - paragraph [ref=e584]: "-0%"
+            - generic [ref=e585]:
+              - link "Visit Website ↗" [ref=e586] [cursor=pointer]:
+                - /url: https://hunt.town/
+              - link "Chart 📊" [ref=e587] [cursor=pointer]:
+                - /url: https://dexscreener.com/base/0x37f0c2915cecc7e977183b8543fc0864d03e064c
+              - button [ref=e589]:
+                - img [ref=e590]
+  - alert [ref=e594]
+  - generic [ref=e596]:
+    - generic [ref=e597]:
+      - generic [ref=e599]: KEY SIGNALS
+      - list [ref=e600]:
+        - listitem [ref=e601]:
+          - generic [ref=e602]:
+            - generic [ref=e603]: •
+            - generic [ref=e604]:
+              - generic [ref=e605]: Creator rewards → Coin buybacks
+              - generic "Click to see reasoning" [ref=e606] [cursor=pointer]: "[70]"
+        - listitem [ref=e607]:
+          - generic [ref=e608]:
+            - generic [ref=e609]: •
+            - generic [ref=e610]:
+              - generic [ref=e611]: Powered by Valyu.network
+              - generic "Click to see reasoning" [ref=e612] [cursor=pointer]: "[45]"
+        - listitem [ref=e613]:
+          - generic [ref=e614]:
+            - generic [ref=e615]: •
+            - generic [ref=e616]:
+              - generic [ref=e617]: Livestreamed autonomous trading agent
+              - generic "Click to see reasoning" [ref=e618] [cursor=pointer]: "[45]"
+    - generic [ref=e619]:
+      - generic [ref=e621]: TECHNICAL ASSESSMENT
+      - generic [ref=e622]: Built with Next.js using modern React patterns, TypeScript, and sophisticated 3D animations. The site features a custom 3D carousel interface for market selection, WebGL background effects, and responsive design. This appears to be built by an experienced development team with significant frontend expertise, likely costing $25-50K in development. The technical implementation is legitimate with proper meta tags, analytics integration, and professional deployment on Vercel. The 3D interactions and animations suggest genuine technical capability rather than AI-generated content.
+    - 'button "▶ ADMIN: DISCOVERED LINKS (3)" [ref=e625] [cursor=pointer]':
+      - generic [ref=e626] [cursor=pointer]: ▶
+      - generic [ref=e627] [cursor=pointer]: "ADMIN: DISCOVERED LINKS (3)"
+```

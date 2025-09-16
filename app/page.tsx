@@ -53,12 +53,13 @@ interface CryptoProject {
   twitter_url: string | null;
   telegram_url: string | null;
   created_at: string;
-  
+
   // Add X analysis fields
   x_analysis_score?: number;
   x_analysis_tier?: string;
   analysis_token_type?: string; // For token type filtering
   token_type?: string; // Add token_type field
+  one_liner?: string; // Add top-level one_liner field
 }
 
 interface FilterState {
@@ -872,9 +873,9 @@ export default function ProjectsRatedPage() {
                   </div>
                   
                   {/* Quick Take from analysis - Support both old and new format */}
-                  {(project.website_stage1_tooltip?.one_liner || (project.website_stage1_analysis as any)?.quick_take) && (
+                  {(project.one_liner || project.website_stage1_tooltip?.one_liner || (project.website_stage1_analysis as any)?.quick_take) && (
                     <p className="text-[#888] text-sm mb-4 line-clamp-2">
-                      {project.website_stage1_tooltip?.one_liner || (project.website_stage1_analysis as any).quick_take}
+                      {project.one_liner || project.website_stage1_tooltip?.one_liner || (project.website_stage1_analysis as any).quick_take}
                     </p>
                   )}
                   

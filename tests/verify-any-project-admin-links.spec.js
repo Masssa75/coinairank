@@ -2,8 +2,8 @@ const { test, expect } = require('@playwright/test');
 
 // Test configuration - modify these to test different projects
 const TEST_CONFIG = {
-  symbol: 'BKN',           // Project symbol to test
-  expectedDomain: 'brickken.com',  // Expected domain in links
+  symbol: 'TAO',           // Project symbol to test
+  expectedDomain: 'bittensor.com',  // Expected domain in links
   minLinksExpected: 3,     // Minimum number of expected links
   tier: 'SOLID'            // Expected tier badge
 };
