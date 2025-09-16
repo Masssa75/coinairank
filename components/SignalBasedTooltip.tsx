@@ -184,18 +184,21 @@ export function SignalBasedTooltip({
     const spaceAbove = rect.top;
     const spaceBelow = window.innerHeight - rect.bottom;
 
-    // On mobile, prefer below placement if there's any reasonable space
+    // On mobile, prefer placement with most space available
     if (isMobile) {
-      if (spaceBelow >= 100) {
+      // Calculate if we need to scroll to show tooltip
+      const minSpaceRequired = 200; // Minimum space needed for tooltip
+
+      if (spaceBelow >= minSpaceRequired && spaceBelow >= spaceAbove) {
         y = rect.bottom;
         placement = 'below';
-      } else if (spaceAbove >= 100) {
+      } else if (spaceAbove >= minSpaceRequired) {
         y = rect.top;
         placement = 'above';
       } else {
-        // Center on screen if not enough space
-        y = window.innerHeight / 2;
-        placement = 'below';
+        // Position at top of viewport with some padding when neither has enough space
+        y = Math.max(60, rect.top); // Keep below mobile header
+        placement = 'above';
       }
     } else {
       if (spaceAbove >= tooltipHeight || spaceAbove > spaceBelow) {
@@ -252,18 +255,21 @@ export function SignalBasedTooltip({
       const spaceAbove = rect.top;
       const spaceBelow = window.innerHeight - rect.bottom;
 
-      // On mobile, prefer below placement if there's any reasonable space
+      // On mobile, prefer placement with most space available
       if (isMobile) {
-        if (spaceBelow >= 100) {
+        // Calculate if we need to scroll to show tooltip
+        const minSpaceRequired = 200; // Minimum space needed for tooltip
+
+        if (spaceBelow >= minSpaceRequired && spaceBelow >= spaceAbove) {
           y = rect.bottom;
           placement = 'below';
-        } else if (spaceAbove >= 100) {
+        } else if (spaceAbove >= minSpaceRequired) {
           y = rect.top;
           placement = 'above';
         } else {
-          // Center on screen if not enough space
-          y = window.innerHeight / 2;
-          placement = 'below';
+          // Position at top of viewport with some padding when neither has enough space
+          y = Math.max(60, rect.top); // Keep below mobile header
+          placement = 'above';
         }
       } else {
         if (spaceAbove >= tooltipHeight || spaceAbove > spaceBelow) {
@@ -527,7 +533,7 @@ export function SignalBasedTooltip({
         >
           <div className="bg-[#1a1c1f] rounded-lg shadow-2xl border border-[#333] p-3 md:p-4
             w-[calc(100vw-20px)] max-w-[500px] min-w-[300px] md:min-w-[400px]
-            max-h-[70vh] md:max-h-[80vh] overflow-y-auto scrollbar-hide">
+            max-h-[60vh] md:max-h-[80vh] overflow-y-auto scrollbar-hide">
             
             {/* Error States for Incomplete Data */}
             {hasLargeHtml && (
