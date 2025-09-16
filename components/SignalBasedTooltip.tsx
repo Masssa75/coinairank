@@ -2,6 +2,18 @@
 
 import React from 'react';
 import { createPortal } from 'react-dom';
+import {
+  AlertTriangle,
+  Info,
+  FileText,
+  BookOpen,
+  Github,
+  Link,
+  Star,
+  Check,
+  X,
+  Radio
+} from 'lucide-react';
 
 interface Signal {
   signal: string;
@@ -487,44 +499,51 @@ export function SignalBasedTooltip({
             
             {/* Error States for Incomplete Data */}
             {hasLargeHtml && (
-              <div className="text-[#f59e0b] text-sm mb-3 p-2 bg-[#f59e0b]/10 rounded">
-                ⚠️ Website too large ({websiteAnalysis?.html_length ? Math.round(websiteAnalysis.html_length / 1000) : '>240'}K chars) - parsing not yet implemented
+              <div className="text-[#f59e0b] text-sm mb-3 p-2 bg-[#f59e0b]/10 rounded flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <span>Website too large ({websiteAnalysis?.html_length ? Math.round(websiteAnalysis.html_length / 1000) : '>240'}K chars) - parsing not yet implemented</span>
               </div>
             )}
-            
+
             {needsProperScraping && (
-              <div className="text-[#3b82f6] text-sm mb-3 p-2 bg-[#3b82f6]/10 rounded">
-                ℹ️ Client-side rendered website - full browser scraping not yet implemented
+              <div className="text-[#3b82f6] text-sm mb-3 p-2 bg-[#3b82f6]/10 rounded flex items-start gap-2">
+                <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <span>Client-side rendered website - full browser scraping not yet implemented</span>
               </div>
             )}
             
             {hasNoAnalysis && !hasLargeHtml && (
               <div className="text-[#ef4444] text-sm mb-3 p-2 bg-[#ef4444]/10 rounded">
-                ⚠️ Website analysis pending
+                <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 inline mr-1" />
+                Website analysis pending
               </div>
             )}
             
             {!hasLargeHtml && !needsProperScraping && !hasNoAnalysis && websiteAnalysis?.html_length > 250000 && (
               <div className="text-[#f59e0b] text-sm mb-3 p-2 bg-[#f59e0b]/10 rounded">
-                ⚠️ Website too large ({Math.round(websiteAnalysis.html_length / 1000)}K chars) - analysis skipped
+                <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 inline mr-1" />
+                Website too large ({Math.round(websiteAnalysis.html_length / 1000)}K chars) - analysis skipped
               </div>
             )}
             
             {websiteAnalysis && extractionStatus !== 'completed' && (
               <div className="text-[#ef4444] text-sm mb-3 p-2 bg-[#ef4444]/10 rounded">
-                ⚠️ Phase 1 extraction missing
+                <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 inline mr-1" />
+                Phase 1 extraction missing
               </div>
             )}
             
             {extractionStatus === 'completed' && !benchmarkComparison && !websiteAnalysis?.signal_evaluations && (
               <div className="text-[#ef4444] text-sm mb-3 p-2 bg-[#ef4444]/10 rounded">
-                ⚠️ Phase 2 scoring not complete
+                <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 inline mr-1" />
+                Phase 2 scoring not complete
               </div>
             )}
             
             {benchmarkComparison && !benchmarkComparison.signal_evaluations && !websiteAnalysis?.signal_evaluations && (
               <div className="text-[#ef4444] text-sm mb-3 p-2 bg-[#ef4444]/10 rounded">
-                ⚠️ Signal evaluations not available
+                <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 inline mr-1" />
+                Signal evaluations not available
               </div>
             )}
 
@@ -726,7 +745,8 @@ export function SignalBasedTooltip({
                                   {/* Success message */}
                                   {saveSuccess && (
                                     <div className="mt-2 px-2 py-1 bg-green-900/30 text-green-400 rounded text-[9px] font-medium">
-                                      ✓ Feedback saved successfully
+                                      <Check className="w-3 h-3 inline mr-1" />
+                                      Feedback saved successfully
                                     </div>
                                   )}
                                 </div>
@@ -772,7 +792,10 @@ export function SignalBasedTooltip({
                   {tooltip?.pros && (
                     <div>
                       <div className="flex items-center gap-1 mb-2">
-                        <span className="text-[#00ff88] text-xs font-bold">✓ PROS</span>
+                        <div className="flex items-center gap-1">
+                          <Check className="w-3 h-3 text-[#00ff88]" />
+                          <span className="text-[#00ff88] text-xs font-bold">PROS</span>
+                        </div>
                       </div>
                       <ul className="space-y-1">
                         {tooltip.pros.slice(0, 5).map((pro, idx) => {
@@ -792,7 +815,10 @@ export function SignalBasedTooltip({
                   {tooltip?.cons && (
                     <div>
                       <div className="flex items-center gap-1 mb-2">
-                        <span className="text-[#ff4444] text-xs font-bold">✗ CONS</span>
+                        <div className="flex items-center gap-1">
+                          <X className="w-3 h-3 text-[#ff4444]" />
+                          <span className="text-[#ff4444] text-xs font-bold">CONS</span>
+                        </div>
                       </div>
                       <ul className="space-y-1">
                         {tooltip.cons.slice(0, 3).map((con, idx) => {
@@ -873,7 +899,10 @@ export function SignalBasedTooltip({
                   <div className="mt-2 space-y-2">
                     {/* Whitepaper */}
                     <div className="flex items-center gap-2 text-[9px]">
-                      <span className="text-[#ff9500] w-20">📄 Whitepaper:</span>
+                      <div className="flex items-center gap-1 text-[#ff9500] w-20">
+                        <FileText className="w-3 h-3" />
+                        <span>Whitepaper:</span>
+                      </div>
                       {websiteAnalysis?.whitepaper_url ? (
                         <span className="text-[#aaa] font-mono truncate flex-1">
                           {websiteAnalysis.whitepaper_url.length > 40 ? websiteAnalysis.whitepaper_url.substring(0, 37) + '...' : websiteAnalysis.whitepaper_url}
@@ -886,7 +915,10 @@ export function SignalBasedTooltip({
 
                     {/* Documentation */}
                     <div className="flex items-center gap-2 text-[9px]">
-                      <span className="text-[#10b981] w-20">📚 Docs:</span>
+                      <div className="flex items-center gap-1 text-[#10b981] w-20">
+                        <BookOpen className="w-3 h-3" />
+                        <span>Docs:</span>
+                      </div>
                       {websiteAnalysis?.docs_url ? (
                         <span className="text-[#aaa] font-mono truncate flex-1">
                           {websiteAnalysis.docs_url.length > 40 ? websiteAnalysis.docs_url.substring(0, 37) + '...' : websiteAnalysis.docs_url}
@@ -899,7 +931,10 @@ export function SignalBasedTooltip({
 
                     {/* GitHub */}
                     <div className="flex items-center gap-2 text-[9px]">
-                      <span className="text-[#8b5cf6] w-20">💻 GitHub:</span>
+                      <div className="flex items-center gap-1 text-[#8b5cf6] w-20">
+                        <Github className="w-3 h-3" />
+                        <span>GitHub:</span>
+                      </div>
                       {websiteAnalysis?.github_url ? (
                         <span className="text-[#aaa] font-mono truncate flex-1">
                           {websiteAnalysis.github_url.length > 40 ? websiteAnalysis.github_url.substring(0, 37) + '...' : websiteAnalysis.github_url}
@@ -913,7 +948,10 @@ export function SignalBasedTooltip({
                     {/* Social Links */}
                     {websiteAnalysis?.social_urls && websiteAnalysis.social_urls.length > 0 && (
                       <div className="flex items-center gap-2 text-[9px]">
-                        <span className="text-[#3b82f6] w-20">🔗 Social:</span>
+                        <div className="flex items-center gap-1 text-[#3b82f6] w-20">
+                        <Link className="w-3 h-3" />
+                        <span>Social:</span>
+                      </div>
                         <span className="text-[#aaa]">({websiteAnalysis.social_urls.length} links)</span>
                       </div>
                     )}
@@ -921,7 +959,10 @@ export function SignalBasedTooltip({
                     {/* Important Resources */}
                     {websiteAnalysis?.important_resources && websiteAnalysis.important_resources.length > 0 && (
                       <div className="flex items-center gap-2 text-[9px]">
-                        <span className="text-[#fbbf24] w-20">⭐ Other:</span>
+                        <div className="flex items-center gap-1 text-[#fbbf24] w-20">
+                          <Star className="w-3 h-3" />
+                          <span>Other:</span>
+                        </div>
                         <span className="text-[#aaa]">({websiteAnalysis.important_resources.length} resources)</span>
                       </div>
                     )}
