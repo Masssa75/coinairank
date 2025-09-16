@@ -169,38 +169,53 @@ export function SignalBasedTooltip({
   const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
     if (isPersistent) return;  // Don't show on hover if already persistent
     if (!containerRef.current) return;
-    
+
     const rect = containerRef.current.getBoundingClientRect();
-    const tooltipHeight = 400; // Estimated height
-    const tooltipWidth = 500; // Max width
-    
+    const isMobile = window.innerWidth < 768;
+    const tooltipHeight = isMobile ? 350 : 400; // Smaller height on mobile
+    const tooltipWidth = isMobile ? Math.min(window.innerWidth - 20, 400) : 500; // Responsive width on mobile
+
     // Calculate position
     let x = rect.left + rect.width / 2;
     let y: number;
     let placement: 'above' | 'below';
-    
+
     // Check vertical space
     const spaceAbove = rect.top;
     const spaceBelow = window.innerHeight - rect.bottom;
-    
-    if (spaceAbove >= tooltipHeight || spaceAbove > spaceBelow) {
-      // Position above
-      y = rect.top;
-      placement = 'above';
+
+    // On mobile, prefer below placement if there's any reasonable space
+    if (isMobile) {
+      if (spaceBelow >= 100) {
+        y = rect.bottom;
+        placement = 'below';
+      } else if (spaceAbove >= 100) {
+        y = rect.top;
+        placement = 'above';
+      } else {
+        // Center on screen if not enough space
+        y = window.innerHeight / 2;
+        placement = 'below';
+      }
     } else {
-      // Position below
-      y = rect.bottom;
-      placement = 'below';
+      if (spaceAbove >= tooltipHeight || spaceAbove > spaceBelow) {
+        y = rect.top;
+        placement = 'above';
+      } else {
+        y = rect.bottom;
+        placement = 'below';
+      }
     }
-    
+
     // Check horizontal boundaries
     const halfWidth = tooltipWidth / 2;
-    if (x - halfWidth < 10) {
-      x = halfWidth + 10; // Adjust for left edge
-    } else if (x + halfWidth > window.innerWidth - 10) {
-      x = window.innerWidth - halfWidth - 10; // Adjust for right edge
+    const edgePadding = isMobile ? 10 : 10;
+    if (x - halfWidth < edgePadding) {
+      x = halfWidth + edgePadding; // Adjust for left edge
+    } else if (x + halfWidth > window.innerWidth - edgePadding) {
+      x = window.innerWidth - halfWidth - edgePadding; // Adjust for right edge
     }
-    
+
     setTooltipPosition({ x, y, placement });
     setShowTooltip(true);
   };
@@ -215,7 +230,7 @@ export function SignalBasedTooltip({
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
     if (!containerRef.current) return;
-    
+
     if (isPersistent) {
       // If already persistent, close it
       setIsPersistent(false);
@@ -224,36 +239,51 @@ export function SignalBasedTooltip({
     } else {
       // Make tooltip persistent
       const rect = containerRef.current.getBoundingClientRect();
-      const tooltipHeight = 400; // Estimated height
-      const tooltipWidth = 500; // Max width
-      
+      const isMobile = window.innerWidth < 768;
+      const tooltipHeight = isMobile ? 350 : 400; // Smaller height on mobile
+      const tooltipWidth = isMobile ? Math.min(window.innerWidth - 20, 400) : 500; // Responsive width on mobile
+
       // Calculate position
       let x = rect.left + rect.width / 2;
       let y: number;
       let placement: 'above' | 'below';
-      
+
       // Check vertical space
       const spaceAbove = rect.top;
       const spaceBelow = window.innerHeight - rect.bottom;
-      
-      if (spaceAbove >= tooltipHeight || spaceAbove > spaceBelow) {
-        // Position above
-        y = rect.top;
-        placement = 'above';
+
+      // On mobile, prefer below placement if there's any reasonable space
+      if (isMobile) {
+        if (spaceBelow >= 100) {
+          y = rect.bottom;
+          placement = 'below';
+        } else if (spaceAbove >= 100) {
+          y = rect.top;
+          placement = 'above';
+        } else {
+          // Center on screen if not enough space
+          y = window.innerHeight / 2;
+          placement = 'below';
+        }
       } else {
-        // Position below
-        y = rect.bottom;
-        placement = 'below';
+        if (spaceAbove >= tooltipHeight || spaceAbove > spaceBelow) {
+          y = rect.top;
+          placement = 'above';
+        } else {
+          y = rect.bottom;
+          placement = 'below';
+        }
       }
-      
+
       // Check horizontal boundaries
       const halfWidth = tooltipWidth / 2;
-      if (x - halfWidth < 10) {
-        x = halfWidth + 10; // Adjust for left edge
-      } else if (x + halfWidth > window.innerWidth - 10) {
-        x = window.innerWidth - halfWidth - 10; // Adjust for right edge
+      const edgePadding = isMobile ? 10 : 10;
+      if (x - halfWidth < edgePadding) {
+        x = halfWidth + edgePadding; // Adjust for left edge
+      } else if (x + halfWidth > window.innerWidth - edgePadding) {
+        x = window.innerWidth - halfWidth - edgePadding; // Adjust for right edge
       }
-      
+
       setTooltipPosition({ x, y, placement });
       setShowTooltip(true);
       setIsPersistent(true);
@@ -482,20 +512,22 @@ export function SignalBasedTooltip({
       </div>
       
       {mounted && showTooltip && tooltipPosition && createPortal(
-        <div 
+        <div
           ref={tooltipRef}
           className={`fixed z-[999999] ${isPersistent ? 'pointer-events-auto' : 'pointer-events-none'}`}
-          style={{ 
+          style={{
             left: `${tooltipPosition.x}px`,
-            top: tooltipPosition.placement === 'above' 
-              ? `${tooltipPosition.y}px` 
+            top: tooltipPosition.placement === 'above'
+              ? `${tooltipPosition.y}px`
               : `${tooltipPosition.y}px`,
             transform: tooltipPosition.placement === 'above'
               ? 'translate(-50%, -100%) translateY(-8px)'
               : 'translate(-50%, 8px)',
           }}
         >
-          <div className="bg-[#1a1c1f] rounded-lg shadow-2xl border border-[#333] p-4 min-w-[400px] max-w-[500px] max-h-[80vh] overflow-y-auto scrollbar-hide">
+          <div className="bg-[#1a1c1f] rounded-lg shadow-2xl border border-[#333] p-3 md:p-4
+            w-[calc(100vw-20px)] max-w-[500px] min-w-[300px] md:min-w-[400px]
+            max-h-[70vh] md:max-h-[80vh] overflow-y-auto scrollbar-hide">
             
             {/* Error States for Incomplete Data */}
             {hasLargeHtml && (
