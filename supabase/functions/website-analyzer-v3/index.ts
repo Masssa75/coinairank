@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import * as cheerio from 'https://esm.sh/cheerio@1.0.0-rc.12';
 
 // Prompt version for tracking changes
-const PROMPT_VERSION = 'v3.4.0-with-project-age';
+const PROMPT_VERSION = 'v3.3.0-categorized-resources';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -544,8 +544,6 @@ Return JSON:
   "token_type": "meme/utility",
   "project_description": "60 chars max description",
   "project_summary": "75 word summary of the project",
-  "launch_date": "YYYY-MM-DD format if found (e.g., 2021-11-07), or null if not found",
-  "project_age_years": "number with 1 decimal (e.g., 3.2) calculated from launch_date to today, or null if launch date unknown",
   "technical_assessment": "4-5 sentences: First describe the technical implementation (framework, SSR/CSR, responsiveness, performance). Then assess WHO likely built this (amateur solo, mid-tier agency, elite team) and EFFORT level (weekend project vs months of polish). Estimate implied INVESTMENT based on execution quality ($1K template vs $50K professional vs $100K+ enterprise). Finally, evaluate if the content and claimed innovations appear genuine or AI-generated, and explain your reasoning.",
   "ssr_csr_classification": "SSR or CSR",
   "needs_browser_rendering": {
@@ -847,8 +845,6 @@ HTML: ${htmlForAnalysis}`;
         token_type: parsedData.token_type,
         one_liner: parsedData.project_description,  // Changed from project_description
         project_summary_rich: parsedData.project_summary,
-        launch_date: parsedData.launch_date || null,
-        project_age_years: parsedData.project_age_years || null,
         technical_assessment: parsedData.technical_assessment,
         ssr_csr_classification: parsedData.ssr_csr_classification,
         needs_browser_rendering: parsedData.needs_browser_rendering,
