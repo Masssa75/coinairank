@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import * as cheerio from 'https://esm.sh/cheerio@1.0.0-rc.12';
 
 // Prompt version for tracking changes
-const PROMPT_VERSION = 'v3.3.0-categorized-resources';
+const PROMPT_VERSION = 'v3.4.0-with-project-age';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -847,6 +847,8 @@ HTML: ${htmlForAnalysis}`;
         token_type: parsedData.token_type,
         one_liner: parsedData.project_description,  // Changed from project_description
         project_summary_rich: parsedData.project_summary,
+        launch_date: parsedData.launch_date || null,
+        project_age_years: parsedData.project_age_years || null,
         technical_assessment: parsedData.technical_assessment,
         ssr_csr_classification: parsedData.ssr_csr_classification,
         needs_browser_rendering: parsedData.needs_browser_rendering,
