@@ -755,7 +755,8 @@ export default function ProjectsRatedPage() {
 
                 {/* Project Info */}
                 <div className="p-5">
-                  <div className="flex justify-between items-start mb-3">
+                  {/* Header with symbol, network, tier, and date */}
+                  <div className="flex justify-between items-start mb-4">
                     <div>
                       <Link href={`/project/${project.symbol}`}>
                         <h3 className={`text-xl font-bold hover:text-[#00ff88] transition-colors cursor-pointer ${
@@ -768,8 +769,8 @@ export default function ProjectsRatedPage() {
                             >
                               <span className="flex items-center gap-2">
                                 {project.symbol}
-                                {project.name && 
-                                 project.name !== project.symbol && 
+                                {project.name &&
+                                 project.name !== project.symbol &&
                                  !project.name.includes('/') && (
                                   <span className="text-sm text-[#666] font-normal">({project.name})</span>
                                 )}
@@ -778,8 +779,8 @@ export default function ProjectsRatedPage() {
                           ) : (
                             <span className="flex items-center gap-2">
                               {project.symbol}
-                              {project.name && 
-                               project.name !== project.symbol && 
+                              {project.name &&
+                               project.name !== project.symbol &&
                                !project.name.includes('/') && (
                                 <span className="text-sm text-[#666] font-normal">({project.name})</span>
                               )}
@@ -789,9 +790,9 @@ export default function ProjectsRatedPage() {
                       </Link>
                       {/* Status badges and network */}
                       <div className="flex gap-1 mt-1 items-center">
-                        <span 
+                        <span
                           className="px-2 py-0.5 rounded text-xs font-medium uppercase"
-                          style={{ 
+                          style={{
                             backgroundColor: getNetworkBadge(project.network).bg,
                             color: getNetworkBadge(project.network).text
                           }}
@@ -804,22 +805,22 @@ export default function ProjectsRatedPage() {
                       {(() => {
                         // Simple rule: Show tier if it exists, otherwise show dash
                         const displayTier = project.website_stage1_tier || '—';
-                        
+
                         // Get HTML length for warning displays
                         const htmlLength = project.website_stage1_analysis?.html_length;
                         const hasLargeHtml = htmlLength && htmlLength > 240000;
-                        
-                        // Determine if CSR with incomplete analysis  
-                        const isCSR = project.ssr_csr_classification === 'CSR' || 
+
+                        // Determine if CSR with incomplete analysis
+                        const isCSR = project.ssr_csr_classification === 'CSR' ||
                                      project.website_stage1_analysis?.ssr_csr_classification === 'CSR';
                         const needsProperScraping = isCSR && htmlLength && htmlLength <= 240000;
-                        
+
                         // Check if has no analysis for warning display
                         const hasNoAnalysis = !project.website_stage1_tier;
-                        
+
                         // Show tooltip for any project with tier or dash
                         if (!displayTier) return null;
-                        
+
                         return (
                           <SignalBasedTooltip
                           projectDescription={project.website_stage1_analysis?.project_description}
@@ -849,16 +850,16 @@ export default function ProjectsRatedPage() {
                           signalFeedback={project.signal_feedback}
                           onFeedbackUpdate={(feedback) => {
                             // Update local state to reflect feedback changes
-                            setProjects(prev => prev.map(p => 
+                            setProjects(prev => prev.map(p =>
                               p.id === project.id ? { ...p, signal_feedback: feedback } : p
                             ));
                           }}
                           stage2Resources={project.website_stage2_resources}
                           tooltip={project.website_stage1_analysis?.tooltip || project.website_stage1_tooltip}
                         >
-                            <span 
+                            <span
                               className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"
-                              style={{ 
+                              style={{
                                 backgroundColor: getTierColor(displayTier).bg,
                                 color: getTierColor(displayTier).text
                               }}
@@ -871,10 +872,10 @@ export default function ProjectsRatedPage() {
                       <p className="text-xs text-[#666] mt-1">{formatDate(project.created_at)}</p>
                     </div>
                   </div>
-                  
-                  {/* Quick Take from analysis - Support both old and new format */}
+
+                  {/* Large prominent description - V5 style */}
                   {(project.one_liner || project.website_stage1_tooltip?.one_liner || (project.website_stage1_analysis as any)?.quick_take) && (
-                    <p className="text-[#888] text-sm mb-4 line-clamp-2">
+                    <p className="text-[17px] text-[#e0e0e0] leading-[1.3] mb-5 font-normal tracking-[-0.5px] line-clamp-3">
                       {project.one_liner || project.website_stage1_tooltip?.one_liner || (project.website_stage1_analysis as any).quick_take}
                     </p>
                   )}

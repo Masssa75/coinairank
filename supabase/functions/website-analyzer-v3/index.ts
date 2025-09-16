@@ -357,9 +357,37 @@ serve(async (req) => {
       }
     }
 
-    // Step 1: Fetch the website HTML
-    const fetchResponse = await fetch(websiteUrl);
-    
+    // Step 1: Fetch the website HTML with proper headers and timeout
+    let fetchResponse;
+    try {
+      fetchResponse = await fetch(websiteUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1'
+        },
+        signal: AbortSignal.timeout(30000) // 30 second timeout
+      });
+    } catch (fetchError: any) {
+      console.log(`⚠️ Website fetch error: ${fetchError?.message || 'Unknown error'}`);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          function: 'website-analyzer-v3',
+          test_type: 'phase1_full_analysis_with_stage2_links',
+          phase: 1,
+          symbol,
+          websiteUrl,
+          error: `Website fetch failed: ${fetchError?.message || 'Unknown error'}`,
+          timeout: fetchError?.name === 'AbortError'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
     if (!fetchResponse.ok) {
       console.log(`⚠️ Website fetch failed: ${fetchResponse.status} ${fetchResponse.statusText}`);
       return new Response(
