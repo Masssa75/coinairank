@@ -535,47 +535,80 @@ export default function ProjectsRatedPage() {
       
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto scrollbar-hide">
-        {/* New Header Bar */}
-        <header className="sticky top-0 z-50 bg-[#0f0f0f] border-b border-[#2a2d31] px-6 h-14 flex items-center gap-4">
+        {/* New Header Bar - Mobile Responsive */}
+        <header className="sticky top-0 z-50 bg-[#0f0f0f] border-b border-[#2a2d31] px-3 sm:px-6 h-14 flex items-center gap-2 sm:gap-4">
           {/* Logo */}
-          <div className="min-w-[140px] flex items-center gap-2">
-            <Link href="/" className="text-xl font-semibold tracking-tight text-white hover:text-[#00ff88] transition-colors">
+          <div className="flex items-center gap-2">
+            <Link href="/" className="text-lg sm:text-xl font-semibold tracking-tight text-white hover:text-[#00ff88] transition-colors">
               CoinAiRank
             </Link>
             {isAdmin && (
-              <span className="px-2 py-0.5 bg-[#00ff88]/20 text-[#00ff88] text-xs font-semibold rounded flex items-center gap-1">
+              <span className="hidden sm:flex px-2 py-0.5 bg-[#00ff88]/20 text-[#00ff88] text-xs font-semibold rounded items-center gap-1">
                 <Shield className="w-3 h-3" />
                 Admin
               </span>
             )}
           </div>
 
-          {/* Icon group */}
-          <div className="flex gap-1 ml-4">
+          {/* Desktop: Icon group and Search */}
+          <div className="hidden md:flex gap-1 ml-4">
             {/* Settings Icon */}
-            <button 
+            <button
               className="p-1.5 rounded hover:bg-[#1a1c1f] transition-colors"
               title="Column Settings"
             >
               <Settings className="w-4 h-4 text-[#666] hover:text-[#00ff88]" />
             </button>
-            
+
             {/* Search Input */}
             <SearchInput onSearch={setSearchQuery} placeholder="Search symbol or name..." />
           </div>
 
           {/* Spacer */}
           <div className="flex-1"></div>
-          
-          {/* Admin Badge for smaller screens */}
-          {isAdmin && (
-            <div className="hidden md:block">
-              {/* Admin indicator already shown next to logo */}
-            </div>
-          )}
 
-          {/* Sort Controls */}
-          <div className="flex items-center gap-2">
+          {/* Mobile: Compact Sort */}
+          <div className="flex md:hidden items-center gap-1">
+            <select
+              value={sortBy}
+              onChange={(e) => {
+                setSortBy(e.target.value);
+                setProjects([]);
+                setPage(1);
+              }}
+              className="w-[100px] px-2 py-1.5 bg-[#1a1c1f] border border-[#2a2d31] text-[#ccc] rounded-md text-xs cursor-pointer appearance-none pr-6"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right 4px center',
+                backgroundSize: '12px'
+              }}
+            >
+              <option value="created_at">Date</option>
+              <option value="website_stage1_score">Score</option>
+              <option value="current_market_cap">MCap</option>
+              <option value="current_liquidity_usd">Liq</option>
+              <option value="roi_percent">ROI</option>
+            </select>
+            <button
+              onClick={() => {
+                setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc');
+                setProjects([]);
+                setPage(1);
+              }}
+              className="p-1.5 bg-[#1a1c1f] border border-[#2a2d31] rounded-md hover:bg-[#222426] transition-colors"
+              title={sortOrder === 'desc' ? 'Sort descending' : 'Sort ascending'}
+            >
+              {sortOrder === 'desc' ? (
+                <ChevronDown className="w-3 h-3 text-[#666]" />
+              ) : (
+                <ChevronUp className="w-3 h-3 text-[#666]" />
+              )}
+            </button>
+          </div>
+
+          {/* Desktop: Full Sort Controls */}
+          <div className="hidden md:flex items-center gap-2">
             <span className="text-[#666] text-[13px] font-medium">Sort by:</span>
             <select
               value={sortBy}
@@ -711,10 +744,15 @@ export default function ProjectsRatedPage() {
           </div>
         </header>
 
-        <div className="p-6">
+        {/* Mobile Search Bar - Below Header */}
+        <div className="md:hidden px-3 py-2 bg-[#0a0b0d] border-b border-[#2a2d31]">
+          <SearchInput onSearch={setSearchQuery} placeholder="Search symbol or name..." />
+        </div>
+
+        <div className="p-3 sm:p-6">
 
           {/* Project Grid - Dynamic columns based on sidebar state */}
-          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 ${
+          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 ${
             isSidebarCollapsed ? 'xl:grid-cols-4' : '2xl:grid-cols-4'
           }`}>
             {projects.map((project, index) => (
@@ -873,9 +911,9 @@ export default function ProjectsRatedPage() {
                     </div>
                   </div>
 
-                  {/* Large prominent description - V5 style */}
+                  {/* Large prominent description - V5 style (responsive) */}
                   {(project.one_liner || project.website_stage1_tooltip?.one_liner || (project.website_stage1_analysis as any)?.quick_take) && (
-                    <p className="text-[17px] text-[#e0e0e0] leading-[1.3] mb-5 font-normal tracking-[-0.5px] line-clamp-3">
+                    <p className="text-[15px] sm:text-[17px] text-[#e0e0e0] leading-[1.3] mb-4 sm:mb-5 font-normal tracking-[-0.3px] sm:tracking-[-0.5px] line-clamp-2 sm:line-clamp-3">
                       {project.one_liner || project.website_stage1_tooltip?.one_liner || (project.website_stage1_analysis as any).quick_take}
                     </p>
                   )}
