@@ -8,7 +8,7 @@ import { AddTokenModal } from '@/components/AddTokenModal';
 import SearchInput from '@/components/SearchInput';
 // Removed useDebounce - using custom implementation for better control
 import { cleanupDeprecatedFilters } from '@/lib/cleanupLocalStorage';
-import { Settings, Menu, ChevronDown, ChevronUp, Shield, FileCode2, LogOut, MoreVertical, AlertTriangle, CheckCircle, Trash2 } from 'lucide-react';
+import { Settings, Menu, ChevronDown, ChevronUp, Shield, FileCode2, LogOut, MoreVertical, AlertTriangle, CheckCircle, Trash2, Radio } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -60,6 +60,7 @@ interface CryptoProject {
   analysis_token_type?: string; // For token type filtering
   token_type?: string; // Add token_type field
   one_liner?: string; // Add top-level one_liner field
+  strongest_signal?: string; // Add top-level strongest_signal field
 }
 
 interface FilterState {
@@ -913,11 +914,21 @@ export default function ProjectsRatedPage() {
 
                   {/* Large prominent description - V5 style (responsive) */}
                   {(project.one_liner || project.website_stage1_tooltip?.one_liner || (project.website_stage1_analysis as any)?.quick_take) && (
-                    <p className="text-[15px] sm:text-[17px] text-[#e0e0e0] leading-[1.3] mb-4 sm:mb-5 font-normal tracking-[-0.3px] sm:tracking-[-0.5px] line-clamp-2 sm:line-clamp-3">
+                    <p className="text-[15px] sm:text-[17px] text-[#e0e0e0] leading-[1.3] mb-3 font-normal tracking-[-0.3px] sm:tracking-[-0.5px] line-clamp-2 sm:line-clamp-3">
                       {project.one_liner || project.website_stage1_tooltip?.one_liner || (project.website_stage1_analysis as any).quick_take}
                     </p>
                   )}
-                  
+
+                  {/* Signal with Radio icon - only show if signal exists */}
+                  {(project.strongest_signal || project.website_stage1_analysis?.strongest_signal) && (
+                    <div className="flex items-center gap-1.5 text-[13px] text-[#999] mb-5 -mt-1">
+                      <Radio className="w-3.5 h-3.5 text-[#00ff88] flex-shrink-0" />
+                      <span className="line-clamp-1">
+                        {project.strongest_signal || project.website_stage1_analysis?.strongest_signal}
+                      </span>
+                    </div>
+                  )}
+
                   {/* Metrics */}
                   <div className="grid grid-cols-3 gap-2 mb-4">
                     <div className="text-center p-2 bg-[#1a1c1f] rounded-lg border border-[#2a2d31]">
