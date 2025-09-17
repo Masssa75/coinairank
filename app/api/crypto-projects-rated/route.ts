@@ -159,11 +159,11 @@ export async function GET(request: NextRequest) {
       'website_stage1_score',
       'current_liquidity_usd',
       'current_market_cap',
-      'current_roi_percent',
+      'roi_percent',
       'created_at',
       'website_stage1_analyzed_at'
     ];
-    
+
     const sortColumn = validSortColumns.includes(sortBy) ? sortBy : 'website_stage1_score';
     // Put nulls last when sorting by score (unanalyzed tokens go to the end)
     const nullsFirst = sortColumn === 'website_stage1_score' ? false : sortOrder === 'desc';
