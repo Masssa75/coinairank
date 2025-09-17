@@ -920,14 +920,23 @@ export default function ProjectsRatedPage() {
                   )}
 
                   {/* Signal with Radio icon - only show if signal exists */}
-                  {(project.strongest_signal || project.website_stage1_analysis?.strongest_signal) && (
-                    <div className="flex items-center gap-1.5 text-[13px] text-[#999] mb-5 -mt-1">
-                      <Radio className="w-3.5 h-3.5 text-[#00ff88] flex-shrink-0" />
-                      <span className="line-clamp-1">
-                        {project.strongest_signal || project.website_stage1_analysis?.strongest_signal}
-                      </span>
-                    </div>
-                  )}
+                  {(() => {
+                    const signal = project.strongest_signal || project.website_stage1_analysis?.strongest_signal;
+                    if (!signal) return null;
+
+                    // Handle both string and object formats
+                    const signalText = typeof signal === 'string' ? signal : signal.signal;
+                    if (!signalText) return null;
+
+                    return (
+                      <div className="flex items-center gap-1.5 text-[13px] text-[#999] mb-5 -mt-1">
+                        <Radio className="w-3.5 h-3.5 text-[#00ff88] flex-shrink-0" />
+                        <span className="line-clamp-1">
+                          {signalText}
+                        </span>
+                      </div>
+                    );
+                  })()}
 
                   {/* Metrics */}
                   <div className="grid grid-cols-3 gap-2 mb-4">
