@@ -1,31 +1,23 @@
 [functions.website-analyzer-v3]
 verify_jwt = false
-max_execution_duration = 300
 
 [functions.website-analyzer-v2]
 verify_jwt = false
-max_execution_duration = 300
 
 [functions.website-analyzer]
 verify_jwt = false
-max_execution_duration = 300
 
 [functions.project-ingestion]
 verify_jwt = false
-max_execution_duration = 300
 
 [functions.gecko-token-discovery]
 verify_jwt = false
-max_execution_duration = 300
 
 [functions.website-discovery]
 verify_jwt = false
-max_execution_duration = 300
 
 [functions.x-analyzer]
 verify_jwt = false
-max_execution_duration = 300
 
 [functions.ultra-tracker]
 verify_jwt = false
-max_execution_duration = 300

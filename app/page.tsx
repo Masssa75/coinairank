@@ -40,6 +40,9 @@ interface CryptoProject {
   current_market_cap: number | null;
   current_price_usd: number | null;
   roi_percent: number | null;  // Changed from current_roi_percent
+  project_age_years?: number | null;  // Age of the project in years
+  age_source?: string | null;  // Source of age data (genesis, cmc_launch, etc.)
+  launch_date?: string | null;  // Launch date of the project
   initial_liquidity_usd?: number | null;  // Added fallback field
   initial_market_cap?: number | null;  // Added fallback field
   is_imposter?: boolean;  // Optional - CAR doesn't have these yet
@@ -70,7 +73,8 @@ interface FilterState {
   includeUnverified?: boolean
   minXScore?: number
   minWebsiteScore?: number
-  showReprocessedOnly?: boolean
+  minAge?: number
+  maxAge?: number
 }
 
 export default function ProjectsRatedPage() {
@@ -352,9 +356,12 @@ export default function ProjectsRatedPage() {
         params.append('minScore', apiScore.toString());
       }
       
-      // Add reprocessed filter
-      if (debouncedFilters.showReprocessedOnly) {
-        params.append('reprocessedOnly', 'true');
+      // Add age filters
+      if (debouncedFilters.minAge !== undefined && debouncedFilters.minAge > 0) {
+        params.append('minAge', debouncedFilters.minAge.toString());
+      }
+      if (debouncedFilters.maxAge !== undefined && debouncedFilters.maxAge < 10) {
+        params.append('maxAge', debouncedFilters.maxAge.toString());
       }
 
       const response = await fetch(`/api/crypto-projects-rated?${params}`);
@@ -589,7 +596,7 @@ export default function ProjectsRatedPage() {
               <option value="website_stage1_score">Score</option>
               <option value="current_market_cap">MCap</option>
               <option value="current_liquidity_usd">Liq</option>
-              <option value="roi_percent">ROI</option>
+              <option value="project_age_years">Age</option>
             </select>
             <button
               onClick={() => {
@@ -630,7 +637,7 @@ export default function ProjectsRatedPage() {
               <option value="website_stage1_score">AI Score</option>
               <option value="current_market_cap">Market Cap</option>
               <option value="current_liquidity_usd">Liquidity</option>
-              <option value="roi_percent">ROI %</option>
+              <option value="project_age_years">Age (Years)</option>
             </select>
             <button
               onClick={() => {
@@ -951,9 +958,9 @@ export default function ProjectsRatedPage() {
                       </p>
                     </div>
                     <div className="text-center p-2 bg-[#1a1c1f] rounded-lg border border-[#2a2d31]">
-                      <p className="text-xs text-[#666]">ROI</p>
-                      <p className={`text-sm font-semibold ${project.roi_percent && project.roi_percent > 0 ? 'text-[#00ff88]' : project.roi_percent && project.roi_percent < 0 ? 'text-[#ff4444]' : 'text-[#888]'}`}>
-                        {project.roi_percent ? `${project.roi_percent > 0 ? '+' : ''}${project.roi_percent.toFixed(0)}%` : 'N/A'}
+                      <p className="text-xs text-[#666]">Age</p>
+                      <p className="text-sm font-semibold text-[#888]">
+                        {project.project_age_years ? `${project.project_age_years.toFixed(1)}y` : '-'}
                       </p>
                     </div>
                   </div>

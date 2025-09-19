@@ -10,7 +10,8 @@ interface FilterState {
   includeImposters?: boolean  // true = show imposters, false = hide imposters
   includeUnverified?: boolean  // true = show unverified, false = hide unverified
   minWebsiteScore?: number
-  showReprocessedOnly?: boolean
+  minAge?: number  // Minimum age in years
+  maxAge?: number  // Maximum age in years
 }
 
 interface FilterSidebarProps {
@@ -38,7 +39,8 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
       includeImposters: false,  // Default: hide imposters
       includeUnverified: false,  // Default: hide unverified
       minWebsiteScore: 1,
-      showReprocessedOnly: false
+      minAge: undefined,
+      maxAge: undefined
     }
   }
 
@@ -60,7 +62,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
       networks: true,
       safety: true,
       scores: true,
-      reprocessed: false
+      age: true
     }
   }
 
@@ -104,10 +106,14 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     const initial = getInitialFilterState()
     return initial.minWebsiteScore || 1
   })
-  const [isReprocessedCollapsed, setIsReprocessedCollapsed] = useState(sectionStates.reprocessed || false)
-  const [showReprocessedOnly, setShowReprocessedOnly] = useState(() => {
+  const [isAgeCollapsed, setIsAgeCollapsed] = useState(sectionStates.age || true)
+  const [minAge, setMinAge] = useState<number | undefined>(() => {
     const initial = getInitialFilterState()
-    return initial.showReprocessedOnly || false
+    return initial.minAge
+  })
+  const [maxAge, setMaxAge] = useState<number | undefined>(() => {
+    const initial = getInitialFilterState()
+    return initial.maxAge
   })
 
   // Run cleanup on mount to remove deprecated filter settings
@@ -131,11 +137,11 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
         networks: isNetworksCollapsed,
         safety: isSafetyCollapsed,
         scores: isScoresCollapsed,
-        reprocessed: isReprocessedCollapsed
+        age: isAgeCollapsed
       }
       localStorage.setItem('carProjectsFilterSections', JSON.stringify(sectionStates))
     }
-  }, [isTokenTypeCollapsed, isNetworksCollapsed, isSafetyCollapsed, isScoresCollapsed])
+  }, [isTokenTypeCollapsed, isNetworksCollapsed, isSafetyCollapsed, isScoresCollapsed, isAgeCollapsed])
 
   // Save sidebar collapsed state
   useEffect(() => {
@@ -153,7 +159,8 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
       includeImposters: false,
       includeUnverified: false,
       minWebsiteScore: 1,
-      showReprocessedOnly: false
+      minAge: undefined,
+      maxAge: undefined
     }
     
     // Update all individual states
@@ -163,7 +170,8 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     setIncludeImposters(false)
     setIncludeUnverified(false)
     setMinWebsiteScore(1)
-    setShowReprocessedOnly(false)
+    setMinAge(undefined)
+    setMaxAge(undefined)
     
     // Reset all sections to collapsed (except token type)
     setIsTokenTypeCollapsed(false)
@@ -192,10 +200,10 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     setFilters(prev => ({ ...prev, includeUnverified }))
   }, [includeUnverified, setFilters])
 
-  // Update filters when showReprocessedOnly changes
+  // Update filters when age filters change
   useEffect(() => {
-    setFilters(prev => ({ ...prev, showReprocessedOnly }))
-  }, [showReprocessedOnly, setFilters])
+    setFilters(prev => ({ ...prev, minAge, maxAge }))
+  }, [minAge, maxAge, setFilters])
 
   const handleTokenTypeChange = (utilityChecked: boolean, memeChecked: boolean) => {
     let newType: FilterState['tokenType'] = 'all'
@@ -506,42 +514,69 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
         </div>
           </div>
 
-          {/* Reprocessed Tokens Filter - TEMPORARY */}
-          <div className={`border-b border-[#1a1c1f] ${isReprocessedCollapsed ? 'collapsed' : ''}`}>
-            <div 
+          {/* Age Filter */}
+          <div className={`border-b border-[#1a1c1f] ${isAgeCollapsed ? 'collapsed' : ''}`}>
+            <div
               className="px-5 py-5 cursor-pointer flex justify-between items-center bg-[#111214] hover:bg-[#1a1c1f] hover:pl-6 transition-all"
-              onClick={() => setIsReprocessedCollapsed(!isReprocessedCollapsed)}
+              onClick={() => setIsAgeCollapsed(!isAgeCollapsed)}
             >
-              <h3 className={`text-[13px] uppercase tracking-[1px] font-semibold transition-colors ${!isReprocessedCollapsed ? 'text-[#00ff88]' : 'text-[#888]'}`}>
-                Analysis Status
+              <h3 className={`text-[13px] uppercase tracking-[1px] font-semibold transition-colors ${!isAgeCollapsed ? 'text-[#00ff88]' : 'text-[#888]'}`}>
+                Project Age
               </h3>
-              <ChevronDown className={`w-3 h-3 transition-all ${!isReprocessedCollapsed ? 'text-[#00ff88]' : 'text-[#666]'} ${isReprocessedCollapsed ? '-rotate-90' : ''}`} />
+              <ChevronDown className={`w-3 h-3 transition-all ${!isAgeCollapsed ? 'text-[#00ff88]' : 'text-[#666]'} ${isAgeCollapsed ? '-rotate-90' : ''}`} />
             </div>
-            <div className={`bg-[#0a0b0d] overflow-hidden transition-all ${isReprocessedCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100 p-5'}`}>
-              <div className="flex flex-col gap-3">
-                <label 
-                  className="flex items-center gap-2.5 cursor-pointer text-sm text-[#ccc] hover:text-white transition-colors"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div 
-                    className={`w-5 h-5 border-2 rounded-[5px] transition-all flex items-center justify-center ${
-                      showReprocessedOnly ? 'bg-[#00ff88] border-[#00ff88]' : 'border-[#333]'
-                    }`}
-                    onClick={() => {
-                      setShowReprocessedOnly(!showReprocessedOnly)
+            <div className={`bg-[#0a0b0d] overflow-hidden transition-all ${isAgeCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100 p-5'}`}>
+              <div className="flex flex-col gap-4">
+                {/* Min Age */}
+                <div>
+                  <label className="text-xs text-[#888] mb-2 block">
+                    Minimum Age (years): <span className="text-white">{minAge ? minAge : 'Any'}</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    step="0.5"
+                    value={minAge || 0}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value)
+                      setMinAge(value > 0 ? value : undefined)
                     }}
-                  >
-                    {showReprocessedOnly && <span className="text-black font-bold text-xs">✓</span>}
+                    className="w-full h-2 bg-[#1a1c1f] rounded-lg appearance-none cursor-pointer slider"
+                    style={{
+                      background: minAge ? `linear-gradient(to right, #00ff88 0%, #00ff88 ${(minAge / 10) * 100}%, #1a1c1f ${(minAge / 10) * 100}%, #1a1c1f 100%)` : '#1a1c1f'
+                    }}
+                  />
+                  <div className="flex justify-between text-[10px] text-[#666] mt-1">
+                    <span>0</span>
+                    <span>5</span>
+                    <span>10+</span>
                   </div>
-                  <span>Show Only Reprocessed</span>
-                </label>
-                <div className="text-xs text-[#666] mt-1">
-                  Filters to only show tokens with completed Phase 1 & 2 analysis
                 </div>
-                <div className="mt-2 p-3 bg-[#1a1c1f] rounded-lg">
-                  <div className="text-xs text-[#00ff88] font-semibold mb-1">TEMPORARY FILTER</div>
-                  <div className="text-xs text-[#666]">
-                    This filter shows tokens where comparison_status = &apos;completed&apos;
+                {/* Max Age */}
+                <div>
+                  <label className="text-xs text-[#888] mb-2 block">
+                    Maximum Age (years): <span className="text-white">{maxAge ? maxAge : 'Any'}</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    step="0.5"
+                    value={maxAge || 10}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value)
+                      setMaxAge(value < 10 ? value : undefined)
+                    }}
+                    className="w-full h-2 bg-[#1a1c1f] rounded-lg appearance-none cursor-pointer slider"
+                    style={{
+                      background: maxAge ? `linear-gradient(to right, #00ff88 0%, #00ff88 ${(maxAge / 10) * 100}%, #1a1c1f ${(maxAge / 10) * 100}%, #1a1c1f 100%)` : '#1a1c1f'
+                    }}
+                  />
+                  <div className="flex justify-between text-[10px] text-[#666] mt-1">
+                    <span>0</span>
+                    <span>5</span>
+                    <span>10+</span>
                   </div>
                 </div>
               </div>

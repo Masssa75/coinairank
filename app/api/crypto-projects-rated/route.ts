@@ -26,7 +26,8 @@ export async function GET(request: NextRequest) {
     const tokenType = searchParams.get('tokenType');
     const includeUnverified = searchParams.get('includeUnverified') === 'true';
     const includeImposters = searchParams.get('includeImposters') === 'true';
-    const reprocessedOnly = searchParams.get('reprocessedOnly') === 'true';
+    const minAge = searchParams.get('minAge') ? parseFloat(searchParams.get('minAge')!) : undefined;
+    const maxAge = searchParams.get('maxAge') ? parseFloat(searchParams.get('maxAge')!) : undefined;
     const projectId = searchParams.get('id'); // Add support for specific project ID
     
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -148,10 +149,13 @@ export async function GET(request: NextRequest) {
       // Only show tokens where contract_verification.found_on_site is true
       query = query.eq('contract_verification->>found_on_site', 'true');
     }
-    
-    // Apply reprocessed filter - only show tokens with completed Phase 2 analysis
-    if (reprocessedOnly) {
-      query = query.eq('comparison_status', 'completed');
+
+    // Apply age filters
+    if (minAge !== undefined && minAge > 0) {
+      query = query.gte('project_age_years', minAge);
+    }
+    if (maxAge !== undefined && maxAge < 10) {
+      query = query.lte('project_age_years', maxAge);
     }
     
     // Apply sorting
@@ -160,6 +164,7 @@ export async function GET(request: NextRequest) {
       'current_liquidity_usd',
       'current_market_cap',
       'roi_percent',
+      'project_age_years',
       'created_at',
       'website_stage1_analyzed_at'
     ];
