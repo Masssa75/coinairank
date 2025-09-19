@@ -178,7 +178,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     setIsNetworksCollapsed(true)
     setIsSafetyCollapsed(true)
     setIsScoresCollapsed(true)
-    setIsReprocessedCollapsed(false)
+    setIsAgeCollapsed(true)
     
     // Update main filter state
     setFilters(defaultState)
