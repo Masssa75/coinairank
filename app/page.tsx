@@ -865,7 +865,7 @@ export default function ProjectsRatedPage() {
                         const hasNoAnalysis = !project.website_stage1_tier;
 
                         // Show tooltip for any project with tier or dash
-                        if (!displayTier) return null;
+                        // Remove this check - displayTier always has a value (either tier or '—')
 
                         return (
                           <SignalBasedTooltip
