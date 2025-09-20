@@ -46,7 +46,7 @@ export default function WhitepaperPage() {
               {expandedSections.has('mission') && (
                 <div className="ml-7 space-y-4 text-gray-700 dark:text-gray-300">
                   <p>
-                    <strong>The Problem:</strong> Crypto has devolved from Bitcoin's intellectual breakthrough into a casino of 20,000+ meaningless tokens.
+                    <strong>The Problem:</strong> Crypto has devolved from Bitcoin&apos;s intellectual breakthrough into a casino of 20,000+ meaningless tokens.
                     Real innovation (Kaspa, Bittensor) drowns in noise while dog coins pump. Smart investors can&apos;t analyze 20,000 projects,
                     so everyone became &quot;candle watchers.&quot;
                   </p>
@@ -69,7 +69,7 @@ export default function WhitepaperPage() {
                 className="flex items-center text-xl font-semibold mb-4 hover:text-blue-600"
               >
                 {expandedSections.has('architecture') ? <ChevronDown className="w-5 h-5 mr-2" /> : <ChevronRight className="w-5 h-5 mr-2" />}
-                Technical Architecture (What We're Building)
+                Technical Architecture (What We&apos;re Building)
               </button>
 
               {expandedSections.has('architecture') && (
@@ -205,7 +205,7 @@ export default function WhitepaperPage() {
               {expandedSections.has('principles') && (
                 <div className="ml-7 space-y-4 text-gray-700 dark:text-gray-300">
                   <ul className="list-disc ml-5">
-                    <li><strong>Truth over hype:</strong> Call out bullshit, even if it's popular</li>
+                    <li><strong>Truth over hype:</strong> Call out bullshit, even if it&apos;s popular</li>
                     <li><strong>Simplicity over complexity:</strong> If grandma can&apos;t understand our explanation, we failed</li>
                     <li><strong>Builders over marketers:</strong> Reward those who ship code, not promises</li>
                     <li><strong>Innovation over iteration:</strong> Fork #500 scores lower than novel approach #1</li>
@@ -223,7 +223,7 @@ export default function WhitepaperPage() {
                 className="flex items-center text-xl font-semibold mb-4 hover:text-blue-600"
               >
                 {expandedSections.has('metrics') ? <ChevronDown className="w-5 h-5 mr-2" /> : <ChevronRight className="w-5 h-5 mr-2" />}
-                Success Metrics (How We Know We're Winning)
+                Success Metrics (How We Know We&apos;re Winning)
               </button>
 
               {expandedSections.has('metrics') && (
