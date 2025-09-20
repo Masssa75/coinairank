@@ -861,6 +861,65 @@ export default function ProjectsRatedPage() {
                           </h3>
                         </Link>
                       </div>
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          // Same tier logic as grid view
+                          const displayTier = project.website_stage1_tier || '—';
+                          const htmlLength = project.website_stage1_analysis?.html_length;
+                          const hasLargeHtml = htmlLength && htmlLength > 240000;
+                          const isCSR = project.ssr_csr_classification === 'CSR' ||
+                                       project.website_stage1_analysis?.ssr_csr_classification === 'CSR';
+                          const needsProperScraping = isCSR && htmlLength && htmlLength <= 240000;
+                          const hasNoAnalysis = !project.website_stage1_tier;
+
+                          return (
+                            <SignalBasedTooltip
+                              projectDescription={project.website_stage1_analysis?.project_description}
+                              signals={project.website_stage1_analysis?.signals_found}
+                              redFlags={project.website_stage1_analysis?.red_flags}
+                              strongestSignal={project.website_stage1_analysis?.strongest_signal || project.website_stage1_analysis?.strongest_signal}
+                              benchmarkComparison={project.benchmark_comparison}
+                              extractionStatus={project.extraction_status}
+                              comparisonStatus={project.comparison_status}
+                              websiteAnalysis={{
+                                ...project.website_stage1_analysis,
+                                discovered_links: (project as any).discovered_links || [],
+                                stage_2_links: (project as any).stage_2_links || [],
+                                html_length: htmlLength,
+                                whitepaper_url: (project as any).whitepaper_url,
+                                github_url: (project as any).github_url,
+                                docs_url: (project as any).docs_url,
+                                social_urls: (project as any).social_urls || [],
+                                important_resources: (project as any).important_resources || []
+                              }}
+                              technicalAssessment={project.technical_assessment}
+                              hasLargeHtml={hasLargeHtml}
+                              needsProperScraping={needsProperScraping}
+                              hasNoAnalysis={hasNoAnalysis}
+                              isAdmin={isAdmin}
+                              tokenId={project.id.toString()}
+                              signalFeedback={project.signal_feedback}
+                              onFeedbackUpdate={(feedback) => {
+                                setProjects(prev => prev.map(p =>
+                                  p.id === project.id ? { ...p, signal_feedback: feedback } : p
+                                ));
+                              }}
+                              stage2Resources={project.website_stage2_resources}
+                              tooltip={project.website_stage1_analysis?.tooltip || project.website_stage1_tooltip}
+                            >
+                              <span
+                                className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"
+                                style={{
+                                  backgroundColor: getTierColor(displayTier).bg,
+                                  color: getTierColor(displayTier).text
+                                }}
+                              >
+                                {displayTier}
+                              </span>
+                            </SignalBasedTooltip>
+                          );
+                        })()}
+                      </div>
                     </div>
                   </div>
                 ) : (
