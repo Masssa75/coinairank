@@ -1,0 +1,22 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/add-token/route": "app/api/add-token/route.js",
+  "/api/admin/ai-prompts/route": "app/api/admin/ai-prompts/route.js",
+  "/api/admin/auth/route": "app/api/admin/auth/route.js",
+  "/api/admin/benchmarks/[id]/route": "app/api/admin/benchmarks/[id]/route.js",
+  "/api/admin/benchmarks/route": "app/api/admin/benchmarks/route.js",
+  "/api/admin/delete-project/route": "app/api/admin/delete-project/route.js",
+  "/api/admin/excluded-domains/route": "app/api/admin/excluded-domains/route.js",
+  "/api/admin/imposter/route": "app/api/admin/imposter/route.js",
+  "/api/capture-screenshot/route": "app/api/capture-screenshot/route.js",
+  "/api/signal-feedback/route": "app/api/signal-feedback/route.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/api/crypto-projects-rated/route": "app/api/crypto-projects-rated/route.js",
+  "/page": "app/page.js",
+  "/project/[symbol]/page": "app/project/[symbol]/page.js",
+  "/admin/benchmarks/page": "app/admin/benchmarks/page.js",
+  "/admin/dashboard/page": "app/admin/dashboard/page.js",
+  "/admin/prompts/page": "app/admin/prompts/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/admin/domains/page": "app/admin/domains/page.js"
+}

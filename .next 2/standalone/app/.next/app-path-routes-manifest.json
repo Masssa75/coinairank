@@ -1,0 +1,22 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/api/add-token/route": "/api/add-token",
+  "/api/admin/ai-prompts/route": "/api/admin/ai-prompts",
+  "/api/admin/auth/route": "/api/admin/auth",
+  "/api/admin/benchmarks/[id]/route": "/api/admin/benchmarks/[id]",
+  "/api/admin/benchmarks/route": "/api/admin/benchmarks",
+  "/api/admin/delete-project/route": "/api/admin/delete-project",
+  "/api/admin/excluded-domains/route": "/api/admin/excluded-domains",
+  "/api/admin/imposter/route": "/api/admin/imposter",
+  "/api/capture-screenshot/route": "/api/capture-screenshot",
+  "/api/signal-feedback/route": "/api/signal-feedback",
+  "/favicon.ico/route": "/favicon.ico",
+  "/api/crypto-projects-rated/route": "/api/crypto-projects-rated",
+  "/page": "/",
+  "/project/[symbol]/page": "/project/[symbol]",
+  "/admin/benchmarks/page": "/admin/benchmarks",
+  "/admin/dashboard/page": "/admin/dashboard",
+  "/admin/prompts/page": "/admin/prompts",
+  "/admin/page": "/admin",
+  "/admin/domains/page": "/admin/domains"
+}
