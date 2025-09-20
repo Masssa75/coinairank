@@ -76,13 +76,13 @@ serve(async (req) => {
         symbol,
         handle,
         tweets_analyzed: tweets.length,
-        behavioral_breakdown: analysis.behavioral_percentages,
+        behavioral_breakdown: analysis.behavioral_percentages || {},
         example_tweets: analysis.example_tweets || {},
-        primary_focus: analysis.content_patterns.primary_focus,
-        substance_ratio: analysis.content_patterns.substance_vs_hype_ratio,
-        red_flags_count: analysis.red_flags.length,
-        positive_signals_count: analysis.positive_signals.length,
-        character_type: analysis.trust_assessment.character_type,
+        primary_focus: analysis.content_patterns?.primary_focus || '',
+        substance_ratio: analysis.content_patterns?.substance_vs_hype_ratio || '',
+        red_flags_count: analysis.red_flags?.length || 0,
+        positive_signals_count: analysis.positive_signals?.length || 0,
+        character_type: analysis.trust_assessment?.character_type || 'unknown',
         analysis,
         performance: {
           fetch_tweets_ms: timings.fetch_tweets_ms,
@@ -331,6 +331,12 @@ async function analyzeWithKimiK2(tweets: Tweet[], handle: string, symbol: string
 
     // Try to parse the JSON
     const parsed = JSON.parse(jsonStr);
+
+    // Ensure example_tweets exists even if AI didn't provide it
+    if (!parsed.example_tweets) {
+      parsed.example_tweets = {};
+    }
+
     console.log('Successfully parsed AI response');
     return parsed;
   } catch (error) {
