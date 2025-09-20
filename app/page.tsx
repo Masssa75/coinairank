@@ -831,16 +831,49 @@ export default function ProjectsRatedPage() {
 
         <div className="p-3 sm:p-6">
 
-          {/* Project Grid - Dynamic columns based on sidebar state */}
-          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 ${
-            isSidebarCollapsed ? 'xl:grid-cols-4' : '2xl:grid-cols-4'
-          }`}>
+          {/* Project Display - Grid or List based on viewMode */}
+          {viewMode === 'grid' ? (
+            /* Grid View */
+            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 ${
+              isSidebarCollapsed ? 'xl:grid-cols-4' : '2xl:grid-cols-4'
+            }`}>
+          ) : (
+            /* List View */
+            <div className="space-y-2">
+          )}
             {projects.map((project, index) => (
               <div
                 key={project.id}
                 ref={index === projects.length - 1 ? lastProjectRef : null}
               >
-                <div className="bg-[#111214] rounded-2xl border border-[#2a2d31] hover:border-[#00ff88] transition-all hover:-translate-y-1 relative overflow-hidden group min-w-0">
+                {viewMode === 'grid' ? (
+                  /* Grid View - Full Card */
+                  <div className="bg-[#111214] rounded-2xl border border-[#2a2d31] hover:border-[#00ff88] transition-all hover:-translate-y-1 relative overflow-hidden group min-w-0">
+                ) : (
+                  /* List View - Simple Row */
+                  <div className="bg-[#111214] rounded-lg border border-[#2a2d31] hover:border-[#00ff88] transition-all p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Link href={`/project/${project.symbol}`}>
+                          <h3 className={`text-lg font-bold hover:text-[#00ff88] transition-colors cursor-pointer ${
+                            project.is_imposter === true ? 'text-red-500' : 'text-white'
+                          }`}>
+                            {project.symbol}
+                            {project.name &&
+                             project.name !== project.symbol &&
+                             !project.name.includes('/') && (
+                              <span className="text-sm text-[#666] font-normal ml-2">({project.name})</span>
+                            )}
+                          </h3>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {viewMode === 'grid' && (
+                  <>
+                    {/* Grid View Content */}
                 {/* Preview Area */}
                 <div className="relative h-[420px] bg-[#0a0b0d] overflow-hidden">
                   {/* Show loading state if capturing screenshot */}
@@ -1104,6 +1137,8 @@ export default function ProjectsRatedPage() {
                   </div>
 
                 </div>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
