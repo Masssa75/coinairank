@@ -847,7 +847,7 @@ export default function ProjectsRatedPage() {
                   /* List View - Clean Row */
                   <div className="py-3 px-0 hover:bg-[#1a1c1f] transition-colors">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-4">
                         <Link href={`/project/${project.symbol}`}>
                           <h3 className={`text-lg font-bold hover:text-[#00ff88] transition-colors cursor-pointer ${
                             project.is_imposter === true ? 'text-red-500' : 'text-white'
@@ -860,6 +860,32 @@ export default function ProjectsRatedPage() {
                             )}
                           </h3>
                         </Link>
+
+                        {/* Age and Market Cap */}
+                        <div className="flex items-center gap-6 text-sm text-[#888]">
+                          <div className="flex items-center gap-1">
+                            <span className="text-[#666]">Age:</span>
+                            <span className="text-[#ccc]">
+                              {project.project_age_years
+                                ? `${project.project_age_years.toFixed(1)}y`
+                                : '—'
+                              }
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[#666]">MCap:</span>
+                            <span className="text-[#ccc]">
+                              {(() => {
+                                const mcap = project.current_market_cap;
+                                if (!mcap) return '—';
+                                if (mcap >= 1000000000) return `$${(mcap / 1000000000).toFixed(1)}B`;
+                                if (mcap >= 1000000) return `$${(mcap / 1000000).toFixed(1)}M`;
+                                if (mcap >= 1000) return `$${(mcap / 1000).toFixed(0)}K`;
+                                return `$${mcap.toFixed(0)}`;
+                              })()}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
                         {(() => {
