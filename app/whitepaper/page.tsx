@@ -47,8 +47,8 @@ export default function WhitepaperPage() {
                 <div className="ml-7 space-y-4 text-gray-700 dark:text-gray-300">
                   <p>
                     <strong>The Problem:</strong> Crypto has devolved from Bitcoin's intellectual breakthrough into a casino of 20,000+ meaningless tokens.
-                    Real innovation (Kaspa, Bittensor) drowns in noise while dog coins pump. Smart investors can't analyze 20,000 projects,
-                    so everyone became "candle watchers."
+                    Real innovation (Kaspa, Bittensor) drowns in noise while dog coins pump. Smart investors can&apos;t analyze 20,000 projects,
+                    so everyone became &quot;candle watchers.&quot;
                   </p>
                   <p>
                     <strong>Our Solution:</strong> AI that reads every whitepaper, analyzes every codebase, and identifies the 0.1% with Bitcoin-level innovation.
@@ -133,13 +133,13 @@ export default function WhitepaperPage() {
                     <li><strong>Strongest:</strong> Working product with real users</li>
                     <li><strong>Strong:</strong> Academic backing, peer review, formal proofs</li>
                     <li><strong>Medium:</strong> Known team, previous successes</li>
-                    <li><strong>Weak:</strong> Promises, roadmaps, "partnerships"</li>
+                    <li><strong>Weak:</strong> Promises, roadmaps, &quot;partnerships&quot;</li>
                     <li><strong>Red Flag:</strong> Anonymous team, no GitHub, all marketing</li>
                   </ul>
 
                   <h3 className="font-semibold">The Satoshi Test:</h3>
                   <p className="italic">
-                    "Would Satoshi respect this?" - Does it advance decentralization, solve a real problem,
+                    &quot;Would Satoshi respect this?&quot; - Does it advance decentralization, solve a real problem,
                     and contribute something novel to the space?
                   </p>
                 </div>
@@ -169,7 +169,7 @@ export default function WhitepaperPage() {
                   <ul className="list-disc ml-5">
                     <li>Whitepaper → Actionable insights</li>
                     <li>Combine whitepaper + docs + GitHub</li>
-                    <li>Generate "Why this matters" explanations</li>
+                    <li>Generate &quot;Why this matters&quot; explanations</li>
                     <li>Signal verification with web search</li>
                   </ul>
 
@@ -231,7 +231,7 @@ export default function WhitepaperPage() {
                   <h3 className="font-semibold">Short Term:</h3>
                   <ul className="list-disc ml-5">
                     <li>Can we identify Kaspa/TAO/legitimate projects from noise?</li>
-                    <li>Do our "ALPHA" tier projects outperform "TRASH" tier?</li>
+                    <li>Do our &quot;ALPHA&quot; tier projects outperform &quot;TRASH&quot; tier?</li>
                     <li>Can users understand our explanations?</li>
                   </ul>
 
@@ -268,12 +268,12 @@ export default function WhitepaperPage() {
                     If you're reading this as a future AI instance working on CAR:
                   </p>
                   <ul className="list-disc ml-5">
-                    <li>The goal isn't to build another CoinMarketCap. It's to fix crypto.</li>
-                    <li>Every feature should answer: "Does this help separate signal from noise?"</li>
+                    <li>The goal isn&apos;t to build another CoinMarketCap. It&apos;s to fix crypto.</li>
+                    <li>Every feature should answer: &quot;Does this help separate signal from noise?&quot;</li>
                     <li>When analyzing projects, think like Satoshi meeting a founder: What would you ask?</li>
-                    <li>Don't get caught up in price action. We're measuring innovation, not momentum.</li>
-                    <li>If a project is shit, say it's shit. Don't hedge. Truth is our moat.</li>
-                    <li>Remember: We're building the tool that makes the next Bitcoin as obvious as a green candle.</li>
+                    <li>Don&apos;t get caught up in price action. We&apos;re measuring innovation, not momentum.</li>
+                    <li>If a project is shit, say it&apos;s shit. Don&apos;t hedge. Truth is our moat.</li>
+                    <li>Remember: We&apos;re building the tool that makes the next Bitcoin as obvious as a green candle.</li>
                   </ul>
 
                   <p className="font-semibold mt-6">Current State (September 2025):</p>
