@@ -623,72 +623,87 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
               <div className="flex flex-col gap-4">
                 {/* Min Market Cap */}
                 <div>
-                  <label className="text-xs text-[#888] mb-2 block">
-                    Minimum Market Cap: <span className="text-white">
-                      {minMarketCap ?
-                        (minMarketCap >= 1000000 ? `$${(minMarketCap / 1000000).toFixed(1)}M` :
-                         minMarketCap >= 1000 ? `$${(minMarketCap / 1000).toFixed(0)}K` :
-                         `$${minMarketCap}`)
-                        : 'Any'}
-                    </span>
+                  <label className="text-xs text-[#888] mb-2 block uppercase tracking-wider">
+                    Minimum Market Cap
                   </label>
                   <input
-                    type="range"
-                    min="0"
-                    max="7"
-                    step="0.1"
-                    value={minMarketCap ? Math.log10(minMarketCap) : 0}
+                    type="text"
+                    placeholder="e.g. 100K, 1M, 5.5M"
+                    value={minMarketCap ?
+                      (minMarketCap >= 1000000 ? `${(minMarketCap / 1000000).toFixed(1).replace(/\.0$/, '')}M` :
+                       minMarketCap >= 1000 ? `${(minMarketCap / 1000).toFixed(0)}K` :
+                       minMarketCap.toString())
+                      : ''}
                     onChange={(e) => {
-                      const logValue = parseFloat(e.target.value)
-                      const value = logValue > 0 ? Math.pow(10, logValue) : 0
-                      setMinMarketCap(value > 0 ? Math.round(value) : undefined)
+                      const value = e.target.value.trim().toUpperCase();
+                      if (value === '') {
+                        setMinMarketCap(undefined);
+                        return;
+                      }
+
+                      // Parse input like "100K", "1M", "5.5M", "1000000"
+                      let numValue = 0;
+                      if (value.endsWith('K')) {
+                        numValue = parseFloat(value.slice(0, -1)) * 1000;
+                      } else if (value.endsWith('M')) {
+                        numValue = parseFloat(value.slice(0, -1)) * 1000000;
+                      } else if (value.endsWith('B')) {
+                        numValue = parseFloat(value.slice(0, -1)) * 1000000000;
+                      } else {
+                        numValue = parseFloat(value);
+                      }
+
+                      if (!isNaN(numValue) && numValue > 0) {
+                        setMinMarketCap(Math.round(numValue));
+                      }
                     }}
-                    className="w-full h-2 bg-[#1a1c1f] rounded-lg appearance-none cursor-pointer slider"
-                    style={{
-                      background: minMarketCap ? `linear-gradient(to right, #00ff88 0%, #00ff88 ${(Math.log10(minMarketCap) / 7) * 100}%, #1a1c1f ${(Math.log10(minMarketCap) / 7) * 100}%, #1a1c1f 100%)` : '#1a1c1f'
-                    }}
+                    className="w-full px-3 py-2 bg-[#1a1c1f] border border-[#2a2d31] rounded-md text-white placeholder-[#666] focus:outline-none focus:border-[#00ff88] transition-colors"
                   />
-                  <div className="flex justify-between text-[10px] text-[#666] mt-1">
-                    <span>$0</span>
-                    <span>$10K</span>
-                    <span>$100K</span>
-                    <span>$1M</span>
-                    <span>$10M</span>
+                  <div className="text-[10px] text-[#666] mt-1">
+                    Enter values like 100K, 1M, or 5500000
                   </div>
                 </div>
                 {/* Max Market Cap */}
                 <div>
-                  <label className="text-xs text-[#888] mb-2 block">
-                    Maximum Market Cap: <span className="text-white">
-                      {maxMarketCap ?
-                        (maxMarketCap >= 1000000 ? `$${(maxMarketCap / 1000000).toFixed(1)}M` :
-                         maxMarketCap >= 1000 ? `$${(maxMarketCap / 1000).toFixed(0)}K` :
-                         `$${maxMarketCap}`)
-                        : 'Any'}
-                    </span>
+                  <label className="text-xs text-[#888] mb-2 block uppercase tracking-wider">
+                    Maximum Market Cap
                   </label>
                   <input
-                    type="range"
-                    min="0"
-                    max="7"
-                    step="0.1"
-                    value={maxMarketCap ? Math.log10(maxMarketCap) : 7}
+                    type="text"
+                    placeholder="e.g. 10M, 100M, 1B"
+                    value={maxMarketCap ?
+                      (maxMarketCap >= 1000000000 ? `${(maxMarketCap / 1000000000).toFixed(1).replace(/\.0$/, '')}B` :
+                       maxMarketCap >= 1000000 ? `${(maxMarketCap / 1000000).toFixed(1).replace(/\.0$/, '')}M` :
+                       maxMarketCap >= 1000 ? `${(maxMarketCap / 1000).toFixed(0)}K` :
+                       maxMarketCap.toString())
+                      : ''}
                     onChange={(e) => {
-                      const logValue = parseFloat(e.target.value)
-                      const value = logValue > 0 ? Math.pow(10, logValue) : 0
-                      setMaxMarketCap(logValue < 7 ? Math.round(value) : undefined)
+                      const value = e.target.value.trim().toUpperCase();
+                      if (value === '') {
+                        setMaxMarketCap(undefined);
+                        return;
+                      }
+
+                      // Parse input like "100K", "1M", "5.5M", "1B", "1000000"
+                      let numValue = 0;
+                      if (value.endsWith('K')) {
+                        numValue = parseFloat(value.slice(0, -1)) * 1000;
+                      } else if (value.endsWith('M')) {
+                        numValue = parseFloat(value.slice(0, -1)) * 1000000;
+                      } else if (value.endsWith('B')) {
+                        numValue = parseFloat(value.slice(0, -1)) * 1000000000;
+                      } else {
+                        numValue = parseFloat(value);
+                      }
+
+                      if (!isNaN(numValue) && numValue > 0) {
+                        setMaxMarketCap(Math.round(numValue));
+                      }
                     }}
-                    className="w-full h-2 bg-[#1a1c1f] rounded-lg appearance-none cursor-pointer slider"
-                    style={{
-                      background: maxMarketCap ? `linear-gradient(to right, #00ff88 0%, #00ff88 ${(Math.log10(maxMarketCap) / 7) * 100}%, #1a1c1f ${(Math.log10(maxMarketCap) / 7) * 100}%, #1a1c1f 100%)` : '#1a1c1f'
-                    }}
+                    className="w-full px-3 py-2 bg-[#1a1c1f] border border-[#2a2d31] rounded-md text-white placeholder-[#666] focus:outline-none focus:border-[#00ff88] transition-colors"
                   />
-                  <div className="flex justify-between text-[10px] text-[#666] mt-1">
-                    <span>$0</span>
-                    <span>$10K</span>
-                    <span>$100K</span>
-                    <span>$1M</span>
-                    <span>$10M</span>
+                  <div className="text-[10px] text-[#666] mt-1">
+                    Leave empty for no maximum limit
                   </div>
                 </div>
               </div>
