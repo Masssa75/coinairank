@@ -855,11 +855,11 @@ export default function ProjectsRatedPage() {
           {viewMode === 'list' && (
             /* Table Headers for List View */
             <div className="grid grid-cols-12 gap-4 py-3 px-0 border-b border-[#2a2d31] text-sm font-medium text-[#666] uppercase tracking-wide">
-              <div className="col-span-5">Project</div>
+              <div className="col-span-4">Project</div>
               <div className="col-span-2 text-center">Age</div>
               <div className="col-span-2 text-center">Market Cap</div>
-              <div className="col-span-2 text-center">Tier</div>
-              <div className="col-span-1"></div>
+              <div className="col-span-2 text-center">Web Tier</div>
+              <div className="col-span-2 text-center">X Tier</div>
             </div>
           )}
 
@@ -878,8 +878,8 @@ export default function ProjectsRatedPage() {
                   /* List View - Table Row */
                   <div className="py-3 px-0 hover:bg-[#1a1c1f] transition-colors">
                     <div className="grid grid-cols-12 gap-4 items-center">
-                      {/* Project Name - col-span-5 */}
-                      <div className="col-span-5">
+                      {/* Project Name - col-span-4 */}
+                      <div className="col-span-4">
                         <Link href={`/project/${project.symbol}`}>
                           <h3 className={`text-lg font-bold hover:text-[#00ff88] transition-colors cursor-pointer ${
                             project.is_imposter === true ? 'text-red-500' : 'text-white'
@@ -975,8 +975,23 @@ export default function ProjectsRatedPage() {
                         })()}
                       </div>
 
-                      {/* Extra space - col-span-1 */}
-                      <div className="col-span-1"></div>
+                      {/* X Analysis Tier - col-span-2 */}
+                      <div className="col-span-2 text-center">
+                        <span
+                          className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-pointer transition-colors hover:opacity-80"
+                          style={{
+                            backgroundColor: '#2a2d31',
+                            color: '#888'
+                          }}
+                          onClick={() => {
+                            // TODO: Trigger X analysis when function is ready
+                            console.log('X analysis triggered for project:', project.symbol);
+                          }}
+                          title="Click to analyze X/Twitter profile"
+                        >
+                          ⏳
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ) : (
