@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
 interface WhitepaperAnalysis {
   content_breakdown: Record<string, number>;
@@ -30,7 +30,10 @@ export default function WhitepaperTooltip() {
   useEffect(() => {
     async function fetchProjects() {
       try {
-        const supabase = createClient();
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
 
         const { data, error } = await supabase
           .from('crypto_projects_rated')
