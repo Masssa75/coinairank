@@ -838,6 +838,9 @@ HTML: ${htmlForAnalysis}`;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Build update object, only including contract/network if provided
+    // Calculate total duration before saving
+    const totalDuration = Date.now() - startTime;
+
     const updateData: any = {
         symbol: symbol,
         website_url: websiteUrl,
@@ -864,7 +867,10 @@ HTML: ${htmlForAnalysis}`;
         browser_render_error: parsedData.browser_render_error || null,
         prompt_version: PROMPT_VERSION,
         extraction_status: 'completed',
-        extraction_completed_at: new Date().toISOString()
+        extraction_completed_at: new Date().toISOString(),
+        // Add duration tracking
+        website_analysis_duration_ms: totalDuration,
+        website_stage1_analyzed_at: new Date().toISOString()
     };
 
     // Only update contract/network if they were explicitly provided
@@ -900,8 +906,8 @@ HTML: ${htmlForAnalysis}`;
     }
 
     // Step 6: Return comprehensive results matching original structure
-    const totalDuration = Date.now() - startTime;
-    
+    // totalDuration already calculated above
+
     const responseData = {
       success: true,
       function: 'testest',

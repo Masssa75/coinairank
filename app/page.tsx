@@ -75,6 +75,8 @@ interface FilterState {
   minWebsiteScore?: number
   minAge?: number
   maxAge?: number
+  minMarketCap?: number
+  maxMarketCap?: number
 }
 
 export default function ProjectsRatedPage() {
@@ -362,6 +364,14 @@ export default function ProjectsRatedPage() {
       }
       if (debouncedFilters.maxAge !== undefined && debouncedFilters.maxAge < 10) {
         params.append('maxAge', debouncedFilters.maxAge.toString());
+      }
+
+      // Add market cap filters
+      if (debouncedFilters.minMarketCap !== undefined && debouncedFilters.minMarketCap > 0) {
+        params.append('minMarketCap', debouncedFilters.minMarketCap.toString());
+      }
+      if (debouncedFilters.maxMarketCap !== undefined && debouncedFilters.maxMarketCap > 0) {
+        params.append('maxMarketCap', debouncedFilters.maxMarketCap.toString());
       }
 
       const response = await fetch(`/api/crypto-projects-rated?${params}`);

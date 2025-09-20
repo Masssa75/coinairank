@@ -12,6 +12,8 @@ interface FilterState {
   minWebsiteScore?: number
   minAge?: number  // Minimum age in years
   maxAge?: number  // Maximum age in years
+  minMarketCap?: number  // Minimum market cap in USD
+  maxMarketCap?: number  // Maximum market cap in USD
 }
 
 interface FilterSidebarProps {
@@ -40,7 +42,9 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
       includeUnverified: false,  // Default: hide unverified
       minWebsiteScore: 1,
       minAge: undefined,
-      maxAge: undefined
+      maxAge: undefined,
+      minMarketCap: undefined,
+      maxMarketCap: undefined
     }
   }
 
@@ -62,7 +66,8 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
       networks: true,
       safety: true,
       scores: true,
-      age: true
+      age: true,
+      marketCap: true
     }
   }
 
@@ -115,6 +120,15 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     const initial = getInitialFilterState()
     return initial.maxAge
   })
+  const [isMarketCapCollapsed, setIsMarketCapCollapsed] = useState(sectionStates.marketCap || true)
+  const [minMarketCap, setMinMarketCap] = useState<number | undefined>(() => {
+    const initial = getInitialFilterState()
+    return initial.minMarketCap
+  })
+  const [maxMarketCap, setMaxMarketCap] = useState<number | undefined>(() => {
+    const initial = getInitialFilterState()
+    return initial.maxMarketCap
+  })
 
   // Run cleanup on mount to remove deprecated filter settings
   useEffect(() => {
@@ -137,11 +151,12 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
         networks: isNetworksCollapsed,
         safety: isSafetyCollapsed,
         scores: isScoresCollapsed,
-        age: isAgeCollapsed
+        age: isAgeCollapsed,
+        marketCap: isMarketCapCollapsed
       }
       localStorage.setItem('carProjectsFilterSections', JSON.stringify(sectionStates))
     }
-  }, [isTokenTypeCollapsed, isNetworksCollapsed, isSafetyCollapsed, isScoresCollapsed, isAgeCollapsed])
+  }, [isTokenTypeCollapsed, isNetworksCollapsed, isSafetyCollapsed, isScoresCollapsed, isAgeCollapsed, isMarketCapCollapsed])
 
   // Save sidebar collapsed state
   useEffect(() => {
@@ -160,7 +175,9 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
       includeUnverified: false,
       minWebsiteScore: 1,
       minAge: undefined,
-      maxAge: undefined
+      maxAge: undefined,
+      minMarketCap: undefined,
+      maxMarketCap: undefined
     }
     
     // Update all individual states
@@ -172,6 +189,8 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     setMinWebsiteScore(1)
     setMinAge(undefined)
     setMaxAge(undefined)
+    setMinMarketCap(undefined)
+    setMaxMarketCap(undefined)
     
     // Reset all sections to collapsed (except token type)
     setIsTokenTypeCollapsed(false)
@@ -179,6 +198,7 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     setIsSafetyCollapsed(true)
     setIsScoresCollapsed(true)
     setIsAgeCollapsed(true)
+    setIsMarketCapCollapsed(true)
     
     // Update main filter state
     setFilters(defaultState)
@@ -204,6 +224,11 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
   useEffect(() => {
     setFilters(prev => ({ ...prev, minAge, maxAge }))
   }, [minAge, maxAge, setFilters])
+
+  // Update filters when market cap filters change
+  useEffect(() => {
+    setFilters(prev => ({ ...prev, minMarketCap, maxMarketCap }))
+  }, [minMarketCap, maxMarketCap, setFilters])
 
   const handleTokenTypeChange = (utilityChecked: boolean, memeChecked: boolean) => {
     let newType: FilterState['tokenType'] = 'all'
@@ -577,6 +602,93 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
                     <span>0</span>
                     <span>5</span>
                     <span>10+</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Market Cap Filter */}
+          <div className={`border-b border-[#1a1c1f] ${isMarketCapCollapsed ? 'collapsed' : ''}`}>
+            <div
+              className="px-5 py-5 cursor-pointer flex justify-between items-center bg-[#111214] hover:bg-[#1a1c1f] hover:pl-6 transition-all"
+              onClick={() => setIsMarketCapCollapsed(!isMarketCapCollapsed)}
+            >
+              <h3 className={`text-[13px] uppercase tracking-[1px] font-semibold transition-colors ${!isMarketCapCollapsed ? 'text-[#00ff88]' : 'text-[#888]'}`}>
+                Market Cap
+              </h3>
+              <ChevronDown className={`w-3 h-3 transition-all ${!isMarketCapCollapsed ? 'text-[#00ff88]' : 'text-[#666]'} ${isMarketCapCollapsed ? '-rotate-90' : ''}`} />
+            </div>
+            <div className={`bg-[#0a0b0d] overflow-hidden transition-all ${isMarketCapCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100 p-5'}`}>
+              <div className="flex flex-col gap-4">
+                {/* Min Market Cap */}
+                <div>
+                  <label className="text-xs text-[#888] mb-2 block">
+                    Minimum Market Cap: <span className="text-white">
+                      {minMarketCap ?
+                        (minMarketCap >= 1000000 ? `$${(minMarketCap / 1000000).toFixed(1)}M` :
+                         minMarketCap >= 1000 ? `$${(minMarketCap / 1000).toFixed(0)}K` :
+                         `$${minMarketCap}`)
+                        : 'Any'}
+                    </span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="7"
+                    step="0.1"
+                    value={minMarketCap ? Math.log10(minMarketCap) : 0}
+                    onChange={(e) => {
+                      const logValue = parseFloat(e.target.value)
+                      const value = logValue > 0 ? Math.pow(10, logValue) : 0
+                      setMinMarketCap(value > 0 ? Math.round(value) : undefined)
+                    }}
+                    className="w-full h-2 bg-[#1a1c1f] rounded-lg appearance-none cursor-pointer slider"
+                    style={{
+                      background: minMarketCap ? `linear-gradient(to right, #00ff88 0%, #00ff88 ${(Math.log10(minMarketCap) / 7) * 100}%, #1a1c1f ${(Math.log10(minMarketCap) / 7) * 100}%, #1a1c1f 100%)` : '#1a1c1f'
+                    }}
+                  />
+                  <div className="flex justify-between text-[10px] text-[#666] mt-1">
+                    <span>$0</span>
+                    <span>$10K</span>
+                    <span>$100K</span>
+                    <span>$1M</span>
+                    <span>$10M</span>
+                  </div>
+                </div>
+                {/* Max Market Cap */}
+                <div>
+                  <label className="text-xs text-[#888] mb-2 block">
+                    Maximum Market Cap: <span className="text-white">
+                      {maxMarketCap ?
+                        (maxMarketCap >= 1000000 ? `$${(maxMarketCap / 1000000).toFixed(1)}M` :
+                         maxMarketCap >= 1000 ? `$${(maxMarketCap / 1000).toFixed(0)}K` :
+                         `$${maxMarketCap}`)
+                        : 'Any'}
+                    </span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="7"
+                    step="0.1"
+                    value={maxMarketCap ? Math.log10(maxMarketCap) : 7}
+                    onChange={(e) => {
+                      const logValue = parseFloat(e.target.value)
+                      const value = logValue > 0 ? Math.pow(10, logValue) : 0
+                      setMaxMarketCap(logValue < 7 ? Math.round(value) : undefined)
+                    }}
+                    className="w-full h-2 bg-[#1a1c1f] rounded-lg appearance-none cursor-pointer slider"
+                    style={{
+                      background: maxMarketCap ? `linear-gradient(to right, #00ff88 0%, #00ff88 ${(Math.log10(maxMarketCap) / 7) * 100}%, #1a1c1f ${(Math.log10(maxMarketCap) / 7) * 100}%, #1a1c1f 100%)` : '#1a1c1f'
+                    }}
+                  />
+                  <div className="flex justify-between text-[10px] text-[#666] mt-1">
+                    <span>$0</span>
+                    <span>$10K</span>
+                    <span>$100K</span>
+                    <span>$1M</span>
+                    <span>$10M</span>
                   </div>
                 </div>
               </div>

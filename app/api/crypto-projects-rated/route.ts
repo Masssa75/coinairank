@@ -28,6 +28,8 @@ export async function GET(request: NextRequest) {
     const includeImposters = searchParams.get('includeImposters') === 'true';
     const minAge = searchParams.get('minAge') ? parseFloat(searchParams.get('minAge')!) : undefined;
     const maxAge = searchParams.get('maxAge') ? parseFloat(searchParams.get('maxAge')!) : undefined;
+    const minMarketCap = searchParams.get('minMarketCap') ? parseFloat(searchParams.get('minMarketCap')!) : undefined;
+    const maxMarketCap = searchParams.get('maxMarketCap') ? parseFloat(searchParams.get('maxMarketCap')!) : undefined;
     const projectId = searchParams.get('id'); // Add support for specific project ID
     
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -156,6 +158,14 @@ export async function GET(request: NextRequest) {
     }
     if (maxAge !== undefined && maxAge < 10) {
       query = query.lte('project_age_years', maxAge);
+    }
+
+    // Apply market cap filters
+    if (minMarketCap !== undefined && minMarketCap > 0) {
+      query = query.gte('current_market_cap', minMarketCap);
+    }
+    if (maxMarketCap !== undefined && maxMarketCap > 0) {
+      query = query.lte('current_market_cap', maxMarketCap);
     }
     
     // Apply sorting
