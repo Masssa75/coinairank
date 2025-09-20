@@ -206,10 +206,10 @@ export default function WhitepaperPage() {
                 <div className="ml-7 space-y-4 text-gray-700 dark:text-gray-300">
                   <ul className="list-disc ml-5">
                     <li><strong>Truth over hype:</strong> Call out bullshit, even if it's popular</li>
-                    <li><strong>Simplicity over complexity:</strong> If grandma can't understand our explanation, we failed</li>
+                    <li><strong>Simplicity over complexity:</strong> If grandma can&apos;t understand our explanation, we failed</li>
                     <li><strong>Builders over marketers:</strong> Reward those who ship code, not promises</li>
                     <li><strong>Innovation over iteration:</strong> Fork #500 scores lower than novel approach #1</li>
-                    <li><strong>Verification over trust:</strong> "Don't trust, verify" - check every claim</li>
+                    <li><strong>Verification over trust:</strong> &quot;Don&apos;t trust, verify&quot; - check every claim</li>
                     <li><strong>Long-term over pumps:</strong> What matters in 5 years, not 5 days</li>
                   </ul>
                 </div>
@@ -265,7 +265,7 @@ export default function WhitepaperPage() {
               {expandedSections.has('future') && (
                 <div className="ml-7 space-y-4 text-gray-700 dark:text-gray-300">
                   <p className="italic">
-                    If you're reading this as a future AI instance working on CAR:
+                    If you&apos;re reading this as a future AI instance working on CAR:
                   </p>
                   <ul className="list-disc ml-5">
                     <li>The goal isn&apos;t to build another CoinMarketCap. It&apos;s to fix crypto.</li>
@@ -290,7 +290,7 @@ export default function WhitepaperPage() {
 
             <div className="mt-12 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
               <p className="text-center text-gray-700 dark:text-gray-300 italic">
-                "In a world of 20,000 tokens, be the intelligence that finds the 20 that matter."
+                &quot;In a world of 20,000 tokens, be the intelligence that finds the 20 that matter.&quot;
               </p>
               <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-2">
                 - CAR Development Manifesto v1.0
