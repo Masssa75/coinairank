@@ -77,6 +77,7 @@ serve(async (req) => {
         handle,
         tweets_analyzed: tweets.length,
         behavioral_breakdown: analysis.behavioral_percentages,
+        example_tweets: analysis.example_tweets || {},
         primary_focus: analysis.content_patterns.primary_focus,
         substance_ratio: analysis.content_patterns.substance_vs_hype_ratio,
         red_flags_count: analysis.red_flags.length,
@@ -250,7 +251,12 @@ async function analyzeWithKimiK2(tweets: Tweet[], handle: string, symbol: string
        - Authentic community interaction
        - Substantive announcements with details
 
-    5. TRUST ASSESSMENT:
+    5. EXAMPLE TWEETS (provide the MOST representative example for each major behavior category):
+       - For each category with >10% presence, provide ONE actual tweet text (truncated to 100 chars if needed)
+       - Format as object with category name as key and example tweet as value
+       - Only include categories that are actually present in significant amounts
+
+    6. TRUST ASSESSMENT:
        - Trust score (0-100 where 100 is highest trust)
        - Character type must be one of: 'technical_community', 'product_ecosystem', 'marketing_operation', or 'mixed'
        - One-line verdict explaining the assessment
@@ -273,6 +279,11 @@ async function analyzeWithKimiK2(tweets: Tweet[], handle: string, symbol: string
       },
       "red_flags": ["array of specific red flags identified"],
       "positive_signals": ["array of positive signals identified"],
+      "example_tweets": {
+        "defensive_messaging": "actual tweet text here if category >10%",
+        "technical_development": "actual tweet text here if category >10%",
+        "marketing_hype": "actual tweet text here if category >10%"
+      },
       "trust_assessment": {
         "score": 0,
         "character_type": "one of the four types specified",
@@ -349,6 +360,7 @@ async function storeAnalysis(symbol: string, handle: string, analysis: any, twee
         handle: handle,
         tweets_analyzed: tweets.length,
         behavioral_breakdown: analysis.behavioral_percentages,
+        example_tweets: analysis.example_tweets || {},
         content_patterns: analysis.content_patterns,
         red_flags: analysis.red_flags,
         positive_signals: analysis.positive_signals,
@@ -373,7 +385,8 @@ async function storeAnalysis(symbol: string, handle: string, analysis: any, twee
       x_behavioral_percentages: analysis.behavioral_percentages,
       x_primary_behavior: Object.entries(analysis.behavioral_percentages)
         .sort((a: any, b: any) => b[1] - a[1])[0]?.[0] || 'unknown',
-      x_red_flags_count: analysis.red_flags.length
+      x_red_flags_count: analysis.red_flags.length,
+      x_example_tweets: analysis.example_tweets || {}
     })
     .eq('symbol', symbol);
 

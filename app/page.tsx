@@ -832,24 +832,18 @@ export default function ProjectsRatedPage() {
         <div className="p-3 sm:p-6">
 
           {/* Project Display - Grid or List based on viewMode */}
-          {viewMode === 'grid' ? (
-            /* Grid View */
-            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 ${
+          <div className={viewMode === 'grid' ?
+            `grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 ${
               isSidebarCollapsed ? 'xl:grid-cols-4' : '2xl:grid-cols-4'
-            }`}>
-          ) : (
-            /* List View */
-            <div className="space-y-2">
-          )}
+            }` :
+            'space-y-2'
+          }>
             {projects.map((project, index) => (
               <div
                 key={project.id}
                 ref={index === projects.length - 1 ? lastProjectRef : null}
               >
-                {viewMode === 'grid' ? (
-                  /* Grid View - Full Card */
-                  <div className="bg-[#111214] rounded-2xl border border-[#2a2d31] hover:border-[#00ff88] transition-all hover:-translate-y-1 relative overflow-hidden group min-w-0">
-                ) : (
+                {viewMode === 'list' ? (
                   /* List View - Simple Row */
                   <div className="bg-[#111214] rounded-lg border border-[#2a2d31] hover:border-[#00ff88] transition-all p-4">
                     <div className="flex items-center justify-between">
@@ -869,11 +863,9 @@ export default function ProjectsRatedPage() {
                       </div>
                     </div>
                   </div>
-                )}
-
-                {viewMode === 'grid' && (
-                  <>
-                    {/* Grid View Content */}
+                ) : (
+                  /* Grid View - Full Card */
+                  <div className="bg-[#111214] rounded-2xl border border-[#2a2d31] hover:border-[#00ff88] transition-all hover:-translate-y-1 relative overflow-hidden group min-w-0">
                 {/* Preview Area */}
                 <div className="relative h-[420px] bg-[#0a0b0d] overflow-hidden">
                   {/* Show loading state if capturing screenshot */}
@@ -1137,9 +1129,8 @@ export default function ProjectsRatedPage() {
                   </div>
 
                 </div>
-                    </>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
