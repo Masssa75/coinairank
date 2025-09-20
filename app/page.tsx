@@ -832,6 +832,17 @@ export default function ProjectsRatedPage() {
         <div className="p-3 sm:p-6">
 
           {/* Project Display - Grid or List based on viewMode */}
+          {viewMode === 'list' && (
+            /* Table Headers for List View */
+            <div className="grid grid-cols-12 gap-4 py-3 px-0 border-b border-[#2a2d31] text-sm font-medium text-[#666] uppercase tracking-wide">
+              <div className="col-span-5">Project</div>
+              <div className="col-span-2 text-center">Age</div>
+              <div className="col-span-2 text-center">Market Cap</div>
+              <div className="col-span-2 text-center">Tier</div>
+              <div className="col-span-1"></div>
+            </div>
+          )}
+
           <div className={viewMode === 'grid' ?
             `grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 ${
               isSidebarCollapsed ? 'xl:grid-cols-4' : '2xl:grid-cols-4'
@@ -844,10 +855,11 @@ export default function ProjectsRatedPage() {
                 ref={index === projects.length - 1 ? lastProjectRef : null}
               >
                 {viewMode === 'list' ? (
-                  /* List View - Clean Row */
+                  /* List View - Table Row */
                   <div className="py-3 px-0 hover:bg-[#1a1c1f] transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
+                    <div className="grid grid-cols-12 gap-4 items-center">
+                      {/* Project Name - col-span-5 */}
+                      <div className="col-span-5">
                         <Link href={`/project/${project.symbol}`}>
                           <h3 className={`text-lg font-bold hover:text-[#00ff88] transition-colors cursor-pointer ${
                             project.is_imposter === true ? 'text-red-500' : 'text-white'
@@ -860,34 +872,30 @@ export default function ProjectsRatedPage() {
                             )}
                           </h3>
                         </Link>
-
-                        {/* Age and Market Cap */}
-                        <div className="flex items-center gap-6 text-sm text-[#888]">
-                          <div className="flex items-center gap-1">
-                            <span className="text-[#666]">Age:</span>
-                            <span className="text-[#ccc]">
-                              {project.project_age_years
-                                ? `${project.project_age_years.toFixed(1)}y`
-                                : '—'
-                              }
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <span className="text-[#666]">MCap:</span>
-                            <span className="text-[#ccc]">
-                              {(() => {
-                                const mcap = project.current_market_cap;
-                                if (!mcap) return '—';
-                                if (mcap >= 1000000000) return `$${(mcap / 1000000000).toFixed(1)}B`;
-                                if (mcap >= 1000000) return `$${(mcap / 1000000).toFixed(1)}M`;
-                                if (mcap >= 1000) return `$${(mcap / 1000).toFixed(0)}K`;
-                                return `$${mcap.toFixed(0)}`;
-                              })()}
-                            </span>
-                          </div>
-                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
+
+                      {/* Age - col-span-2 */}
+                      <div className="col-span-2 text-center text-[#ccc]">
+                        {project.project_age_years
+                          ? `${project.project_age_years.toFixed(1)}y`
+                          : '—'
+                        }
+                      </div>
+
+                      {/* Market Cap - col-span-2 */}
+                      <div className="col-span-2 text-center text-[#ccc]">
+                        {(() => {
+                          const mcap = project.current_market_cap;
+                          if (!mcap) return '—';
+                          if (mcap >= 1000000000) return `$${(mcap / 1000000000).toFixed(1)}B`;
+                          if (mcap >= 1000000) return `$${(mcap / 1000000).toFixed(1)}M`;
+                          if (mcap >= 1000) return `$${(mcap / 1000).toFixed(0)}K`;
+                          return `$${mcap.toFixed(0)}`;
+                        })()}
+                      </div>
+
+                      {/* Tier - col-span-2 */}
+                      <div className="col-span-2 text-center">
                         {(() => {
                           // Same tier logic as grid view
                           const displayTier = project.website_stage1_tier || '—';
@@ -946,6 +954,9 @@ export default function ProjectsRatedPage() {
                           );
                         })()}
                       </div>
+
+                      {/* Extra space - col-span-1 */}
+                      <div className="col-span-1"></div>
                     </div>
                   </div>
                 ) : (
