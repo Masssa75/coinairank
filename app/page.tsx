@@ -836,7 +836,7 @@ export default function ProjectsRatedPage() {
             `grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 ${
               isSidebarCollapsed ? 'xl:grid-cols-4' : '2xl:grid-cols-4'
             }` :
-            'space-y-2'
+            'divide-y divide-[#2a2d31]'
           }>
             {projects.map((project, index) => (
               <div
@@ -844,8 +844,8 @@ export default function ProjectsRatedPage() {
                 ref={index === projects.length - 1 ? lastProjectRef : null}
               >
                 {viewMode === 'list' ? (
-                  /* List View - Simple Row */
-                  <div className="bg-[#111214] rounded-lg border border-[#2a2d31] hover:border-[#00ff88] transition-all p-4">
+                  /* List View - Clean Row */
+                  <div className="py-3 px-0 hover:bg-[#1a1c1f] transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <Link href={`/project/${project.symbol}`}>

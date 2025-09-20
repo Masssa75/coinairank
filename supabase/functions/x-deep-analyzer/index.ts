@@ -78,6 +78,7 @@ serve(async (req) => {
         tweets_analyzed: tweets.length,
         behavioral_breakdown: analysis.behavioral_percentages || {},
         example_tweets: analysis.example_tweets || {},
+        top_substantive_tweets: analysis.top_substantive_tweets || [],
         primary_focus: analysis.content_patterns?.primary_focus || '',
         substance_ratio: analysis.content_patterns?.substance_vs_hype_ratio || '',
         red_flags_count: analysis.red_flags?.length || 0,
@@ -256,7 +257,14 @@ async function analyzeWithKimiK2(tweets: Tweet[], handle: string, symbol: string
        - Format as object with category name as key and example tweet as value
        - Only include categories that are actually present in significant amounts
 
-    6. TRUST ASSESSMENT:
+    6. TOP SUBSTANTIVE TWEETS (extract the 5 most informational/valuable tweets):
+       - Find tweets with ACTUAL substance: product launches, feature releases, technical updates, partnerships, milestones
+       - Exclude: hype, promises, warnings, generic marketing
+       - Include: concrete developments, specific achievements, tangible progress
+       - Provide full tweet text (no truncation) and explain why it's substantive
+       - Format as array of objects with "tweet" and "why_valuable" fields
+
+    7. TRUST ASSESSMENT:
        - Trust score (0-100 where 100 is highest trust)
        - Character type must be one of: 'technical_community', 'product_ecosystem', 'marketing_operation', or 'mixed'
        - One-line verdict explaining the assessment
@@ -284,6 +292,12 @@ async function analyzeWithKimiK2(tweets: Tweet[], handle: string, symbol: string
         "technical_development": "actual tweet text here if category >10%",
         "marketing_hype": "actual tweet text here if category >10%"
       },
+      "top_substantive_tweets": [
+        {
+          "tweet": "full tweet text with concrete information",
+          "why_valuable": "explanation of what makes this tweet substantive"
+        }
+      ],
       "trust_assessment": {
         "score": 0,
         "character_type": "one of the four types specified",
@@ -332,9 +346,12 @@ async function analyzeWithKimiK2(tweets: Tweet[], handle: string, symbol: string
     // Try to parse the JSON
     const parsed = JSON.parse(jsonStr);
 
-    // Ensure example_tweets exists even if AI didn't provide it
+    // Ensure optional fields exist even if AI didn't provide them
     if (!parsed.example_tweets) {
       parsed.example_tweets = {};
+    }
+    if (!parsed.top_substantive_tweets) {
+      parsed.top_substantive_tweets = [];
     }
 
     console.log('Successfully parsed AI response');
@@ -367,6 +384,7 @@ async function storeAnalysis(symbol: string, handle: string, analysis: any, twee
         tweets_analyzed: tweets.length,
         behavioral_breakdown: analysis.behavioral_percentages,
         example_tweets: analysis.example_tweets || {},
+        top_substantive_tweets: analysis.top_substantive_tweets || [],
         content_patterns: analysis.content_patterns,
         red_flags: analysis.red_flags,
         positive_signals: analysis.positive_signals,
