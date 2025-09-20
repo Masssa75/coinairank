@@ -122,7 +122,15 @@ export default function ProjectsRatedPage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [openActionMenu, setOpenActionMenu] = useState<number | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Initialize viewMode from localStorage
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('carViewMode');
+      return (saved as 'grid' | 'list') || 'grid';
+    }
+    return 'grid';
+  });
   
   // Initialize with default filters, will load from localStorage in useEffect
   const [filters, setFilters] = useState<FilterState>({
@@ -591,7 +599,10 @@ export default function ProjectsRatedPage() {
             {/* Mobile View Toggle */}
             <div className="flex items-center bg-[#1a1c1f] border border-[#2a2d31] rounded-md">
               <button
-                onClick={() => setViewMode('grid')}
+                onClick={() => {
+                  setViewMode('grid');
+                  localStorage.setItem('carViewMode', 'grid');
+                }}
                 className={`p-1 rounded-l-md transition-colors ${
                   viewMode === 'grid'
                     ? 'bg-[#00ff88] text-black'
@@ -602,7 +613,10 @@ export default function ProjectsRatedPage() {
                 <Grid3X3 className="w-3 h-3" />
               </button>
               <button
-                onClick={() => setViewMode('list')}
+                onClick={() => {
+                  setViewMode('list');
+                  localStorage.setItem('carViewMode', 'list');
+                }}
                 className={`p-1 rounded-r-md transition-colors ${
                   viewMode === 'list'
                     ? 'bg-[#00ff88] text-black'
@@ -657,7 +671,10 @@ export default function ProjectsRatedPage() {
             {/* View Toggle */}
             <div className="flex items-center bg-[#1a1c1f] border border-[#2a2d31] rounded-md">
               <button
-                onClick={() => setViewMode('grid')}
+                onClick={() => {
+                  setViewMode('grid');
+                  localStorage.setItem('carViewMode', 'grid');
+                }}
                 className={`p-1.5 rounded-l-md transition-colors ${
                   viewMode === 'grid'
                     ? 'bg-[#00ff88] text-black'
@@ -668,7 +685,10 @@ export default function ProjectsRatedPage() {
                 <Grid3X3 className="w-4 h-4" />
               </button>
               <button
-                onClick={() => setViewMode('list')}
+                onClick={() => {
+                  setViewMode('list');
+                  localStorage.setItem('carViewMode', 'list');
+                }}
                 className={`p-1.5 rounded-r-md transition-colors ${
                   viewMode === 'list'
                     ? 'bg-[#00ff88] text-black'
