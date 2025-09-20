@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoinAiRank - HTML Mockup</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0b0d;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 300px;
+            background: #111214;
+            border-right: 1px solid #2a2d31;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .sidebar.collapsed {
+            width: 60px;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #2a2d31;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar.collapsed .sidebar-header {
+            padding: 20px 18px;
+        }
+
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #00ff88;
+        }
+
+        .sidebar.collapsed .sidebar-title {
+            display: none;
+        }
+
+        .sidebar-content {
+            padding: 20px;
+        }
+
+        .sidebar.collapsed .sidebar-content {
+            padding: 20px 12px;
+        }
+
+        .filter-section {
+            margin-bottom: 24px;
+        }
+
+        .filter-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ccc;
+            margin-bottom: 8px;
+        }
+
+        .sidebar.collapsed .filter-title,
+        .sidebar.collapsed .filter-section {
+            display: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: #0f0f0f;
+            border-bottom: 1px solid #2a2d31;
+            padding: 0 24px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 600;
+            color: white;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .logo:hover {
+            color: #00ff88;
+        }
+
+        .admin-badge {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .search-input {
+            background: #1a1c1f;
+            border: 1px solid #2a2d31;
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #ccc;
+            font-size: 14px;
+            width: 300px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #00ff88;
+        }
+
+        .sort-controls {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sort-label {
+            color: #666;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .sort-select {
+            background: #1a1c1f;
+            border: 1px solid #2a2d31;
+            border-radius: 6px;
+            padding: 6px 12px;
+            color: #ccc;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .sort-button {
+            background: #1a1c1f;
+            border: 1px solid #2a2d31;
+            border-radius: 6px;
+            padding: 6px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sort-button:hover {
+            background: #222426;
+            color: white;
+        }
+
+        /* Project Grid */
+        .projects-container {
+            padding: 24px;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+        }
+
+        .project-card {
+            background: #111214;
+            border: 1px solid #2a2d31;
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .project-card:hover {
+            border-color: #00ff88;
+            transform: translateY(-4px);
+        }
+
+        .project-preview {
+            height: 420px;
+            background: #0a0b0d;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .project-screenshot {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            object-position: top;
+        }
+
+        .loading-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #1a1c1f;
+            color: #666;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #1a1c1f;
+            border-top: 3px solid #00ff88;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .project-info {
+            padding: 20px;
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+
+        .project-symbol {
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .project-symbol:hover {
+            color: #00ff88;
+        }
+
+        .project-name {
+            font-size: 14px;
+            color: #666;
+            font-weight: normal;
+        }
+
+        .project-badges {
+            display: flex;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .network-badge {
+            background: rgba(98, 126, 234, 0.15);
+            color: #627eea;
+        }
+
+        .network-badge.solana {
+            background: rgba(20, 241, 149, 0.15);
+            color: #14f195;
+        }
+
+        .network-badge.bsc {
+            background: rgba(240, 185, 11, 0.15);
+            color: #f0b90b;
+        }
+
+        .network-badge.base {
+            background: rgba(0, 82, 255, 0.15);
+            color: #0052ff;
+        }
+
+        .project-tier {
+            text-align: right;
+        }
+
+        .tier-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            cursor: help;
+        }
+
+        .tier-alpha {
+            background: rgba(0, 255, 136, 0.15);
+            color: #00ff88;
+        }
+
+        .tier-solid {
+            background: rgba(255, 204, 0, 0.15);
+            color: #ffcc00;
+        }
+
+        .tier-basic {
+            background: rgba(255, 136, 0, 0.15);
+            color: #ff8800;
+        }
+
+        .tier-trash {
+            background: rgba(255, 68, 68, 0.15);
+            color: #ff4444;
+        }
+
+        .tier-pending {
+            background: rgba(102, 102, 102, 0.15);
+            color: #999;
+        }
+
+        .project-date {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .project-description {
+            font-size: 16px;
+            color: #e0e0e0;
+            line-height: 1.3;
+            margin-bottom: 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .project-signal {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 20px;
+        }
+
+        .signal-icon {
+            width: 14px;
+            height: 14px;
+            color: #00ff88;
+        }
+
+        .project-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 8px;
+            background: #1a1c1f;
+            border: 1px solid #2a2d31;
+            border-radius: 6px;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 2px;
+        }
+
+        .metric-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #00ff88;
+            color: black;
+        }
+
+        .btn-primary:hover {
+            background: #00cc66;
+        }
+
+        .btn-secondary {
+            background: #1a1c1f;
+            color: #888;
+            border: 1px solid #2a2d31;
+        }
+
+        .btn-secondary:hover {
+            background: #252729;
+            color: white;
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #00ff88;
+            border-top: 4px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Error State */
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #ff4444;
+        }
+
+        /* Tooltip Styles */
+        .tooltip {
+            position: fixed;
+            z-index: 999999;
+            background: #1a1c1f;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 16px;
+            max-width: 500px;
+            min-width: 300px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            pointer-events: auto;
+        }
+
+        .tooltip.mobile {
+            max-width: calc(100vw - 20px);
+            min-width: calc(100vw - 20px);
+            max-height: 60vh;
+        }
+
+        .tooltip-arrow {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+        }
+
+        .tooltip-arrow.above {
+            bottom: -8px;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 8px solid #1a1c1f;
+        }
+
+        .tooltip-arrow.below {
+            top: -8px;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid #1a1c1f;
+        }
+
+        .tooltip-section {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #2a2d31;
+        }
+
+        .tooltip-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .tooltip-title {
+            color: #666;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .tooltip-description {
+            color: #ddd;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .signal-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .signal-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 6px;
+            font-size: 12px;
+        }
+
+        .signal-bullet {
+            color: #666;
+            margin-right: 8px;
+            margin-top: 2px;
+        }
+
+        .signal-text {
+            color: #ddd;
+            flex: 1;
+        }
+
+        .signal-score {
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .score-alpha { color: #00ff88; }
+        .score-solid { color: #ffcc00; }
+        .score-basic { color: #ff8800; }
+        .score-trash { color: #ff4444; }
+
+        .error-warning {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        .warning-icon {
+            width: 16px;
+            height: 16px;
+            margin-top: 1px;
+            flex-shrink: 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: absolute;
+                left: -300px;
+                height: 100vh;
+                z-index: 100;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            .header {
+                padding: 0 12px;
+            }
+
+            .search-input {
+                width: 200px;
+            }
+
+            .projects-container {
+                padding: 12px;
+            }
+
+            .projects-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+        }
+
+        /* Toggle Button */
+        .sidebar-toggle {
+            background: #1a1c1f;
+            border: 1px solid #2a2d31;
+            border-radius: 6px;
+            padding: 6px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sidebar-toggle:hover {
+            background: #222426;
+            color: white;
+        }
+
+        /* Filter Controls */
+        .filter-control {
+            margin-bottom: 16px;
+        }
+
+        .filter-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #ccc;
+            margin-bottom: 6px;
+        }
+
+        .filter-select {
+            width: 100%;
+            background: #1a1c1f;
+            border: 1px solid #2a2d31;
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        .filter-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .filter-checkbox input {
+            margin: 0;
+        }
+
+        .filter-range {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .filter-input {
+            flex: 1;
+            background: #1a1c1f;
+            border: 1px solid #2a2d31;
+            border-radius: 6px;
+            padding: 6px 8px;
+            color: #ccc;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <span class="sidebar-title">FILTERS</span>
+            </div>
+            <div class="sidebar-content">
+                <div class="filter-section">
+                    <h3 class="filter-title">TOKEN TYPE</h3>
+                    <div class="filter-control">
+                        <select class="filter-select" id="tokenTypeFilter" onchange="applyFilters()">
+                            <option value="all">All Types</option>
+                            <option value="meme">Meme</option>
+                            <option value="utility">Utility</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3 class="filter-title">NETWORKS</h3>
+                    <div class="filter-checkbox">
+                        <input type="checkbox" id="ethereum" value="ethereum" checked onchange="applyFilters()">
+                        <label for="ethereum">Ethereum</label>
+                    </div>
+                    <div class="filter-checkbox">
+                        <input type="checkbox" id="solana" value="solana" checked onchange="applyFilters()">
+                        <label for="solana">Solana</label>
+                    </div>
+                    <div class="filter-checkbox">
+                        <input type="checkbox" id="bsc" value="bsc" checked onchange="applyFilters()">
+                        <label for="bsc">BSC</label>
+                    </div>
+                    <div class="filter-checkbox">
+                        <input type="checkbox" id="base" value="base" checked onchange="applyFilters()">
+                        <label for="base">Base</label>
+                    </div>
+                    <div class="filter-checkbox">
+                        <input type="checkbox" id="pulsechain" value="pulsechain" checked onchange="applyFilters()">
+                        <label for="pulsechain">PulseChain</label>
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3 class="filter-title">WEBSITE SCORE</h3>
+                    <div class="filter-range">
+                        <input type="number" class="filter-input" id="minScore" placeholder="Min" min="1" max="10" value="1" onchange="applyFilters()">
+                        <span>-</span>
+                        <input type="number" class="filter-input" id="maxScore" placeholder="Max" min="1" max="10" value="10" onchange="applyFilters()">
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3 class="filter-title">SAFETY</h3>
+                    <div class="filter-checkbox">
+                        <input type="checkbox" id="includeUnverified" onchange="applyFilters()">
+                        <label for="includeUnverified">Include Unverified</label>
+                    </div>
+                    <div class="filter-checkbox">
+                        <input type="checkbox" id="includeImposters" onchange="applyFilters()">
+                        <label for="includeImposters">Include Imposters</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <a href="#" class="logo">CoinAiRank</a>
+                <span class="admin-badge" id="adminBadge" style="display: none;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    Admin
+                </span>
+
+                <input type="text" class="search-input" id="searchInput" placeholder="Search symbol or name..." onkeyup="handleSearch(event)">
+
+                <div class="sort-controls">
+                    <span class="sort-label">Sort by:</span>
+                    <select class="sort-select" id="sortBy" onchange="applySort()">
+                        <option value="created_at">Date Called</option>
+                        <option value="website_stage1_score">AI Score</option>
+                        <option value="current_market_cap">Market Cap</option>
+                        <option value="current_liquidity_usd">Liquidity</option>
+                        <option value="project_age_years">Age (Years)</option>
+                    </select>
+                    <button class="sort-button" id="sortOrder" onclick="toggleSortOrder()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Projects Container -->
+            <div class="projects-container">
+                <div class="projects-grid" id="projectsGrid">
+                    <!-- Projects will be loaded here -->
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="loading-spinner"></div>
+                </div>
+
+                <div class="error" id="error" style="display: none;">
+                    <h3>Error loading projects</h3>
+                    <p id="errorMessage"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase configuration
+        const SUPABASE_URL = 'https://smxnzdwuvcoasitsxytk.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNteG56ZHd1dmNvYXNpdHN4eXRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3MTg5NTAsImV4cCI6MjA3MjI5NDk1MH0.ElsFkC97ZUpUUHp26Lj49OgdAfHnbyrYbmlFvFFCN9g';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Global state
+        let projects = [];
+        let currentPage = 1;
+        let hasMore = true;
+        let isLoading = false;
+        let currentFilters = {
+            tokenType: 'all',
+            networks: ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'],
+            includeUnverified: false,
+            includeImposters: false,
+            minScore: 1,
+            maxScore: 10,
+            search: ''
+        };
+        let currentSort = {
+            sortBy: 'created_at',
+            sortOrder: 'desc'
+        };
+
+        // Initialize the app
+        async function init() {
+            await loadProjects(true);
+            setupInfiniteScroll();
+        }
+
+        // Load projects from Supabase
+        async function loadProjects(reset = false) {
+            if (isLoading) return;
+
+            isLoading = true;
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+
+            try {
+                let query = supabase
+                    .from('crypto_projects_rated')
+                    .select('*', { count: 'exact' });
+
+                // Apply filters
+                if (currentFilters.tokenType !== 'all') {
+                    query = query.eq('token_type', currentFilters.tokenType);
+                }
+
+                if (currentFilters.networks.length > 0) {
+                    query = query.in('network', currentFilters.networks);
+                }
+
+                if (!currentFilters.includeImposters) {
+                    query = query.or('is_imposter.eq.false,is_imposter.is.null');
+                }
+
+                if (!currentFilters.includeUnverified) {
+                    query = query.eq('contract_verification->>found_on_site', 'true');
+                }
+
+                if (currentFilters.minScore > 1) {
+                    const apiScore = (currentFilters.minScore - 1) * 10;
+                    query = query.gte('website_stage1_score', apiScore);
+                }
+
+                if (currentFilters.maxScore < 10) {
+                    const apiScore = currentFilters.maxScore * 10;
+                    query = query.lte('website_stage1_score', apiScore);
+                }
+
+                if (currentFilters.search) {
+                    query = query.or(`symbol.ilike.%${currentFilters.search}%,name.ilike.%${currentFilters.search}%`);
+                }
+
+                // Apply sorting
+                const nullsFirst = currentSort.sortBy === 'website_stage1_score' ? false : currentSort.sortOrder === 'desc';
+                query = query.order(currentSort.sortBy, {
+                    ascending: currentSort.sortOrder === 'asc',
+                    nullsFirst
+                });
+
+                // Apply pagination
+                const limit = 12;
+                const from = reset ? 0 : (currentPage - 1) * limit;
+                const to = from + limit - 1;
+                query = query.range(from, to);
+
+                const { data, error, count } = await query;
+
+                if (error) {
+                    throw error;
+                }
+
+                if (reset) {
+                    projects = data || [];
+                    currentPage = 1;
+                } else {
+                    projects = [...projects, ...(data || [])];
+                }
+
+                hasMore = projects.length < (count || 0);
+                renderProjects();
+
+            } catch (error) {
+                console.error('Error loading projects:', error);
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('errorMessage').textContent = error.message;
+            } finally {
+                isLoading = false;
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // Render projects to the grid
+        function renderProjects() {
+            const grid = document.getElementById('projectsGrid');
+
+            if (currentPage === 1) {
+                grid.innerHTML = '';
+            }
+
+            projects.forEach(project => {
+                if (document.getElementById(`project-${project.id}`)) {
+                    return; // Skip if already rendered
+                }
+
+                const card = createProjectCard(project);
+                grid.appendChild(card);
+            });
+        }
+
+        // Create a project card element
+        function createProjectCard(project) {
+            const card = document.createElement('div');
+            card.className = 'project-card';
+            card.id = `project-${project.id}`;
+
+            const tier = project.website_stage1_tier || '—';
+            const tierClass = getTierClass(tier);
+            const networkClass = getNetworkClass(project.network);
+
+            card.innerHTML = `
+                <div class="project-preview">
+                    ${project.website_screenshot_url ?
+                        `<img src="${project.website_screenshot_url}" alt="${project.symbol} screenshot" class="project-screenshot" onerror="handleImageError(this, '${project.symbol}')">` :
+                        `<div class="loading-placeholder">
+                            <div class="spinner"></div>
+                            <p>Loading screenshot...</p>
+                        </div>`
+                    }
+                </div>
+
+                <div class="project-info">
+                    <div class="project-header">
+                        <div>
+                            <a href="#" class="project-symbol">${project.symbol}</a>
+                            ${project.name && project.name !== project.symbol ?
+                                `<span class="project-name">(${project.name})</span>` : ''
+                            }
+                            <div class="project-badges">
+                                <span class="badge network-badge ${networkClass}">${project.network}</span>
+                            </div>
+                        </div>
+                        <div class="project-tier">
+                            <span class="tier-badge ${tierClass}" data-project-id="${project.id}" onclick="showTooltip(event, ${project.id})" style="cursor: pointer;" title="Click for analysis details">${tier}</span>
+                            <div class="project-date">${formatDate(project.created_at)}</div>
+                        </div>
+                    </div>
+
+                    ${project.one_liner || (project.website_stage1_tooltip && project.website_stage1_tooltip.one_liner) ?
+                        `<div class="project-description">${project.one_liner || project.website_stage1_tooltip.one_liner}</div>` : ''
+                    }
+
+                    ${project.strongest_signal || (project.website_stage1_analysis && project.website_stage1_analysis.strongest_signal) ?
+                        `<div class="project-signal">
+                            <svg class="signal-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="2"></circle>
+                                <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"></path>
+                            </svg>
+                            <span>${getSignalText(project.strongest_signal || project.website_stage1_analysis.strongest_signal)}</span>
+                        </div>` : ''
+                    }
+
+                    <div class="project-metrics">
+                        <div class="metric">
+                            <div class="metric-label">Market Cap</div>
+                            <div class="metric-value">${formatMarketCap(project.current_market_cap)}</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Liquidity</div>
+                            <div class="metric-value">${formatMarketCap(project.current_liquidity_usd || project.initial_liquidity_usd)}</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Age</div>
+                            <div class="metric-value">${project.project_age_years ? `${project.project_age_years.toFixed(1)}y` : '-'}</div>
+                        </div>
+                    </div>
+
+                    <div class="project-actions">
+                        <a href="${project.website_url}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                            Visit Website ↗
+                        </a>
+                        ${project.contract_address ?
+                            `<a href="https://dexscreener.com/${project.network}/${project.contract_address}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+                                Chart 📊
+                            </a>` : ''
+                        }
+                    </div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // Utility functions
+        function getTierClass(tier) {
+            const tierMap = {
+                'ALPHA': 'tier-alpha',
+                'SOLID': 'tier-solid',
+                'BASIC': 'tier-basic',
+                'TRASH': 'tier-trash',
+                '—': 'tier-pending',
+                '-': 'tier-pending'
+            };
+            return tierMap[tier.toUpperCase()] || 'tier-pending';
+        }
+
+        function getNetworkClass(network) {
+            return network.toLowerCase();
+        }
+
+        function formatMarketCap(value) {
+            if (!value) return 'N/A';
+            if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+            if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
+            return `$${value.toFixed(0)}`;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffTime = Math.abs(now.getTime() - date.getTime());
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) return 'Today';
+            if (diffDays === 1) return 'Yesterday';
+            if (diffDays < 7) return `${diffDays}d ago`;
+            if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+            return `${Math.floor(diffDays / 30)}mo ago`;
+        }
+
+        function getSignalText(signal) {
+            if (typeof signal === 'string') return signal;
+            if (signal && signal.signal) return signal.signal;
+            return '';
+        }
+
+        function handleImageError(img, symbol) {
+            img.src = `https://placehold.co/400x600/1a1c1f/666666?text=${encodeURIComponent(symbol)}`;
+        }
+
+        // Event handlers
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+
+        function applyFilters() {
+            // Get token type
+            currentFilters.tokenType = document.getElementById('tokenTypeFilter').value;
+
+            // Get selected networks
+            const networkCheckboxes = ['ethereum', 'solana', 'bsc', 'base', 'pulsechain'];
+            currentFilters.networks = networkCheckboxes.filter(network =>
+                document.getElementById(network).checked
+            );
+
+            // Get score range
+            currentFilters.minScore = parseInt(document.getElementById('minScore').value) || 1;
+            currentFilters.maxScore = parseInt(document.getElementById('maxScore').value) || 10;
+
+            // Get safety options
+            currentFilters.includeUnverified = document.getElementById('includeUnverified').checked;
+            currentFilters.includeImposters = document.getElementById('includeImposters').checked;
+
+            // Reset and reload
+            projects = [];
+            currentPage = 1;
+            loadProjects(true);
+        }
+
+        function applySort() {
+            currentSort.sortBy = document.getElementById('sortBy').value;
+            projects = [];
+            currentPage = 1;
+            loadProjects(true);
+        }
+
+        function toggleSortOrder() {
+            currentSort.sortOrder = currentSort.sortOrder === 'desc' ? 'asc' : 'desc';
+            const button = document.getElementById('sortOrder');
+            const svg = button.querySelector('svg');
+
+            if (currentSort.sortOrder === 'asc') {
+                svg.innerHTML = '<polyline points="18 15 12 9 6 15"></polyline>';
+            } else {
+                svg.innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
+            }
+
+            projects = [];
+            currentPage = 1;
+            loadProjects(true);
+        }
+
+        function handleSearch(event) {
+            if (event.key === 'Enter' || event.type === 'input') {
+                currentFilters.search = event.target.value;
+                projects = [];
+                currentPage = 1;
+                loadProjects(true);
+            }
+        }
+
+        // Setup infinite scroll
+        function setupInfiniteScroll() {
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting && hasMore && !isLoading) {
+                    currentPage++;
+                    loadProjects();
+                }
+            }, {
+                threshold: 0.1
+            });
+
+            // Observe the loading element
+            observer.observe(document.getElementById('loading'));
+        }
+
+        // Search with debouncing
+        let searchTimeout;
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentFilters.search = e.target.value;
+                projects = [];
+                currentPage = 1;
+                loadProjects(true);
+            }, 400);
+        });
+
+        // Tooltip functionality
+        let currentTooltip = null;
+        let isAdmin = false; // Set to true if admin authentication is detected
+
+        function showTooltip(event, projectId) {
+            event.stopPropagation();
+
+            // Close existing tooltip
+            hideTooltip();
+
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+
+            const target = event.target;
+            const rect = target.getBoundingClientRect();
+
+            // Create tooltip
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            if (window.innerWidth < 768) {
+                tooltip.classList.add('mobile');
+            }
+
+            // Calculate position
+            const isMobile = window.innerWidth < 768;
+            const tooltipWidth = isMobile ? window.innerWidth - 20 : 500;
+            const tooltipHeight = isMobile ? 350 : 400;
+
+            let x = rect.left + rect.width / 2;
+            let y = rect.top;
+            let placement = 'above';
+
+            const spaceAbove = rect.top;
+            const spaceBelow = window.innerHeight - rect.bottom;
+
+            if (spaceBelow > spaceAbove || spaceAbove < tooltipHeight) {
+                y = rect.bottom;
+                placement = 'below';
+            }
+
+            // Adjust horizontal position
+            const halfWidth = tooltipWidth / 2;
+            const edgePadding = 10;
+            if (x - halfWidth < edgePadding) {
+                x = halfWidth + edgePadding;
+            } else if (x + halfWidth > window.innerWidth - edgePadding) {
+                x = window.innerWidth - halfWidth - edgePadding;
+            }
+
+            tooltip.style.left = `${x}px`;
+            tooltip.style.top = `${y}px`;
+            tooltip.style.transform = placement === 'above' ?
+                'translate(-50%, -100%) translateY(-8px)' :
+                'translate(-50%, 8px)';
+
+            // Generate tooltip content
+            tooltip.innerHTML = generateTooltipContent(project);
+
+            // Add arrow
+            const arrow = document.createElement('div');
+            arrow.className = `tooltip-arrow ${placement}`;
+            tooltip.appendChild(arrow);
+
+            // Add to page
+            document.body.appendChild(tooltip);
+            currentTooltip = tooltip;
+
+            // Add click outside handler
+            setTimeout(() => {
+                document.addEventListener('click', handleTooltipOutsideClick);
+            }, 10);
+        }
+
+        function hideTooltip() {
+            if (currentTooltip) {
+                document.body.removeChild(currentTooltip);
+                currentTooltip = null;
+                document.removeEventListener('click', handleTooltipOutsideClick);
+            }
+        }
+
+        function handleTooltipOutsideClick(event) {
+            if (currentTooltip && !currentTooltip.contains(event.target)) {
+                hideTooltip();
+            }
+        }
+
+        function generateTooltipContent(project) {
+            let content = '';
+
+            // Check for analysis status
+            const hasAnalysis = project.website_stage1_tier && project.website_stage1_tier !== '—';
+            const hasLargeHtml = project.website_stage1_analysis?.html_length > 240000;
+            const isCSR = project.ssr_csr_classification === 'CSR';
+
+            // Error states
+            if (hasLargeHtml) {
+                content += `
+                    <div class="error-warning">
+                        <svg class="warning-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        Website too large (${Math.round(project.website_stage1_analysis.html_length / 1000)}K chars) - analysis skipped
+                    </div>
+                `;
+            } else if (isCSR) {
+                content += `
+                    <div class="error-warning" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                        <svg class="warning-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                        </svg>
+                        Client-side rendered website - full browser scraping not yet implemented
+                    </div>
+                `;
+            } else if (!hasAnalysis) {
+                content += `
+                    <div class="error-warning">
+                        <svg class="warning-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        Website analysis pending
+                    </div>
+                `;
+            }
+
+            // Project description
+            const description = project.one_liner ||
+                              (project.website_stage1_tooltip && project.website_stage1_tooltip.one_liner) ||
+                              project.website_stage1_analysis?.project_description;
+
+            if (description) {
+                content += `
+                    <div class="tooltip-section">
+                        <div class="tooltip-description">${description}</div>
+                    </div>
+                `;
+            }
+
+            // Signals section
+            const signals = getProjectSignals(project);
+            if (signals && signals.length > 0) {
+                content += `
+                    <div class="tooltip-section">
+                        <div class="tooltip-title">Key Signals</div>
+                        <ul class="signal-list">
+                `;
+
+                signals.slice(0, 4).forEach(signal => {
+                    const scoreClass = getScoreClass(signal.score);
+                    content += `
+                        <li class="signal-item">
+                            <span class="signal-bullet">•</span>
+                            <span class="signal-text">${signal.signal}</span>
+                            ${signal.score ? `<span class="signal-score ${scoreClass}">[${signal.score}]</span>` : ''}
+                        </li>
+                    `;
+                });
+
+                content += `
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // Concerns section
+            const concerns = getProjectConcerns(project);
+            if (concerns && concerns.length > 0) {
+                content += `
+                    <div class="tooltip-section">
+                        <div class="tooltip-title">Concerns</div>
+                        <ul class="signal-list">
+                `;
+
+                concerns.slice(0, 3).forEach(concern => {
+                    content += `
+                        <li class="signal-item">
+                            <span class="signal-bullet">•</span>
+                            <span class="signal-text">${concern}</span>
+                        </li>
+                    `;
+                });
+
+                content += `
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // Technical assessment
+            const technicalAssessment = project.technical_assessment ||
+                                       project.website_stage1_analysis?.technical_assessment;
+
+            if (technicalAssessment) {
+                content += `
+                    <div class="tooltip-section">
+                        <div class="tooltip-title">Technical Assessment</div>
+                        <div class="tooltip-description" style="font-size: 11px; color: #aaa;">${technicalAssessment}</div>
+                    </div>
+                `;
+            }
+
+            return content;
+        }
+
+        function getProjectSignals(project) {
+            // Try Phase 2 signals first
+            if (project.benchmark_comparison?.signal_evaluations) {
+                return project.benchmark_comparison.signal_evaluations.map(evalSignal => ({
+                    signal: evalSignal.signal,
+                    score: tierToScore(evalSignal.assigned_tier)
+                }));
+            }
+
+            // Fallback to Phase 1 signals
+            if (project.website_stage1_analysis?.signals_found) {
+                return project.website_stage1_analysis.signals_found.map(signal => ({
+                    signal: signal.signal,
+                    score: signal.strength_score
+                }));
+            }
+
+            // Fallback to tooltip pros
+            if (project.website_stage1_tooltip?.pros) {
+                return project.website_stage1_tooltip.pros.slice(0, 3).map(pro => ({
+                    signal: pro,
+                    score: null
+                }));
+            }
+
+            return [];
+        }
+
+        function getProjectConcerns(project) {
+            // Try red flags first
+            if (project.website_stage1_analysis?.red_flags) {
+                return project.website_stage1_analysis.red_flags
+                    .filter(flag => flag.severity === 'high')
+                    .map(flag => flag.flag);
+            }
+
+            // Fallback to tooltip cons
+            if (project.website_stage1_tooltip?.cons) {
+                return project.website_stage1_tooltip.cons.slice(0, 2);
+            }
+
+            return [];
+        }
+
+        function tierToScore(tier) {
+            switch(tier) {
+                case 1: return 90;
+                case 2: return 70;
+                case 3: return 45;
+                case 4: return 15;
+                default: return 0;
+            }
+        }
+
+        function getScoreClass(score) {
+            if (!score) return '';
+            if (score >= 85) return 'score-alpha';
+            if (score >= 60) return 'score-solid';
+            if (score >= 30) return 'score-basic';
+            return 'score-trash';
+        }
+
+        // Initialize the app when the page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

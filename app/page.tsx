@@ -8,7 +8,7 @@ import { AddTokenModal } from '@/components/AddTokenModal';
 import SearchInput from '@/components/SearchInput';
 // Removed useDebounce - using custom implementation for better control
 import { cleanupDeprecatedFilters } from '@/lib/cleanupLocalStorage';
-import { Settings, Menu, ChevronDown, ChevronUp, Shield, FileCode2, LogOut, MoreVertical, AlertTriangle, CheckCircle, Trash2, Radio } from 'lucide-react';
+import { Settings, Menu, ChevronDown, ChevronUp, Shield, FileCode2, LogOut, MoreVertical, AlertTriangle, CheckCircle, Trash2, Radio, Grid3X3, List } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -122,6 +122,7 @@ export default function ProjectsRatedPage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [openActionMenu, setOpenActionMenu] = useState<number | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
   // Initialize with default filters, will load from localStorage in useEffect
   const [filters, setFilters] = useState<FilterState>({
@@ -585,8 +586,34 @@ export default function ProjectsRatedPage() {
           {/* Spacer */}
           <div className="flex-1"></div>
 
-          {/* Mobile: Compact Sort */}
-          <div className="flex md:hidden items-center gap-1">
+          {/* Mobile: View Toggle & Compact Sort */}
+          <div className="flex md:hidden items-center gap-2">
+            {/* Mobile View Toggle */}
+            <div className="flex items-center bg-[#1a1c1f] border border-[#2a2d31] rounded-md">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-1 rounded-l-md transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-[#00ff88] text-black'
+                    : 'text-[#666] hover:text-[#00ff88] hover:bg-[#222426]'
+                }`}
+                title="Grid View"
+              >
+                <Grid3X3 className="w-3 h-3" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-1 rounded-r-md transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-[#00ff88] text-black'
+                    : 'text-[#666] hover:text-[#00ff88] hover:bg-[#222426]'
+                }`}
+                title="List View"
+              >
+                <List className="w-3 h-3" />
+              </button>
+            </div>
+
             <select
               value={sortBy}
               onChange={(e) => {
@@ -625,8 +652,35 @@ export default function ProjectsRatedPage() {
             </button>
           </div>
 
-          {/* Desktop: Full Sort Controls */}
-          <div className="hidden md:flex items-center gap-2">
+          {/* Desktop: View Toggle & Sort Controls */}
+          <div className="hidden md:flex items-center gap-4">
+            {/* View Toggle */}
+            <div className="flex items-center bg-[#1a1c1f] border border-[#2a2d31] rounded-md">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-1.5 rounded-l-md transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-[#00ff88] text-black'
+                    : 'text-[#666] hover:text-[#00ff88] hover:bg-[#222426]'
+                }`}
+                title="Grid View"
+              >
+                <Grid3X3 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-1.5 rounded-r-md transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-[#00ff88] text-black'
+                    : 'text-[#666] hover:text-[#00ff88] hover:bg-[#222426]'
+                }`}
+                title="List View"
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Sort Controls */}
             <span className="text-[#666] text-[13px] font-medium">Sort by:</span>
             <select
               value={sortBy}

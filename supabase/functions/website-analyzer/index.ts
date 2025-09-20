@@ -120,12 +120,17 @@ async function scrapeWebsite(url: string) {
 
 // HTML cleanup function for large websites (>150K chars) - WORKING VERSION
 function cleanLargeHTML(html: string, originalSize: number): string {
-  if (originalSize <= 150000) return html;
-  
+  console.log(`[DEBUG] cleanLargeHTML called with ${originalSize} chars`);
+
+  if (originalSize <= 150000) {
+    console.log(`[DEBUG] HTML size ${originalSize} <= 150K, returning original`);
+    return html;
+  }
+
   console.log(`🧹 Applying HTML cleanup (${originalSize} > 150K chars)...`);
-  
+
   let cleaned = html
-    .replace(/\sclass="[^"]*"/g, '')           // CSS classes  
+    .replace(/\sclass="[^"]*"/g, '')           // CSS classes
     .replace(/\ssrcset="[^"]*"/g, '')         // Responsive images
     .replace(/\sid="[^"]*"/g, '')             // CSS/JS IDs
     .replace(/\sdata-wf-[^=]*="[^"]*"/g, '') // Webflow metadata
@@ -133,8 +138,15 @@ function cleanLargeHTML(html: string, originalSize: number): string {
     .replace(/https:\/\/cdn\.prod\.website-files\.com\/[^\s"<>]+/g, '[CDN]') // CDN URLs
     .replace(/\s{2,}/g, ' ')                  // Extra whitespace
     .replace(/>\s+</g, '><');                 // Tag whitespace
-    
+
   console.log(`✅ HTML cleaned: ${originalSize} → ${cleaned.length} (-${originalSize - cleaned.length} chars, ${Math.round((1 - cleaned.length/originalSize) * 100)}% reduction)`);
+
+  // Additional debug for KAS specifically
+  if (cleaned.length > MAX_PROMPT_SIZE) {
+    console.log(`[DEBUG] After cleaning, still ${cleaned.length} chars > ${MAX_PROMPT_SIZE} limit`);
+    console.log(`[DEBUG] Need to reduce by another ${cleaned.length - MAX_PROMPT_SIZE} chars`);
+  }
+
   return cleaned;
 }
 
@@ -142,8 +154,12 @@ function cleanLargeHTML(html: string, originalSize: number): string {
 function validatePromptSize(html: string): { success: boolean; error?: string; htmlSize?: number; totalSize?: number } {
   const basePromptSize = 1500; // Base prompt without HTML
   const totalSize = basePromptSize + html.length;
-  
+
+  console.log(`[DEBUG] validatePromptSize: HTML=${html.length} + Base=${basePromptSize} = Total=${totalSize} chars`);
+  console.log(`[DEBUG] MAX_PROMPT_SIZE limit: ${MAX_PROMPT_SIZE} chars`);
+
   if (totalSize > MAX_PROMPT_SIZE) {
+    console.log(`[DEBUG] ❌ VALIDATION FAILED: ${totalSize} > ${MAX_PROMPT_SIZE}`);
     return {
       success: false,
       error: 'PROMPT_TOO_LARGE',
@@ -151,7 +167,8 @@ function validatePromptSize(html: string): { success: boolean; error?: string; h
       totalSize: totalSize
     };
   }
-  
+
+  console.log(`[DEBUG] ✅ VALIDATION PASSED: ${totalSize} <= ${MAX_PROMPT_SIZE}`);
   return { success: true };
 }
 

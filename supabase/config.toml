@@ -21,3 +21,6 @@ verify_jwt = false
 
 [functions.ultra-tracker]
 verify_jwt = false
+
+[functions.whitepaper-analyzer]
+verify_jwt = false
