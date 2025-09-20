@@ -8,7 +8,7 @@ import { AddTokenModal } from '@/components/AddTokenModal';
 import SearchInput from '@/components/SearchInput';
 // Removed useDebounce - using custom implementation for better control
 import { cleanupDeprecatedFilters } from '@/lib/cleanupLocalStorage';
-import { Settings, Menu, ChevronDown, ChevronUp, Shield, FileCode2, LogOut, MoreVertical, AlertTriangle, CheckCircle, Trash2, Radio, Grid3X3, List, Clock } from 'lucide-react';
+import { Settings, Menu, ChevronDown, ChevronUp, Shield, FileCode2, LogOut, MoreVertical, AlertTriangle, CheckCircle, Trash2, Radio, Grid3X3, List, RotateCw } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -978,7 +978,7 @@ export default function ProjectsRatedPage() {
                       {/* X Analysis Tier - col-span-2 */}
                       <div className="col-span-2 text-center">
                         <span
-                          className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-flex items-center gap-1 cursor-pointer transition-colors hover:opacity-80"
+                          className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-flex items-center justify-center cursor-pointer transition-colors hover:opacity-80"
                           style={{
                             backgroundColor: '#2a2d31',
                             color: '#888'
@@ -989,8 +989,7 @@ export default function ProjectsRatedPage() {
                           }}
                           title="Click to analyze X/Twitter profile"
                         >
-                          <Clock className="w-3 h-3" />
-                          PENDING
+                          <RotateCw className="w-3 h-3" />
                         </span>
                       </div>
                     </div>
