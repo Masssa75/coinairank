@@ -736,7 +736,15 @@ export default function ProjectsRatedPage() {
                       </>
                     )}
                     
-                    <button 
+                    <Link
+                      href="/whitepaper"
+                      className="w-full px-4 py-2 text-left text-[#666] hover:bg-[#1a1c1f] hover:text-white transition-colors text-sm block"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Whitepaper
+                    </Link>
+
+                    <button
                       className="w-full px-4 py-2 text-left text-[#666] hover:bg-[#1a1c1f] hover:text-white transition-colors text-sm"
                       onClick={() => {
                         // Handle About
@@ -745,8 +753,8 @@ export default function ProjectsRatedPage() {
                     >
                       About
                     </button>
-                    
-                    <button 
+
+                    <button
                       className="w-full px-4 py-2 text-left text-[#666] hover:bg-[#1a1c1f] hover:text-white transition-colors text-sm"
                       onClick={() => {
                         // Handle Documentation
