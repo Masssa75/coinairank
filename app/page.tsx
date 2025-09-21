@@ -380,58 +380,122 @@ export default function ProjectsRatedPage() {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-      // Phase 1: Extract signals (V2 with tweet storage)
-      const phase1Response = await fetch(`${supabaseUrl}/functions/v1/x-signal-analyzer-v2`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
+      // Use SSE with V3 for real-time progress updates
+      const eventSource = new EventSource(
+        `${supabaseUrl}/functions/v1/x-signal-analyzer-v3?` +
+        new URLSearchParams({
+          action: 'analyze',
           symbol: project.symbol,
           handle: handle,
-          phase: 1,
-          projectId: project.id
-        })
+          projectId: project.id.toString()
+        }),
+        {
+          headers: {
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'Accept': 'text/event-stream'
+          }
+        } as any
+      );
+
+      let phase1Result: any = null;
+
+      eventSource.addEventListener('starting', (event) => {
+        const data = JSON.parse(event.data);
+        setToast({ message: data.message, type: 'info' });
       });
 
-      const phase1Data = await phase1Response.json();
+      eventSource.addEventListener('fetching_tweets', (event) => {
+        const data = JSON.parse(event.data);
+        setToast({ message: data.message, type: 'info' });
+      });
 
-      if (!phase1Data.success) {
-        throw new Error(phase1Data.error || 'Phase 1 analysis failed');
-      }
+      eventSource.addEventListener('tweets_progress', (event) => {
+        const data = JSON.parse(event.data);
+        setToast({ message: data.message, type: 'info' });
+      });
 
-      setToast({ message: `Phase 1 complete for ${project.symbol}. Starting Phase 2...`, type: 'success' });
+      eventSource.addEventListener('tweets_complete', (event) => {
+        const data = JSON.parse(event.data);
+        setToast({ message: data.message, type: 'success' });
+      });
 
-      // Wait 2 seconds before Phase 2
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      eventSource.addEventListener('ai_analyzing', (event) => {
+        const data = JSON.parse(event.data);
+        setToast({ message: data.message, type: 'info' });
+      });
 
-      // Phase 2: Compare to benchmarks (V2)
-      const phase2Response = await fetch(`${supabaseUrl}/functions/v1/x-signal-analyzer-v2`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
+      eventSource.addEventListener('phase1_complete', (event) => {
+        const data = JSON.parse(event.data);
+        phase1Result = data.result;
+        setToast({ message: data.message, type: 'success' });
+        eventSource.close();
+
+        // Start Phase 2
+        startPhase2(project, phase1Result);
+      });
+
+      eventSource.addEventListener('error', (event) => {
+        const data = event.data ? JSON.parse(event.data) : {};
+        setToast({ message: data.message || 'Analysis failed', type: 'error' });
+        eventSource.close();
+        setXAnalyzingId(null);
+      });
+
+      eventSource.addEventListener('complete', (event) => {
+        eventSource.close();
+      });
+
+      return; // Exit here, phase 2 will be started separately
+    };
+
+    const startPhase2 = async (project: any, phase1Result: any) => {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+      setToast({ message: 'Starting Phase 2 comparison...', type: 'info' });
+
+      // Phase 2 with SSE
+      const phase2EventSource = new EventSource(
+        `${supabaseUrl}/functions/v1/x-signal-analyzer-v3?` +
+        new URLSearchParams({
+          action: 'compare',
           symbol: project.symbol,
-          phase: 2,
-          projectId: phase1Data.database_storage?.projectId || project.id
-        })
+          projectId: project.id.toString()
+        }),
+        {
+          headers: {
+            'Authorization': `Bearer ${supabaseAnonKey}`,
+            'Accept': 'text/event-stream'
+          }
+        } as any
+      );
+
+      phase2EventSource.addEventListener('phase2_starting', (event) => {
+        const data = JSON.parse(event.data);
+        setToast({ message: data.message, type: 'info' });
       });
 
-      const phase2Data = await phase2Response.json();
+      phase2EventSource.addEventListener('comparing_signals', (event) => {
+        const data = JSON.parse(event.data);
+        setToast({ message: data.message, type: 'info' });
+      });
 
-      if (!phase2Data.success) {
-        throw new Error(phase2Data.error || 'Phase 2 analysis failed');
-      }
+      phase2EventSource.addEventListener('phase2_complete', (event) => {
+        const data = JSON.parse(event.data);
+        setToast({ message: data.message, type: 'success' });
+        phase2EventSource.close();
 
-      setToast({ message: `X analysis complete for ${project.symbol}! Tier: ${phase2Data.tier}`, type: 'success' });
+        // Refresh the projects list to show updated scores
+        fetchProjects();
+        setXAnalyzingId(null);
+      });
 
-      // Refresh projects to show new tier
-      setProjects([]);
-      setPage(1);
-      fetchProjects(1, true);
+      phase2EventSource.addEventListener('error', (event) => {
+        const data = event.data ? JSON.parse(event.data) : {};
+        setToast({ message: data.message || 'Phase 2 failed', type: 'error' });
+        phase2EventSource.close();
+        setXAnalyzingId(null);
+      });
 
     } catch (error) {
       console.error('X analysis failed:', error);

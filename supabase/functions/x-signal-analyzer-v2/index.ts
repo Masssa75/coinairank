@@ -186,10 +186,10 @@ serve(async (req) => {
 
 async function fetchTwitterHistory(handle: string): Promise<Tweet[]> {
   const tweets: Tweet[] = [];
-  const browserlessApiKey = Deno.env.get('BROWSERLESS_API_KEY');
+  const scraperApiKey = Deno.env.get('SCRAPERAPI_KEY');
 
-  if (!browserlessApiKey) {
-    throw new Error('BROWSERLESS_API_KEY not configured');
+  if (!scraperApiKey) {
+    throw new Error('SCRAPERAPI_KEY not configured');
   }
 
   // Try to fetch multiple pages to get ~100 tweets
@@ -200,29 +200,15 @@ async function fetchTwitterHistory(handle: string): Promise<Tweet[]> {
       const nitterUrl = `https://nitter.net/${handle}${cursor}`;
       console.log(`Fetching from: ${nitterUrl}`);
 
-      // Use Browserless.io to fetch the Nitter page
+      // Use ScraperAPI to fetch the Nitter page (same as KROMV12)
       const startTime = Date.now();
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for scraping
+      const scraperUrl = `https://api.scraperapi.com/?api_key=${scraperApiKey}&url=${encodeURIComponent(nitterUrl)}`;
 
-      const response = await fetch(
-        `https://chrome.browserless.io/content?token=${browserlessApiKey}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            url: nitterUrl,
-            waitForTimeout: 5000,
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-          }),
-          signal: controller.signal
-        }
-      ).finally(() => clearTimeout(timeoutId));
+      console.log(`Fetching via ScraperAPI...`);
+      const response = await fetch(scraperUrl);
 
       const fetchDuration = Date.now() - startTime;
-      console.log(`Browserless fetch took ${fetchDuration}ms`);
+      console.log(`ScraperAPI fetch took ${fetchDuration}ms`);
 
       if (!response.ok) {
         console.error(`Failed to fetch page ${cursor}: ${response.status}`);
