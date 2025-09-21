@@ -496,7 +496,11 @@ export default function ProjectsRatedPage() {
         phase2EventSource.close();
         setXAnalyzingId(null);
       });
+    };
 
+    try {
+      // Main execution already happened above
+      return;
     } catch (error) {
       console.error('X analysis failed:', error);
       setToast({
