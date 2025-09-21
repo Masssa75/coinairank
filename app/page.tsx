@@ -435,8 +435,7 @@ export default function ProjectsRatedPage() {
       });
 
       eventSource.addEventListener('error', (event) => {
-        const data = event.data ? JSON.parse(event.data) : {};
-        setToast({ message: data.message || 'Analysis failed', type: 'error' });
+        setToast({ message: 'Analysis failed', type: 'error' });
         eventSource.close();
         setXAnalyzingId(null);
       });
@@ -490,8 +489,7 @@ export default function ProjectsRatedPage() {
       });
 
       phase2EventSource.addEventListener('error', (event) => {
-        const data = event.data ? JSON.parse(event.data) : {};
-        setToast({ message: data.message || 'Phase 2 failed', type: 'error' });
+        setToast({ message: 'Phase 2 failed', type: 'error' });
         phase2EventSource.close();
         setXAnalyzingId(null);
       });
