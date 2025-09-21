@@ -22,7 +22,24 @@ serve(async (req) => {
   }
 
   try {
-    const { action, symbol, handle, projectId } = await req.json();
+    // Parse parameters based on request method
+    let action, symbol, handle, projectId;
+
+    if (req.method === 'GET') {
+      // EventSource uses GET with URL parameters
+      const url = new URL(req.url);
+      action = url.searchParams.get('action');
+      symbol = url.searchParams.get('symbol');
+      handle = url.searchParams.get('handle');
+      projectId = url.searchParams.get('projectId');
+    } else {
+      // Regular POST request with JSON body
+      const body = await req.json();
+      action = body.action;
+      symbol = body.symbol;
+      handle = body.handle;
+      projectId = body.projectId;
+    }
 
     // Check if this is an SSE request
     const acceptHeader = req.headers.get('accept');
