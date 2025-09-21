@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { SignalBasedTooltip } from '@/components/SignalBasedTooltip';
 import { ContractVerificationTooltip } from '@/components/ContractVerificationTooltip';
 import { WhitepaperTooltip } from '@/components/WhitepaperTooltip';
+import { XAnalysisTooltip } from '@/components/XAnalysisTooltip';
 import FilterSidebar from '@/components/FilterSidebar';
 import { AddTokenModal } from '@/components/AddTokenModal';
 import SearchInput from '@/components/SearchInput';
@@ -66,6 +67,9 @@ interface CryptoProject {
   x_red_flags?: any;
   x_analyzed_at?: string;
   x_handle?: string;
+  x_analysis?: any;
+  x_score?: number;
+  x_tier?: string;
   social_urls?: Array<{
     url: string;
     type: string;
@@ -1287,16 +1291,25 @@ export default function ProjectsRatedPage() {
 
                           if (xTier) {
                             return (
-                              <span
-                                className="px-2 py-0.5 rounded text-xs font-semibold uppercase cursor-help"
-                                style={{
-                                  backgroundColor: getTierColor(xTier).bg,
-                                  color: getTierColor(xTier).text
-                                }}
-                                title={`X Analysis: ${xTier} tier`}
+                              <XAnalysisTooltip
+                                analysisData={project.x_analysis}
+                                signals={project.x_signals_found}
+                                redFlags={project.x_red_flags}
+                                analysisSummary={project.x_analysis_summary}
+                                strongestSignal={project.strongest_signal}
+                                analyzedAt={project.x_analyzed_at}
+                                twitterHandle={project.twitter_url ? project.twitter_url.split('/').pop()?.replace('@', '') : undefined}
                               >
-                                {xTier}
-                              </span>
+                                <span
+                                  className="px-2 py-0.5 rounded text-xs font-semibold uppercase cursor-pointer"
+                                  style={{
+                                    backgroundColor: getTierColor(xTier).bg,
+                                    color: getTierColor(xTier).text
+                                  }}
+                                >
+                                  {xTier}
+                                </span>
+                              </XAnalysisTooltip>
                             );
                           }
 
@@ -1499,16 +1512,25 @@ export default function ProjectsRatedPage() {
 
                         if (xTier) {
                           return (
-                            <span
-                              className="px-2 py-0.5 rounded text-xs font-semibold uppercase cursor-help"
-                              style={{
-                                backgroundColor: getTierColor(xTier).bg,
-                                color: getTierColor(xTier).text
-                              }}
-                              title={`X Analysis: ${xTier} tier`}
+                            <XAnalysisTooltip
+                              analysisData={project.x_analysis}
+                              signals={project.x_signals_found}
+                              redFlags={project.x_red_flags}
+                              analysisSummary={project.x_analysis_summary}
+                              strongestSignal={project.strongest_signal}
+                              analyzedAt={project.x_analyzed_at}
+                              twitterHandle={project.twitter_url ? project.twitter_url.split('/').pop()?.replace('@', '') : undefined}
                             >
-                              X: {xTier}
-                            </span>
+                              <span
+                                className="px-2 py-0.5 rounded text-xs font-semibold uppercase cursor-pointer"
+                                style={{
+                                  backgroundColor: getTierColor(xTier).bg,
+                                  color: getTierColor(xTier).text
+                                }}
+                              >
+                                X: {xTier}
+                              </span>
+                            </XAnalysisTooltip>
                           );
                         }
 

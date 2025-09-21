@@ -72,9 +72,9 @@ serve(async (req) => {
       try {
         if (action === 'analyze') {
           await processPhase1WithSSE(symbol, handle, projectId, sendEvent);
-          await processPhase2WithSSE(symbol, sendEvent);
+          await processPhase2WithSSE(symbol, projectId, sendEvent);
         } else if (action === 'compare') {
-          await processPhase2WithSSE(symbol, sendEvent);
+          await processPhase2WithSSE(symbol, projectId, sendEvent);
         }
 
         await sendEvent('complete', { message: 'Analysis complete' });
@@ -200,6 +200,7 @@ async function processPhase1WithSSE(
 
 async function processPhase2WithSSE(
   symbol: string,
+  projectId: string | undefined,
   sendEvent: (event: string, data: any) => Promise<void>
 ) {
   const startTime = Date.now();
@@ -222,11 +223,23 @@ async function processPhase2WithSSE(
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
   );
 
-  const { data: project } = await supabase
-    .from('crypto_projects_rated')
-    .select('x_signals_found')
-    .eq('symbol', symbol)
-    .single();
+  // Use projectId if provided, otherwise fall back to symbol
+  let project = null;
+  if (projectId) {
+    const { data } = await supabase
+      .from('crypto_projects_rated')
+      .select('x_signals_found')
+      .eq('id', projectId)
+      .single();
+    project = data;
+  } else {
+    const { data } = await supabase
+      .from('crypto_projects_rated')
+      .select('x_signals_found')
+      .eq('symbol', symbol)
+      .single();
+    project = data;
+  }
 
   const signals = project?.x_signals_found || [];
 
@@ -242,15 +255,24 @@ async function processPhase2WithSSE(
     message: `Calculating final tier and score...`
   });
 
-  // Store results
-  await supabase
-    .from('crypto_projects_rated')
-    .update({
-      x_stage1_score: comparison.final_score,
-      x_stage1_tier: comparison.tier_name,
-      x_stage1_analysis: comparison
-    })
-    .eq('symbol', symbol);
+  // Store results to the correct fields (x_score, x_tier, x_analysis)
+  const updateData = {
+    x_score: comparison.final_score,
+    x_tier: comparison.tier_name,
+    x_analysis: comparison
+  };
+
+  if (projectId) {
+    await supabase
+      .from('crypto_projects_rated')
+      .update(updateData)
+      .eq('id', projectId);
+  } else {
+    await supabase
+      .from('crypto_projects_rated')
+      .update(updateData)
+      .eq('symbol', symbol);
+  }
 
   await sendEvent('phase2_complete', {
     message: `Analysis complete: ${comparison.tier_name} (Score: ${comparison.final_score})`,
