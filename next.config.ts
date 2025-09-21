@@ -5,7 +5,9 @@ const nextConfig: NextConfig = {
   experimental: {
     workerThreads: false,
     cpus: 1
-  }
+  },
+  output: 'standalone',
+  outputFileTracingRoot: process.cwd()
 };
 
 export default nextConfig;

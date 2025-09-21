@@ -302,85 +302,143 @@ async function fetchTwitterHistoryWithProgress(
     throw new Error('SCRAPERAPI_KEY not configured');
   }
 
-  const cursors = ['', '?cursor=20', '?cursor=40', '?cursor=60', '?cursor=80'];
+  // Simplified approach: Only fetch first page since pagination times out
+  // Our testing shows nitter.net works but pagination fails after first page
+  try {
+    const nitterUrl = `https://nitter.net/${handle}`;
+    const scraperUrl = `https://api.scraperapi.com/?api_key=${scraperApiKey}&url=${encodeURIComponent(nitterUrl)}`;
 
-  for (let i = 0; i < cursors.length; i++) {
-    const cursor = cursors[i];
-    try {
-      const nitterUrl = `https://nitter.net/${handle}${cursor}`;
-      const scraperUrl = `https://api.scraperapi.com/?api_key=${scraperApiKey}&url=${encodeURIComponent(nitterUrl)}`;
+    await sendEvent('tweets_progress', {
+      message: `Fetching recent tweets from @${handle}...`,
+      status: 'fetching'
+    });
 
-      await sendEvent('tweets_progress', {
-        message: `Fetching tweets (page ${i + 1}/${cursors.length})...`,
-        current_page: i + 1,
-        total_pages: cursors.length,
-        tweets_so_far: tweets.length
-      });
+    const response = await fetch(scraperUrl, {
+      signal: AbortSignal.timeout(30000) // 30 second timeout
+    });
 
-      const response = await fetch(scraperUrl);
+    if (!response.ok) {
+      console.error(`Failed to fetch tweets: ${response.status}`);
+      // Better HTTP error handling with specific messages
+      if (response.status === 401) {
+        throw new Error('ScraperAPI authentication failed - please check API key configuration');
+      } else if (response.status === 429) {
+        throw new Error('Rate limit exceeded - please wait a few minutes before trying again');
+      } else if (response.status === 403) {
+        throw new Error('Access forbidden - the scraping service may be blocked');
+      } else if (response.status >= 500) {
+        throw new Error('Server error - the service is temporarily unavailable');
+      }
+      throw new Error(`Failed to fetch tweets: HTTP ${response.status}`);
+    }
 
-      if (!response.ok) {
-        console.error(`Failed to fetch page ${cursor}: ${response.status}`);
-        continue;
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    // Check for various error conditions
+    if (html.includes('User not found')) {
+      throw new Error(`User @${handle} not found on Twitter/X`);
+    }
+    if (html.includes('Account suspended')) {
+      throw new Error(`Account @${handle} is suspended`);
+    }
+    if (html.includes('Rate limited') || html.includes('rate limited')) {
+      throw new Error('Twitter data temporarily unavailable - please try again in a few minutes');
+    }
+    if (html.includes('Protected profile') || html.includes('This account\'s Tweets are protected')) {
+      throw new Error(`Account @${handle} is protected (private) - cannot access tweets`);
+    }
+
+    let tweetsProcessed = 0;
+    $('.timeline-item').each((index, element) => {
+      const $element = $(element);
+
+      // Skip retweets
+      if ($element.find('.retweet-header').length > 0) {
+        return;
       }
 
-      const html = await response.text();
-      const $ = cheerio.load(html);
+      const tweetContent = $element.find('.tweet-content').text().trim();
+      const tweetDate = $element.find('.tweet-date').text().trim();
 
-      let tweetsOnPage = 0;
-      $('.timeline-item').each((index, element) => {
-        const $element = $(element);
+      // Skip empty or very short tweets
+      if (!tweetContent || tweetContent.length < 5) {
+        return;
+      }
 
-        if ($element.find('.retweet-header').length > 0) {
-          return;
+      const statsContainer = $element.find('.tweet-stats');
+      const likesText = statsContainer.find('.icon-heart').parent().text().trim();
+      const retweetsText = statsContainer.find('.icon-retweet').parent().text().trim();
+
+      const parseLikes = (text: string): number => {
+        if (!text) return 0;
+        const cleanText = text.replace(/[^0-9.kKmM]/gi, '');
+
+        // Handle millions (M)
+        if (cleanText.toLowerCase().includes('m')) {
+          return Math.round(parseFloat(cleanText.replace(/[mM]/gi, '')) * 1000000);
         }
-
-        const tweetContent = $element.find('.tweet-content').text().trim();
-        const tweetDate = $element.find('.tweet-date').text().trim();
-
-        if (!tweetContent || tweetContent.length < 5) {
-          return;
+        // Handle thousands (K)
+        else if (cleanText.toLowerCase().includes('k')) {
+          return Math.round(parseFloat(cleanText.replace(/[kK]/gi, '')) * 1000);
         }
+        return parseInt(cleanText) || 0;
+      };
 
-        const statsContainer = $element.find('.tweet-stats');
-        const likesText = statsContainer.find('.icon-heart').parent().text().trim();
-        const retweetsText = statsContainer.find('.icon-retweet').parent().text().trim();
-
-        const parseLikes = (text: string): number => {
-          if (!text) return 0;
-          const cleanText = text.replace(/[^0-9.K]/gi, '');
-          if (cleanText.includes('K')) {
-            return Math.round(parseFloat(cleanText.replace('K', '')) * 1000);
-          }
-          return parseInt(cleanText) || 0;
-        };
-
-        tweets.push({
-          text: tweetContent,
-          date: tweetDate,
-          likes: parseLikes(likesText),
-          retweets: parseLikes(retweetsText),
-          length: tweetContent.length
-        });
-
-        tweetsOnPage++;
+      tweets.push({
+        text: tweetContent,
+        date: tweetDate,
+        likes: parseLikes(likesText),
+        retweets: parseLikes(retweetsText),
+        length: tweetContent.length
       });
 
+      tweetsProcessed++;
+    });
+
+    await sendEvent('tweets_progress', {
+      message: `Found ${tweets.length} tweets from @${handle}`,
+      tweets_count: tweets.length,
+      status: 'completed'
+    });
+
+    console.log(`Successfully fetched ${tweets.length} tweets for @${handle}`);
+
+    // If we got no tweets at all, provide helpful context
+    if (tweets.length === 0) {
+      console.warn(`No tweets found for @${handle} - account may be inactive, protected, or only retweets`);
       await sendEvent('tweets_progress', {
-        message: `Found ${tweets.length} tweets so far...`,
-        tweets_count: tweets.length,
-        page_tweets: tweetsOnPage
+        message: `No original tweets found for @${handle} - the account may be inactive or only shares retweets`,
+        status: 'warning',
+        tweets_count: 0
       });
+    }
 
-      if (tweets.length >= 20 || tweetsOnPage === 0) {
-        break;
-      }
+  } catch (error) {
+    console.error(`Error fetching tweets for @${handle}:`, error);
 
-    } catch (error) {
-      console.error(`Error fetching page ${cursor}:`, error);
-      if (tweets.length > 0) {
-        break;
-      }
+    // Provide user-friendly error messages
+    let userMessage = error.message || 'Failed to fetch tweets';
+
+    // Make error messages more actionable
+    if (error.message.includes('timeout')) {
+      userMessage = 'Request timed out - Twitter data fetch is temporarily slow, please try again';
+    } else if (error.message.includes('HTTP 5')) {
+      userMessage = 'Server error - the service is temporarily down, please try again later';
+    } else if (error.message.includes('not found')) {
+      userMessage = `User @${handle} not found - please verify the Twitter handle`;
+    }
+
+    await sendEvent('tweets_progress', {
+      message: userMessage,
+      status: 'error',
+      tweets_count: tweets.length,
+      handle: handle
+    });
+
+    // Only throw if we have absolutely no tweets
+    if (tweets.length === 0) {
+      throw error;
     }
   }
 
