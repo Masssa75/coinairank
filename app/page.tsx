@@ -1296,37 +1296,39 @@ export default function ProjectsRatedPage() {
                       </div>
                     </div>
                     <div className="text-right relative z-10">
-                      {(() => {
-                        // Simple rule: Show tier if it exists, otherwise show dash
-                        const displayTier = project.website_stage1_tier || '—';
+                      <div className="flex flex-col items-end gap-2">
+                        {/* Website Tier Badge */}
+                        {(() => {
+                          // Simple rule: Show tier if it exists, otherwise show dash
+                          const displayTier = project.website_stage1_tier || '—';
 
-                        // Get HTML length for warning displays
-                        const htmlLength = project.website_stage1_analysis?.html_length;
-                        const hasLargeHtml = htmlLength && htmlLength > 240000;
+                          // Get HTML length for warning displays
+                          const htmlLength = project.website_stage1_analysis?.html_length;
+                          const hasLargeHtml = htmlLength && htmlLength > 240000;
 
-                        // Determine if CSR with incomplete analysis
-                        const isCSR = project.ssr_csr_classification === 'CSR' ||
-                                     project.website_stage1_analysis?.ssr_csr_classification === 'CSR';
-                        const needsProperScraping = isCSR && htmlLength && htmlLength <= 240000;
+                          // Determine if CSR with incomplete analysis
+                          const isCSR = project.ssr_csr_classification === 'CSR' ||
+                                       project.website_stage1_analysis?.ssr_csr_classification === 'CSR';
+                          const needsProperScraping = isCSR && htmlLength && htmlLength <= 240000;
 
-                        // Check if has no analysis for warning display
-                        const hasNoAnalysis = !project.website_stage1_tier;
+                          // Check if has no analysis for warning display
+                          const hasNoAnalysis = !project.website_stage1_tier;
 
-                        // Show tooltip for any project with tier or dash
-                        // Remove this check - displayTier always has a value (either tier or '—')
+                          // Show tooltip for any project with tier or dash
+                          // Remove this check - displayTier always has a value (either tier or '—')
 
-                        return (
-                          <SignalBasedTooltip
-                          projectDescription={project.website_stage1_analysis?.project_description}
-                          signals={project.website_stage1_analysis?.signals_found}
-                          redFlags={project.website_stage1_analysis?.red_flags}
-                          strongestSignal={project.website_stage1_analysis?.strongest_signal || project.website_stage1_analysis?.strongest_signal}
-                          benchmarkComparison={project.benchmark_comparison}
-                          extractionStatus={project.extraction_status}
-                          comparisonStatus={project.comparison_status}
-                          websiteAnalysis={{
-                            ...project.website_stage1_analysis,
-                            discovered_links: (project as any).discovered_links || [],
+                          return (
+                            <SignalBasedTooltip
+                            projectDescription={project.website_stage1_analysis?.project_description}
+                            signals={project.website_stage1_analysis?.signals_found}
+                            redFlags={project.website_stage1_analysis?.red_flags}
+                            strongestSignal={project.website_stage1_analysis?.strongest_signal || project.website_stage1_analysis?.strongest_signal}
+                            benchmarkComparison={project.benchmark_comparison}
+                            extractionStatus={project.extraction_status}
+                            comparisonStatus={project.comparison_status}
+                            websiteAnalysis={{
+                              ...project.website_stage1_analysis,
+                              discovered_links: (project as any).discovered_links || [],
                             stage_2_links: (project as any).stage_2_links || [],
                             html_length: htmlLength,
                             whitepaper_url: (project as any).whitepaper_url,
@@ -1363,7 +1365,59 @@ export default function ProjectsRatedPage() {
                           </SignalBasedTooltip>
                         );
                       })()}
+
+                      {/* X Analysis Button */}
+                      {(() => {
+                        const isAnalyzing = analyzingXProjects.has(project.id);
+                        const xTier = project.x_stage1_tier;
+
+                        if (isAnalyzing) {
+                          return (
+                            <span
+                              className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-flex items-center justify-center cursor-not-allowed"
+                              style={{
+                                backgroundColor: '#1a1c1f',
+                                color: '#00ff88'
+                              }}
+                              title="Analyzing X/Twitter profile..."
+                            >
+                              <RotateCw className="w-3 h-3 animate-spin" />
+                            </span>
+                          );
+                        }
+
+                        if (xTier) {
+                          return (
+                            <span
+                              className="px-2 py-0.5 rounded text-xs font-semibold uppercase cursor-help"
+                              style={{
+                                backgroundColor: getTierColor(xTier).bg,
+                                color: getTierColor(xTier).text
+                              }}
+                              title={`X Analysis: ${xTier} tier`}
+                            >
+                              X: {xTier}
+                            </span>
+                          );
+                        }
+
+                        return (
+                          <span
+                            className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-flex items-center justify-center cursor-pointer transition-colors hover:opacity-80"
+                            style={{
+                              backgroundColor: '#2a2d31',
+                              color: '#888'
+                            }}
+                            onClick={() => analyzeXProfile(project)}
+                            title="Click to analyze X/Twitter profile"
+                          >
+                            <RotateCw className="w-3 h-3" />
+                          </span>
+                        );
+                      })()}
+
                       <p className="text-xs text-[#666] mt-1">{formatDate(project.created_at)}</p>
+                      </div>
                     </div>
                   </div>
 
