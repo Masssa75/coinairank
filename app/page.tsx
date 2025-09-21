@@ -498,9 +498,9 @@ export default function ProjectsRatedPage() {
       });
     };
 
-    try {
-      // Main execution already happened above
-      return;
+    // Start the Phase 2 analysis after setup
+    // The actual execution happened in the event listeners above
+
     } catch (error) {
       console.error('X analysis failed:', error);
       setToast({
