@@ -344,7 +344,7 @@ export default function ProjectsRatedPage() {
 
       // Extract Twitter handle from various possible fields
       const handle = project.x_handle ||
-                    project.twitter_handle ||
+                    (project as any).twitter_handle ||
                     (project.twitter_url ? project.twitter_url.split('/').pop()?.replace('@', '') : null);
 
       if (!handle) {
