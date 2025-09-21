@@ -437,7 +437,11 @@ export default function ProjectsRatedPage() {
       eventSource.addEventListener('error', (event) => {
         setToast({ message: 'Analysis failed', type: 'error' });
         eventSource.close();
-        setXAnalyzingId(null);
+        setAnalyzingXProjects(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(project.id);
+          return newSet;
+        });
       });
 
       eventSource.addEventListener('complete', (event) => {
@@ -485,13 +489,21 @@ export default function ProjectsRatedPage() {
 
         // Refresh the projects list to show updated scores
         fetchProjects();
-        setXAnalyzingId(null);
+        setAnalyzingXProjects(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(project.id);
+          return newSet;
+        });
       });
 
       phase2EventSource.addEventListener('error', (event) => {
         setToast({ message: 'Phase 2 failed', type: 'error' });
         phase2EventSource.close();
-        setXAnalyzingId(null);
+        setAnalyzingXProjects(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(project.id);
+          return newSet;
+        });
       });
     }
 
