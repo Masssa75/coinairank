@@ -197,11 +197,11 @@ async function fetchTwitterHistory(handle: string): Promise<Tweet[]> {
 
   for (const cursor of cursors) {
     try {
-      // Use Twitter.com directly instead of Nitter
-      const twitterUrl = `https://twitter.com/${handle}`;
-      console.log(`Fetching from: ${twitterUrl}`);
+      const nitterUrl = `https://nitter.net/${handle}${cursor}`;
+      console.log(`Fetching from: ${nitterUrl}`);
 
       // Use Browserless.io to fetch the Nitter page
+      const startTime = Date.now();
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for scraping
 
@@ -213,13 +213,16 @@ async function fetchTwitterHistory(handle: string): Promise<Tweet[]> {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            url: twitterUrl,
-            waitForSelector: 'article[data-testid="tweet"]',
-            waitForTimeout: 5000
+            url: nitterUrl,
+            waitForTimeout: 5000,
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
           }),
           signal: controller.signal
         }
       ).finally(() => clearTimeout(timeoutId));
+
+      const fetchDuration = Date.now() - startTime;
+      console.log(`Browserless fetch took ${fetchDuration}ms`);
 
       if (!response.ok) {
         console.error(`Failed to fetch page ${cursor}: ${response.status}`);
@@ -227,6 +230,7 @@ async function fetchTwitterHistory(handle: string): Promise<Tweet[]> {
       }
 
       const html = await response.text();
+      console.log(`HTML length: ${html.length}, First 500 chars: ${html.substring(0, 500)}`);
 
       // Parse HTML with Cheerio
       const $ = cheerio.load(html);
