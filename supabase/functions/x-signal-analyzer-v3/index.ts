@@ -41,14 +41,8 @@ serve(async (req) => {
       projectId = body.projectId;
     }
 
-    // Check if this is an SSE request
-    const acceptHeader = req.headers.get('accept');
-    const wantsSSE = acceptHeader?.includes('text/event-stream');
-
-    if (!wantsSSE) {
-      // Return regular JSON response for backward compatibility
-      return handleRegularRequest(action, symbol, handle, projectId);
-    }
+    // V3 is SSE-only - if no Accept header is specified, default to SSE
+    console.log('V3 request with params:', { action, symbol, handle, projectId });
 
     // SSE Implementation
     const encoder = new TextEncoder();
