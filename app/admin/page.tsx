@@ -26,8 +26,8 @@ export default function AdminLogin() {
       const data = await response.json();
       
       if (data.success) {
-        // Redirect to admin dashboard after successful login
-        router.push('/admin/dashboard');
+        // Redirect to main page after successful login (with admin privileges)
+        router.push('/');
       } else {
         setError(data.error || 'Invalid password');
       }
