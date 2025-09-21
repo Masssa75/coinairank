@@ -388,19 +388,14 @@ export default function ProjectsRatedPage() {
         return;
       }
 
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-      // Use SSE with V3 for real-time progress updates
-      // Note: EventSource doesn't support custom headers, so we pass auth as URL param
+      // Use SSE via proxy endpoint to handle Supabase authorization
       const eventSource = new EventSource(
-        `${supabaseUrl}/functions/v1/x-signal-analyzer-v3?` +
+        `/api/x-analyzer?` +
         new URLSearchParams({
           action: 'analyze',
           symbol: project.symbol,
           handle: handle,
-          projectId: project.id.toString(),
-          apikey: supabaseAnonKey  // Pass auth as URL parameter
+          projectId: project.id.toString()
         })
       );
 
@@ -463,14 +458,14 @@ export default function ProjectsRatedPage() {
 
       setToast({ message: 'Starting Phase 2 comparison...', type: 'info' });
 
-      // Phase 2 with SSE
+      // Phase 2 with SSE via proxy endpoint
       const phase2EventSource = new EventSource(
-        `${supabaseUrl}/functions/v1/x-signal-analyzer-v3?` +
+        `/api/x-analyzer?` +
         new URLSearchParams({
           action: 'compare',
           symbol: project.symbol,
           projectId: project.id.toString(),
-          apikey: supabaseAnonKey  // Pass auth as URL parameter
+          handle: 'dummy'  // Required parameter for proxy
         })
       );
 
