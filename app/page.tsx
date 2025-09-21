@@ -8,7 +8,7 @@ import { AddTokenModal } from '@/components/AddTokenModal';
 import SearchInput from '@/components/SearchInput';
 // Removed useDebounce - using custom implementation for better control
 import { cleanupDeprecatedFilters } from '@/lib/cleanupLocalStorage';
-import { Settings, Menu, ChevronDown, ChevronUp, Shield, FileCode2, LogOut, MoreVertical, AlertTriangle, CheckCircle, Trash2, Radio, Grid3X3, List, RotateCw } from 'lucide-react';
+import { Settings, Menu, ChevronDown, ChevronUp, Shield, FileCode2, LogOut, MoreVertical, AlertTriangle, CheckCircle, Trash2, Radio, Grid3X3, List, RotateCw, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -131,7 +131,7 @@ export default function ProjectsRatedPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [openActionMenu, setOpenActionMenu] = useState<number | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [analyzingXProjects, setAnalyzingXProjects] = useState<Set<number>>(new Set());
 
   // Initialize viewMode from localStorage
@@ -728,10 +728,12 @@ export default function ProjectsRatedPage() {
         <div className="fixed top-4 right-4 z-[9999] flex items-center gap-2 px-4 py-3 bg-[#1a1c1f] border border-[#2a2d31] rounded-lg shadow-lg animate-in slide-in-from-top-2 duration-300">
           {toast.type === 'success' ? (
             <CheckCircle className="w-5 h-5 text-[#00ff88]" />
+          ) : toast.type === 'info' ? (
+            <Info className="w-5 h-5 text-blue-500" />
           ) : (
             <AlertTriangle className="w-5 h-5 text-red-500" />
           )}
-          <span className={toast.type === 'success' ? 'text-[#00ff88]' : 'text-red-500'}>
+          <span className={toast.type === 'success' ? 'text-[#00ff88]' : toast.type === 'info' ? 'text-blue-500' : 'text-red-500'}>
             {toast.message}
           </span>
         </div>
