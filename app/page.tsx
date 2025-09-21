@@ -388,6 +388,63 @@ export default function ProjectsRatedPage() {
         return;
       }
 
+      // Define startPhase2 function before using it
+      const startPhase2 = async (project: any, phase1Result: any) => {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+        setToast({ message: 'Starting Phase 2 comparison...', type: 'info' });
+
+        // Phase 2 with SSE via proxy endpoint
+        const phase2EventSource = new EventSource(
+          `/api/x-analyzer?` +
+          new URLSearchParams({
+            action: 'compare',
+            symbol: project.symbol,
+            projectId: project.id.toString(),
+            handle: 'dummy'  // Required parameter for proxy
+          })
+        );
+
+        phase2EventSource.addEventListener('phase2_starting', (event) => {
+          const data = JSON.parse(event.data);
+          setToast({ message: data.message, type: 'info' });
+        });
+
+        phase2EventSource.addEventListener('comparing_signals', (event) => {
+          const data = JSON.parse(event.data);
+          setToast({ message: data.message, type: 'info' });
+        });
+
+        phase2EventSource.addEventListener('phase2_complete', (event) => {
+          const data = JSON.parse(event.data);
+          setToast({ message: data.message, type: 'success' });
+          phase2EventSource.close();
+
+          // Refresh the projects list to show updated scores
+          fetchProjects(page, true);
+          setAnalyzingXProjects(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(project.id);
+            return newSet;
+          });
+        });
+
+        phase2EventSource.addEventListener('error', (event) => {
+          console.error('Phase 2 EventSource error:', event);
+
+          // Only show error if connection is truly closed
+          if (phase2EventSource.readyState === EventSource.CLOSED) {
+            setToast({ message: 'Phase 2 connection failed. Please try again.', type: 'error' });
+            setAnalyzingXProjects(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(project.id);
+              return newSet;
+            });
+          }
+        });
+      };
+
       // Use SSE via proxy endpoint to handle Supabase authorization
       const eventSource = new EventSource(
         `/api/x-analyzer?` +
@@ -437,13 +494,20 @@ export default function ProjectsRatedPage() {
       });
 
       eventSource.addEventListener('error', (event) => {
-        setToast({ message: 'Analysis failed', type: 'error' });
-        eventSource.close();
-        setAnalyzingXProjects(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(project.id);
-          return newSet;
-        });
+        // EventSource fires error for various reasons including connection setup
+        // Only show error if we're sure it's a real failure
+        console.error('EventSource error:', event);
+
+        // Check if EventSource is in CLOSED state (2) which means real failure
+        if (eventSource.readyState === EventSource.CLOSED) {
+          setToast({ message: 'Connection to analyzer failed. Please try again.', type: 'error' });
+          setAnalyzingXProjects(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(project.id);
+            return newSet;
+          });
+        }
+        // Otherwise, it might be a temporary connection issue - let it retry
       });
 
       eventSource.addEventListener('complete', (event) => {
@@ -451,58 +515,6 @@ export default function ProjectsRatedPage() {
       });
 
       return; // Exit here, phase 2 will be started separately
-
-    const startPhase2 = async (project: any, phase1Result: any) => {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-      setToast({ message: 'Starting Phase 2 comparison...', type: 'info' });
-
-      // Phase 2 with SSE via proxy endpoint
-      const phase2EventSource = new EventSource(
-        `/api/x-analyzer?` +
-        new URLSearchParams({
-          action: 'compare',
-          symbol: project.symbol,
-          projectId: project.id.toString(),
-          handle: 'dummy'  // Required parameter for proxy
-        })
-      );
-
-      phase2EventSource.addEventListener('phase2_starting', (event) => {
-        const data = JSON.parse(event.data);
-        setToast({ message: data.message, type: 'info' });
-      });
-
-      phase2EventSource.addEventListener('comparing_signals', (event) => {
-        const data = JSON.parse(event.data);
-        setToast({ message: data.message, type: 'info' });
-      });
-
-      phase2EventSource.addEventListener('phase2_complete', (event) => {
-        const data = JSON.parse(event.data);
-        setToast({ message: data.message, type: 'success' });
-        phase2EventSource.close();
-
-        // Refresh the projects list to show updated scores
-        fetchProjects(page, true);
-        setAnalyzingXProjects(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(project.id);
-          return newSet;
-        });
-      });
-
-      phase2EventSource.addEventListener('error', (event) => {
-        setToast({ message: 'Phase 2 failed', type: 'error' });
-        phase2EventSource.close();
-        setAnalyzingXProjects(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(project.id);
-          return newSet;
-        });
-      });
-    }
 
     } catch (error) {
       console.error('X analysis failed:', error);
