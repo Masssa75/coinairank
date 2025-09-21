@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { SignalBasedTooltip } from '@/components/SignalBasedTooltip';
 import { ContractVerificationTooltip } from '@/components/ContractVerificationTooltip';
+import { WhitepaperTooltip } from '@/components/WhitepaperTooltip';
 import FilterSidebar from '@/components/FilterSidebar';
 import { AddTokenModal } from '@/components/AddTokenModal';
 import SearchInput from '@/components/SearchInput';
@@ -74,6 +75,16 @@ interface CryptoProject {
   token_type?: string; // Add token_type field
   one_liner?: string; // Add top-level one_liner field
   strongest_signal?: string; // Add top-level strongest_signal field
+
+  // Add whitepaper analysis fields
+  whitepaper_url?: string;
+  whitepaper_stage1_score?: number;
+  whitepaper_stage1_tier?: string;
+  whitepaper_signals_found?: any;
+  whitepaper_red_flags?: any;
+  whitepaper_green_flags?: any;
+  whitepaper_analysis?: any;
+  whitepaper_analyzed_at?: string;
 }
 
 interface FilterState {
@@ -1040,11 +1051,12 @@ export default function ProjectsRatedPage() {
           {/* Project Display - Grid or List based on viewMode */}
           {viewMode === 'list' && (
             /* Table Headers for List View */
-            <div className="grid grid-cols-12 gap-4 py-3 px-0 border-b border-[#2a2d31] text-sm font-medium text-[#666] uppercase tracking-wide">
+            <div className="grid grid-cols-14 gap-4 py-3 px-0 border-b border-[#2a2d31] text-sm font-medium text-[#666] uppercase tracking-wide">
               <div className="col-span-4">Project</div>
               <div className="col-span-2 text-center">Age</div>
               <div className="col-span-2 text-center">Market Cap</div>
               <div className="col-span-2 text-center">Web Tier</div>
+              <div className="col-span-2 text-center">WP Tier</div>
               <div className="col-span-2 text-center">X Tier</div>
             </div>
           )}
@@ -1063,7 +1075,7 @@ export default function ProjectsRatedPage() {
                 {viewMode === 'list' ? (
                   /* List View - Table Row */
                   <div className="py-3 px-0 hover:bg-[#1a1c1f] transition-colors">
-                    <div className="grid grid-cols-12 gap-4 items-center">
+                    <div className="grid grid-cols-14 gap-4 items-center">
                       {/* Project Name - col-span-4 */}
                       <div className="col-span-4">
                         <Link href={`/project/${project.symbol}`}>
@@ -1157,6 +1169,37 @@ export default function ProjectsRatedPage() {
                                 {displayTier}
                               </span>
                             </SignalBasedTooltip>
+                          );
+                        })()}
+                      </div>
+
+                      {/* WP TIER - col-span-2 */}
+                      <div className="col-span-2 text-center">
+                        {(() => {
+                          const wpTier = project.whitepaper_stage1_tier;
+                          const displayTier = wpTier || '—';
+
+                          return (
+                            <WhitepaperTooltip
+                              whitepaperUrl={project.whitepaper_url}
+                              whitepaperTier={project.whitepaper_stage1_tier}
+                              whitepaperScore={project.whitepaper_stage1_score}
+                              whitepaperSignals={project.whitepaper_signals_found}
+                              whitepaperRedFlags={project.whitepaper_red_flags}
+                              whitepaperGreenFlags={project.whitepaper_green_flags}
+                              whitepaperAnalysis={project.whitepaper_analysis}
+                              whitepaperAnalyzedAt={project.whitepaper_analyzed_at}
+                            >
+                              <span
+                                className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"
+                                style={{
+                                  backgroundColor: getTierColor(displayTier).bg,
+                                  color: getTierColor(displayTier).text
+                                }}
+                              >
+                                {displayTier}
+                              </span>
+                            </WhitepaperTooltip>
                           );
                         })()}
                       </div>

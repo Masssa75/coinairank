@@ -72,6 +72,7 @@ serve(async (req) => {
       try {
         if (action === 'analyze') {
           await processPhase1WithSSE(symbol, handle, projectId, sendEvent);
+          await processPhase2WithSSE(symbol, sendEvent);
         } else if (action === 'compare') {
           await processPhase2WithSSE(symbol, sendEvent);
         }

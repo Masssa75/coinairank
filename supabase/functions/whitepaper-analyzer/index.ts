@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { extractText, getDocumentProxy } from 'https://esm.sh/unpdf@0.11.0';
+import { extractWhitepaperSignals, compareToWhitepaperBenchmarks, generateWhitepaperSummary } from './signal-extraction.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -94,10 +95,29 @@ serve(async (req) => {
       const analysis = await analyzeWithKimiK2(symbol, project.whitepaper_content);
       const duration = Date.now() - startTime;
 
+      // Extract signals and calculate score/tier
+      const signals = extractWhitepaperSignals(analysis);
+      const benchmarkResult = compareToWhitepaperBenchmarks(signals, analysis.content_breakdown);
+      const summary = generateWhitepaperSummary(signals, analysis.content_breakdown);
+
+      // Create comprehensive analysis object
+      const fullAnalysis = {
+        ...analysis,
+        signals_extracted: signals,
+        benchmark_comparison: benchmarkResult,
+        summary: summary
+      };
+
       const { error: updateError } = await supabase
         .from('crypto_projects_rated')
         .update({
           whitepaper_analysis: analysis,
+          whitepaper_stage1_analysis: fullAnalysis,
+          whitepaper_stage1_score: benchmarkResult.score,
+          whitepaper_stage1_tier: benchmarkResult.tier,
+          whitepaper_signals_found: signals,
+          whitepaper_red_flags: signals.red_flags,
+          whitepaper_green_flags: signals.green_flags,
           whitepaper_analyzed_at: new Date().toISOString(),
           whitepaper_analysis_duration_ms: duration
         })
@@ -109,7 +129,10 @@ serve(async (req) => {
         JSON.stringify({
           success: true,
           symbol,
-          analysis,
+          analysis: fullAnalysis,
+          score: benchmarkResult.score,
+          tier: benchmarkResult.tier,
+          summary,
           duration_ms: duration
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -130,12 +153,31 @@ serve(async (req) => {
     const duration = Date.now() - startTime;
     console.log(`Analysis completed in ${duration}ms`);
 
+    // Extract signals and calculate score/tier
+    const signals = extractWhitepaperSignals(analysis);
+    const benchmarkResult = compareToWhitepaperBenchmarks(signals, analysis.content_breakdown);
+    const summary = generateWhitepaperSummary(signals, analysis.content_breakdown);
+
+    // Create comprehensive analysis object
+    const fullAnalysis = {
+      ...analysis,
+      signals_extracted: signals,
+      benchmark_comparison: benchmarkResult,
+      summary: summary
+    };
+
     // Step 3: Store in database
     const { error: updateError } = await supabase
       .from('crypto_projects_rated')
       .update({
         whitepaper_content: wpContent.substring(0, 50000), // Store first 50k chars
         whitepaper_analysis: analysis,
+        whitepaper_stage1_analysis: fullAnalysis,
+        whitepaper_stage1_score: benchmarkResult.score,
+        whitepaper_stage1_tier: benchmarkResult.tier,
+        whitepaper_signals_found: signals,
+        whitepaper_red_flags: signals.red_flags,
+        whitepaper_green_flags: signals.green_flags,
         whitepaper_analyzed_at: new Date().toISOString(),
         whitepaper_analysis_duration_ms: duration
       })
@@ -147,7 +189,10 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         symbol,
-        analysis
+        analysis: fullAnalysis,
+        score: benchmarkResult.score,
+        tier: benchmarkResult.tier,
+        summary
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
