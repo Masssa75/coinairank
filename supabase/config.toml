@@ -1,8 +1,6 @@
 [functions.website-analyzer-v3]
 verify_jwt = false
 
-[functions.website-analyzer-v2]
-verify_jwt = false
 
 [functions.website-analyzer]
 verify_jwt = false

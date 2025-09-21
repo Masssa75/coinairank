@@ -366,7 +366,7 @@ async function extractSignalsWithAI(tweets: Tweet[], handle: string, symbol: str
       'Authorization': `Bearer ${kimiApiKey}`
     },
     body: JSON.stringify({
-      model: 'kimi-k2-turbo-preview',
+      model: 'kimi-k2-0905-preview',
       messages: [
         {
           role: 'system',
@@ -377,7 +377,8 @@ async function extractSignalsWithAI(tweets: Tweet[], handle: string, symbol: str
           content: prompt
         }
       ],
-      temperature: 0.3  // Low temperature for consistent extraction
+      temperature: 0.3,  // Low temperature for consistent extraction
+      max_tokens: 8000  // Reasonable limit to prevent truncation while allowing thorough analysis
     })
   });
 
@@ -387,6 +388,15 @@ async function extractSignalsWithAI(tweets: Tweet[], handle: string, symbol: str
   }
 
   const result = await response.json();
+
+  // Log token usage for Phase 1
+  if (result.usage) {
+    console.log(`📊 Phase 1 Token Usage:`, {
+      prompt_tokens: result.usage.prompt_tokens,
+      completion_tokens: result.usage.completion_tokens,
+      total_tokens: result.usage.total_tokens
+    });
+  }
 
   // Parse the AI response
   try {
@@ -469,8 +479,8 @@ Return JSON:
       body: JSON.stringify({
         model: 'kimi-k2-0905-preview',
         messages: [{ role: 'user', content: COMPARISON_PROMPT }],
-        temperature: 0.3,
-        max_tokens: 2000
+        temperature: 0.3
+        // No max_tokens limit - let model use what it needs
       })
     });
 
@@ -479,6 +489,16 @@ Return JSON:
     }
 
     const result = await response.json();
+
+    // Log token usage for Phase 2
+    if (result.usage) {
+      console.log(`📊 Phase 2 Token Usage:`, {
+        prompt_tokens: result.usage.prompt_tokens,
+        completion_tokens: result.usage.completion_tokens,
+        total_tokens: result.usage.total_tokens
+      });
+    }
+
     const content = result.choices[0].message.content;
 
     // Parse response
