@@ -446,7 +446,6 @@ export default function ProjectsRatedPage() {
       });
 
       return; // Exit here, phase 2 will be started separately
-    }
 
     const startPhase2 = async (project: any, phase1Result: any) => {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
