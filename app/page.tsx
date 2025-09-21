@@ -65,6 +65,11 @@ interface CryptoProject {
   x_red_flags?: any;
   x_analyzed_at?: string;
   x_handle?: string;
+  social_urls?: Array<{
+    url: string;
+    type: string;
+    reasoning?: string;
+  }>;
   analysis_token_type?: string; // For token type filtering
   token_type?: string; // Add token_type field
   one_liner?: string; // Add top-level one_liner field
@@ -343,9 +348,29 @@ export default function ProjectsRatedPage() {
       setAnalyzingXProjects(prev => new Set(prev).add(project.id));
 
       // Extract Twitter handle from various possible fields
-      const handle = project.x_handle ||
-                    (project as any).twitter_handle ||
-                    (project.twitter_url ? project.twitter_url.split('/').pop()?.replace('@', '') : null);
+      let handle = null;
+
+      // First check twitter_url field
+      if (project.twitter_url) {
+        handle = project.twitter_url.split('/').pop()?.replace('@', '');
+      }
+
+      // If not found, check social_urls array for Twitter/X entries
+      if (!handle && project.social_urls) {
+        const twitterEntry = project.social_urls.find(
+          social => social.type === 'twitter' && social.url
+        );
+        if (twitterEntry) {
+          // Handle both full URLs and relative URLs
+          const url = twitterEntry.url;
+          if (url.includes('twitter.com/') || url.includes('x.com/')) {
+            handle = url.split('/').pop()?.replace('@', '');
+          } else if (url === '/x' || url === '/twitter') {
+            // Some entries just have "/x" - we can't extract handle from these
+            handle = null;
+          }
+        }
+      }
 
       if (!handle) {
         setToast({ message: `No Twitter handle found for ${project.symbol}`, type: 'error' });
