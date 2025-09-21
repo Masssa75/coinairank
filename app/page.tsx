@@ -142,8 +142,10 @@ export default function ProjectsRatedPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [openActionMenu, setOpenActionMenu] = useState<number | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | 'warning' } | null>(null);
   const [analyzingXProjects, setAnalyzingXProjects] = useState<Set<number>>(new Set());
+  const [xAnalysisStatus, setXAnalysisStatus] = useState<Map<number, string>>(new Map());
+  const eventSourcesRef = useRef<Map<number, EventSource>>(new Map());
 
   // Initialize viewMode from localStorage
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
@@ -355,8 +357,16 @@ export default function ProjectsRatedPage() {
   const analyzeXProfile = async (project: CryptoProject) => {
     if (analyzingXProjects.has(project.id)) return;
 
+    // Clean up any existing EventSource for this project
+    const existingSource = eventSourcesRef.current.get(project.id);
+    if (existingSource) {
+      existingSource.close();
+      eventSourcesRef.current.delete(project.id);
+    }
+
     try {
       setAnalyzingXProjects(prev => new Set(prev).add(project.id));
+      setXAnalysisStatus(prev => new Map(prev).set(project.id, 'Initializing...'));
 
       // Extract Twitter handle from various possible fields
       let handle = null;
@@ -408,18 +418,25 @@ export default function ProjectsRatedPage() {
 
         phase2EventSource.addEventListener('phase2_starting', (event) => {
           const data = JSON.parse(event.data);
-          setToast({ message: data.message, type: 'info' });
+          setXAnalysisStatus(prev => new Map(prev).set(project.id, 'Comparing signals...'));
         });
 
         phase2EventSource.addEventListener('comparing_signals', (event) => {
           const data = JSON.parse(event.data);
-          setToast({ message: data.message, type: 'info' });
+          setXAnalysisStatus(prev => new Map(prev).set(project.id, data.message));
         });
 
         phase2EventSource.addEventListener('phase2_complete', (event) => {
           const data = JSON.parse(event.data);
-          setToast({ message: data.message, type: 'success' });
+          setToast({ message: `X analysis complete for ${project.symbol}!`, type: 'success' });
           phase2EventSource.close();
+
+          // Clean up status
+          setXAnalysisStatus(prev => {
+            const newMap = new Map(prev);
+            newMap.delete(project.id);
+            return newMap;
+          });
 
           // Refresh the projects list to show updated scores
           fetchProjects(page, true);
@@ -441,6 +458,11 @@ export default function ProjectsRatedPage() {
               newSet.delete(project.id);
               return newSet;
             });
+            setXAnalysisStatus(prev => {
+              const newMap = new Map(prev);
+              newMap.delete(project.id);
+              return newMap;
+            });
           }
         });
       };
@@ -458,36 +480,47 @@ export default function ProjectsRatedPage() {
 
       let phase1Result: any = null;
 
+      // Store the EventSource for this project
+      eventSourcesRef.current.set(project.id, eventSource);
+
       eventSource.addEventListener('starting', (event) => {
         const data = JSON.parse(event.data);
-        setToast({ message: data.message, type: 'info' });
+        setXAnalysisStatus(prev => new Map(prev).set(project.id, data.message));
       });
 
       eventSource.addEventListener('fetching_tweets', (event) => {
         const data = JSON.parse(event.data);
-        setToast({ message: data.message, type: 'info' });
+        setXAnalysisStatus(prev => new Map(prev).set(project.id, 'Fetching tweets...'));
       });
 
       eventSource.addEventListener('tweets_progress', (event) => {
         const data = JSON.parse(event.data);
-        setToast({ message: data.message, type: 'info' });
+        const statusMsg = data.tweets_count ?
+          `Found ${data.tweets_count} tweets...` :
+          data.message;
+        setXAnalysisStatus(prev => new Map(prev).set(project.id, statusMsg));
       });
 
       eventSource.addEventListener('tweets_complete', (event) => {
         const data = JSON.parse(event.data);
-        setToast({ message: data.message, type: 'success' });
+        const tweetCount = data.message.match(/\d+/)?.[0] || '0';
+        setXAnalysisStatus(prev => new Map(prev).set(project.id, `Analyzing ${tweetCount} tweets...`));
+        if (tweetCount === '0') {
+          setToast({ message: `No tweets found for @${handle}. The account may be private or suspended.`, type: 'warning' });
+        }
       });
 
       eventSource.addEventListener('ai_analyzing', (event) => {
         const data = JSON.parse(event.data);
-        setToast({ message: data.message, type: 'info' });
+        setXAnalysisStatus(prev => new Map(prev).set(project.id, 'AI analyzing tweets...'));
       });
 
       eventSource.addEventListener('phase1_complete', (event) => {
         const data = JSON.parse(event.data);
         phase1Result = data.result;
-        setToast({ message: data.message, type: 'success' });
+        setXAnalysisStatus(prev => new Map(prev).set(project.id, 'Starting comparison...'));
         eventSource.close();
+        eventSourcesRef.current.delete(project.id);
 
         // Start Phase 2
         startPhase2(project, phase1Result);
@@ -506,12 +539,19 @@ export default function ProjectsRatedPage() {
             newSet.delete(project.id);
             return newSet;
           });
+          setXAnalysisStatus(prev => {
+            const newMap = new Map(prev);
+            newMap.delete(project.id);
+            return newMap;
+          });
+          eventSourcesRef.current.delete(project.id);
         }
         // Otherwise, it might be a temporary connection issue - let it retry
       });
 
       eventSource.addEventListener('complete', (event) => {
         eventSource.close();
+        eventSourcesRef.current.delete(project.id);
       });
 
       return; // Exit here, phase 2 will be started separately
@@ -528,6 +568,17 @@ export default function ProjectsRatedPage() {
         newSet.delete(project.id);
         return newSet;
       });
+      setXAnalysisStatus(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(project.id);
+        return newMap;
+      });
+      // Clean up EventSource if it exists
+      const source = eventSourcesRef.current.get(project.id);
+      if (source) {
+        source.close();
+        eventSourcesRef.current.delete(project.id);
+      }
     }
   };
 
@@ -749,10 +800,12 @@ export default function ProjectsRatedPage() {
             <CheckCircle className="w-5 h-5 text-[#00ff88]" />
           ) : toast.type === 'info' ? (
             <Info className="w-5 h-5 text-blue-500" />
+          ) : toast.type === 'warning' ? (
+            <AlertTriangle className="w-5 h-5 text-yellow-500" />
           ) : (
             <AlertTriangle className="w-5 h-5 text-red-500" />
           )}
-          <span className={toast.type === 'success' ? 'text-[#00ff88]' : toast.type === 'info' ? 'text-blue-500' : 'text-red-500'}>
+          <span className={toast.type === 'success' ? 'text-[#00ff88]' : toast.type === 'info' ? 'text-blue-500' : toast.type === 'warning' ? 'text-yellow-500' : 'text-red-500'}>
             {toast.message}
           </span>
         </div>
@@ -1419,20 +1472,28 @@ export default function ProjectsRatedPage() {
                       {/* X Analysis Button */}
                       {(() => {
                         const isAnalyzing = analyzingXProjects.has(project.id);
+                        const analysisStatus = xAnalysisStatus.get(project.id);
                         const xTier = project.x_stage1_tier;
 
                         if (isAnalyzing) {
                           return (
-                            <span
-                              className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-flex items-center justify-center cursor-not-allowed"
-                              style={{
-                                backgroundColor: '#1a1c1f',
-                                color: '#00ff88'
-                              }}
-                              title="Analyzing X/Twitter profile..."
-                            >
-                              <RotateCw className="w-3 h-3 animate-spin" />
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-flex items-center justify-center cursor-not-allowed"
+                                style={{
+                                  backgroundColor: '#1a1c1f',
+                                  color: '#00ff88'
+                                }}
+                                title={analysisStatus || "Analyzing X/Twitter profile..."}
+                              >
+                                <RotateCw className="w-3 h-3 animate-spin" />
+                              </span>
+                              {analysisStatus && (
+                                <span className="text-[10px] text-gray-400 max-w-[150px] truncate">
+                                  {analysisStatus}
+                                </span>
+                              )}
+                            </div>
                           );
                         }
 
@@ -1459,7 +1520,7 @@ export default function ProjectsRatedPage() {
                               color: '#888'
                             }}
                             onClick={() => analyzeXProfile(project)}
-                            title="Click to analyze X/Twitter profile"
+                            title={`Analyze X profile for ${project.symbol}`}
                           >
                             <RotateCw className="w-3 h-3" />
                           </span>
