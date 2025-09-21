@@ -186,10 +186,10 @@ serve(async (req) => {
 
 async function fetchTwitterHistory(handle: string): Promise<Tweet[]> {
   const tweets: Tweet[] = [];
-  const scraperApiKey = Deno.env.get('SCRAPERAPI_KEY');
+  const browserlessApiKey = Deno.env.get('BROWSERLESS_API_KEY');
 
-  if (!scraperApiKey) {
-    throw new Error('SCRAPERAPI_KEY not configured');
+  if (!browserlessApiKey) {
+    throw new Error('BROWSERLESS_API_KEY not configured');
   }
 
   // Try to fetch multiple pages to get ~100 tweets
@@ -197,19 +197,29 @@ async function fetchTwitterHistory(handle: string): Promise<Tweet[]> {
 
   for (const cursor of cursors) {
     try {
-      const nitterUrl = `https://nitter.net/${handle}${cursor}`;
-      console.log(`Fetching from: ${nitterUrl}`);
+      // Use Twitter.com directly instead of Nitter
+      const twitterUrl = `https://twitter.com/${handle}`;
+      console.log(`Fetching from: ${twitterUrl}`);
 
-      // Use ScraperAPI to fetch the Nitter page
+      // Use Browserless.io to fetch the Nitter page
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for scraping
+
       const response = await fetch(
-        `https://api.scraperapi.com?api_key=${scraperApiKey}&url=${encodeURIComponent(nitterUrl)}&render=false`,
+        `https://chrome.browserless.io/content?token=${browserlessApiKey}`,
         {
-          method: 'GET',
+          method: 'POST',
           headers: {
-            'Accept': 'text/html',
-          }
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            url: twitterUrl,
+            waitForSelector: 'article[data-testid="tweet"]',
+            waitForTimeout: 5000
+          }),
+          signal: controller.signal
         }
-      );
+      ).finally(() => clearTimeout(timeoutId));
 
       if (!response.ok) {
         console.error(`Failed to fetch page ${cursor}: ${response.status}`);
@@ -268,7 +278,7 @@ async function fetchTwitterHistory(handle: string): Promise<Tweet[]> {
       console.log(`Found ${tweetsOnPage} tweets on page ${cursor || 'main'}`);
 
       // Stop if we have enough tweets or no more tweets on page
-      if (tweets.length >= 100 || tweetsOnPage === 0) {
+      if (tweets.length >= 20 || tweetsOnPage === 0) {
         break;
       }
 
@@ -278,8 +288,8 @@ async function fetchTwitterHistory(handle: string): Promise<Tweet[]> {
     }
   }
 
-  // Return up to 100 tweets
-  return tweets.slice(0, 100);
+  // Return up to 20 tweets
+  return tweets.slice(0, 20);
 }
 
 async function extractSignalsWithAI(tweets: Tweet[], handle: string, symbol: string) {
