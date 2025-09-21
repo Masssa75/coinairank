@@ -380,8 +380,8 @@ export default function ProjectsRatedPage() {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-      // Phase 1: Extract signals
-      const phase1Response = await fetch(`${supabaseUrl}/functions/v1/x-signal-analyzer`, {
+      // Phase 1: Extract signals (V2 with tweet storage)
+      const phase1Response = await fetch(`${supabaseUrl}/functions/v1/x-signal-analyzer-v2`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${supabaseAnonKey}`,
@@ -406,8 +406,8 @@ export default function ProjectsRatedPage() {
       // Wait 2 seconds before Phase 2
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Phase 2: Compare to benchmarks
-      const phase2Response = await fetch(`${supabaseUrl}/functions/v1/x-signal-analyzer`, {
+      // Phase 2: Compare to benchmarks (V2)
+      const phase2Response = await fetch(`${supabaseUrl}/functions/v1/x-signal-analyzer-v2`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${supabaseAnonKey}`,
