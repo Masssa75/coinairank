@@ -488,7 +488,7 @@ export default function ProjectsRatedPage() {
         phase2EventSource.close();
 
         // Refresh the projects list to show updated scores
-        fetchProjects();
+        fetchProjects(page, true);
         setAnalyzingXProjects(prev => {
           const newSet = new Set(prev);
           newSet.delete(project.id);
