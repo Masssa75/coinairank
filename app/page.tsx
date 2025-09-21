@@ -57,9 +57,14 @@ interface CryptoProject {
   telegram_url: string | null;
   created_at: string;
 
-  // Add X analysis fields
-  x_analysis_score?: number;
-  x_analysis_tier?: string;
+  // Add X analysis fields (proper naming from guide)
+  x_stage1_score?: number;
+  x_stage1_tier?: string;
+  x_signals_found?: any;
+  x_analysis_summary?: string;
+  x_red_flags?: any;
+  x_analyzed_at?: string;
+  x_handle?: string;
   analysis_token_type?: string; // For token type filtering
   token_type?: string; // Add token_type field
   one_liner?: string; // Add top-level one_liner field
@@ -122,6 +127,7 @@ export default function ProjectsRatedPage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [openActionMenu, setOpenActionMenu] = useState<number | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [analyzingXProjects, setAnalyzingXProjects] = useState<Set<number>>(new Set());
 
   // Initialize viewMode from localStorage
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
@@ -328,6 +334,94 @@ export default function ProjectsRatedPage() {
     });
     if (node) observer.current.observe(node);
   }, [loading, hasMore]);
+
+  // X Analysis function
+  const analyzeXProfile = async (project: CryptoProject) => {
+    if (analyzingXProjects.has(project.id)) return;
+
+    try {
+      setAnalyzingXProjects(prev => new Set(prev).add(project.id));
+
+      // Extract Twitter handle from various possible fields
+      const handle = project.x_handle ||
+                    project.twitter_handle ||
+                    (project.twitter_url ? project.twitter_url.split('/').pop()?.replace('@', '') : null);
+
+      if (!handle) {
+        setToast({ message: `No Twitter handle found for ${project.symbol}`, type: 'error' });
+        return;
+      }
+
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+      // Phase 1: Extract signals
+      const phase1Response = await fetch(`${supabaseUrl}/functions/v1/x-signal-analyzer`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          symbol: project.symbol,
+          handle: handle,
+          phase: 1,
+          projectId: project.id
+        })
+      });
+
+      const phase1Data = await phase1Response.json();
+
+      if (!phase1Data.success) {
+        throw new Error(phase1Data.error || 'Phase 1 analysis failed');
+      }
+
+      setToast({ message: `Phase 1 complete for ${project.symbol}. Starting Phase 2...`, type: 'success' });
+
+      // Wait 2 seconds before Phase 2
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Phase 2: Compare to benchmarks
+      const phase2Response = await fetch(`${supabaseUrl}/functions/v1/x-signal-analyzer`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseAnonKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          symbol: project.symbol,
+          phase: 2,
+          projectId: phase1Data.database_storage?.projectId || project.id
+        })
+      });
+
+      const phase2Data = await phase2Response.json();
+
+      if (!phase2Data.success) {
+        throw new Error(phase2Data.error || 'Phase 2 analysis failed');
+      }
+
+      setToast({ message: `X analysis complete for ${project.symbol}! Tier: ${phase2Data.tier}`, type: 'success' });
+
+      // Refresh projects to show new tier
+      setProjects([]);
+      setPage(1);
+      fetchProjects(1, true);
+
+    } catch (error) {
+      console.error('X analysis failed:', error);
+      setToast({
+        message: `X analysis failed for ${project.symbol}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        type: 'error'
+      });
+    } finally {
+      setAnalyzingXProjects(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(project.id);
+        return newSet;
+      });
+    }
+  };
 
   // Fetch projects
   const fetchProjects = useCallback(async (pageNum: number, reset: boolean = false) => {
@@ -977,20 +1071,54 @@ export default function ProjectsRatedPage() {
 
                       {/* X Analysis Tier - col-span-2 */}
                       <div className="col-span-2 text-center">
-                        <span
-                          className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-flex items-center justify-center cursor-pointer transition-colors hover:opacity-80"
-                          style={{
-                            backgroundColor: '#2a2d31',
-                            color: '#888'
-                          }}
-                          onClick={() => {
-                            // TODO: Trigger X analysis when function is ready
-                            console.log('X analysis triggered for project:', project.symbol);
-                          }}
-                          title="Click to analyze X/Twitter profile"
-                        >
-                          <RotateCw className="w-3 h-3" />
-                        </span>
+                        {(() => {
+                          const isAnalyzing = analyzingXProjects.has(project.id);
+                          const xTier = project.x_stage1_tier;
+
+                          if (isAnalyzing) {
+                            return (
+                              <span
+                                className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-flex items-center justify-center cursor-not-allowed"
+                                style={{
+                                  backgroundColor: '#1a1c1f',
+                                  color: '#00ff88'
+                                }}
+                                title="Analyzing X/Twitter profile..."
+                              >
+                                <RotateCw className="w-3 h-3 animate-spin" />
+                              </span>
+                            );
+                          }
+
+                          if (xTier) {
+                            return (
+                              <span
+                                className="px-2 py-0.5 rounded text-xs font-semibold uppercase cursor-help"
+                                style={{
+                                  backgroundColor: getTierColor(xTier).bg,
+                                  color: getTierColor(xTier).text
+                                }}
+                                title={`X Analysis: ${xTier} tier`}
+                              >
+                                {xTier}
+                              </span>
+                            );
+                          }
+
+                          return (
+                            <span
+                              className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-flex items-center justify-center cursor-pointer transition-colors hover:opacity-80"
+                              style={{
+                                backgroundColor: '#2a2d31',
+                                color: '#888'
+                              }}
+                              onClick={() => analyzeXProfile(project)}
+                              title="Click to analyze X/Twitter profile"
+                            >
+                              <RotateCw className="w-3 h-3" />
+                            </span>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
