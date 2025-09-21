@@ -23,7 +23,7 @@ serve(async (req) => {
 
   try {
     // Parse parameters based on request method
-    let action, symbol, handle, projectId;
+    let action, symbol, handle, projectId, apikey;
 
     if (req.method === 'GET') {
       // EventSource uses GET with URL parameters
@@ -32,6 +32,7 @@ serve(async (req) => {
       symbol = url.searchParams.get('symbol');
       handle = url.searchParams.get('handle');
       projectId = url.searchParams.get('projectId');
+      apikey = url.searchParams.get('apikey');
     } else {
       // Regular POST request with JSON body
       const body = await req.json();
@@ -39,6 +40,17 @@ serve(async (req) => {
       symbol = body.symbol;
       handle = body.handle;
       projectId = body.projectId;
+    }
+
+    // For GET requests, check authorization via apikey parameter
+    if (req.method === 'GET' && !apikey) {
+      return new Response(
+        JSON.stringify({ error: 'Missing apikey parameter' }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     // V3 is SSE-only - if no Accept header is specified, default to SSE

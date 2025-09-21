@@ -381,20 +381,16 @@ export default function ProjectsRatedPage() {
       const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
       // Use SSE with V3 for real-time progress updates
+      // Note: EventSource doesn't support custom headers, so we pass auth as URL param
       const eventSource = new EventSource(
         `${supabaseUrl}/functions/v1/x-signal-analyzer-v3?` +
         new URLSearchParams({
           action: 'analyze',
           symbol: project.symbol,
           handle: handle,
-          projectId: project.id.toString()
-        }),
-        {
-          headers: {
-            'Authorization': `Bearer ${supabaseAnonKey}`,
-            'Accept': 'text/event-stream'
-          }
-        } as any
+          projectId: project.id.toString(),
+          apikey: supabaseAnonKey  // Pass auth as URL parameter
+        })
       );
 
       let phase1Result: any = null;
@@ -462,14 +458,9 @@ export default function ProjectsRatedPage() {
         new URLSearchParams({
           action: 'compare',
           symbol: project.symbol,
-          projectId: project.id.toString()
-        }),
-        {
-          headers: {
-            'Authorization': `Bearer ${supabaseAnonKey}`,
-            'Accept': 'text/event-stream'
-          }
-        } as any
+          projectId: project.id.toString(),
+          apikey: supabaseAnonKey  // Pass auth as URL parameter
+        })
       );
 
       phase2EventSource.addEventListener('phase2_starting', (event) => {
