@@ -446,7 +446,7 @@ export default function ProjectsRatedPage() {
       });
 
       return; // Exit here, phase 2 will be started separately
-    };
+    }
 
     const startPhase2 = async (project: any, phase1Result: any) => {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -496,10 +496,7 @@ export default function ProjectsRatedPage() {
         phase2EventSource.close();
         setXAnalyzingId(null);
       });
-    };
-
-    // Start the Phase 2 analysis after setup
-    // The actual execution happened in the event listeners above
+    }
 
     } catch (error) {
       console.error('X analysis failed:', error);
