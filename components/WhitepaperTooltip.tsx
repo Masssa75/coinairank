@@ -21,6 +21,7 @@ interface WhitepaperTooltipProps {
   whitepaperGreenFlags?: any;
   whitepaperAnalysis?: any;
   whitepaperAnalyzedAt?: string;
+  whitepaperSimpleDescription?: string;
   children: React.ReactNode;
 }
 
@@ -33,6 +34,7 @@ export function WhitepaperTooltip({
   whitepaperGreenFlags,
   whitepaperAnalysis,
   whitepaperAnalyzedAt,
+  whitepaperSimpleDescription,
   children
 }: WhitepaperTooltipProps) {
   const [showTooltip, setShowTooltip] = React.useState(false);
@@ -129,6 +131,15 @@ export function WhitepaperTooltip({
           >
             <X className="w-4 h-4" />
           </button>
+        )}
+
+        {/* Simple Description - Show at top if available */}
+        {(whitepaperSimpleDescription || whitepaperAnalysis?.simple_description) && (
+          <div className="mb-3 pb-3 border-b border-[#2a2d31]">
+            <div className="text-sm text-[#ddd] leading-relaxed">
+              {whitepaperSimpleDescription || whitepaperAnalysis.simple_description}
+            </div>
+          </div>
         )}
 
         {/* Key Technical Innovations */}
@@ -277,6 +288,26 @@ export function WhitepaperTooltip({
           </div>
         )}
 
+        {/* Character Assessment */}
+        {whitepaperAnalysis?.character_assessment && (
+          <div className="pt-2 mt-2 border-t border-[#2a2d31]">
+            <h4 className="text-[#00ff88] text-xs font-medium mb-1">Character Assessment</h4>
+            <div className="text-[#999] text-xs italic">
+              {whitepaperAnalysis.character_assessment}
+            </div>
+          </div>
+        )}
+
+        {/* Verdict */}
+        {whitepaperAnalysis?.kimi_verdict && (
+          <div className="mt-2">
+            <h4 className="text-[#00ff88] text-xs font-medium mb-1">Verdict</h4>
+            <div className="text-[#ccc] text-xs">
+              {whitepaperAnalysis.kimi_verdict}
+            </div>
+          </div>
+        )}
+
         {/* Scoring Reasoning - Show at bottom */}
         {whitepaperScore !== undefined && (
           <div className="pt-2 mt-2 border-t border-[#2a2d31]">
@@ -296,9 +327,9 @@ export function WhitepaperTooltip({
                 </>
               )}
             </div>
-            {whitepaperAnalysis?.benchmark_comparison?.reasoning && (
+            {(whitepaperAnalysis?.signals_extracted?.benchmark_comparison?.reasoning || whitepaperAnalysis?.benchmark_comparison?.reasoning) && (
               <div className="text-[#999] text-xs mt-1">
-                {whitepaperAnalysis.benchmark_comparison.reasoning}
+                {whitepaperAnalysis?.signals_extracted?.benchmark_comparison?.reasoning || whitepaperAnalysis?.benchmark_comparison?.reasoning}
               </div>
             )}
           </div>

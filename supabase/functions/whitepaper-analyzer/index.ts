@@ -22,6 +22,7 @@ interface WhitepaperAnalysis {
     other: number;
   };
   other_content_explanation?: string;
+  simple_description: string;
   character_assessment: string;
   key_insights: string[];
   red_flags: string[];
@@ -112,6 +113,7 @@ serve(async (req) => {
         .from('crypto_projects_rated')
         .update({
           whitepaper_analysis: analysis,
+          whitepaper_simple_description: analysis.simple_description,
           whitepaper_stage1_analysis: fullAnalysis,
           whitepaper_stage1_score: benchmarkResult.score,
           whitepaper_stage1_tier: benchmarkResult.tier,
@@ -172,6 +174,7 @@ serve(async (req) => {
       .update({
         whitepaper_content: wpContent.substring(0, 50000), // Store first 50k chars
         whitepaper_analysis: analysis,
+        whitepaper_simple_description: analysis.simple_description,
         whitepaper_stage1_analysis: fullAnalysis,
         whitepaper_stage1_score: benchmarkResult.score,
         whitepaper_stage1_tier: benchmarkResult.tier,
@@ -423,15 +426,17 @@ For the "Other" category, you MUST explain what type of content this includes.
 
 Then provide:
 
-1. CHARACTER ASSESSMENT: One sentence describing what type of document this really is (e.g., "Academic research paper with formal mathematical rigor" or "Marketing pitch disguised as technical documentation")
+1. SIMPLE DESCRIPTION: One sentence explaining what this project actually does in simple terms (e.g., "A layer-2 scaling solution for Ethereum using optimistic rollups" or "A gaming-focused blockchain optimized for NFT transactions")
 
-2. KEY INSIGHTS: List 2-3 most important technical or business insights
+2. CHARACTER ASSESSMENT: One sentence describing what type of document this really is (e.g., "Academic research paper with formal mathematical rigor" or "Marketing pitch disguised as technical documentation")
 
-3. RED FLAGS: List any concerning signs (missing proofs, impossible claims, too much marketing, etc.)
+3. KEY INSIGHTS: List 2-3 most important technical or business insights
 
-4. GREEN FLAGS: List any positive indicators (peer review, mathematical rigor, real innovation, etc.)
+4. RED FLAGS: List any concerning signs (missing proofs, impossible claims, too much marketing, etc.)
 
-5. VERDICT: One sentence - Is this creating genuine value or just noise?
+5. GREEN FLAGS: List any positive indicators (peer review, mathematical rigor, real innovation, etc.)
+
+6. VERDICT: One sentence - Is this creating genuine value or just noise?
 
 Format your response as JSON with this exact structure:
 {
@@ -448,6 +453,7 @@ Format your response as JSON with this exact structure:
     "other": <number>
   },
   "other_content_explanation": "<explanation of what 'other' includes>",
+  "simple_description": "<one sentence simple explanation>",
   "character_assessment": "<one sentence>",
   "key_insights": ["<insight 1>", "<insight 2>", "<insight 3>"],
   "red_flags": ["<flag 1>", "<flag 2>"],

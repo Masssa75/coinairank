@@ -90,6 +90,7 @@ interface CryptoProject {
   whitepaper_green_flags?: any;
   whitepaper_analysis?: any;
   whitepaper_analyzed_at?: string;
+  whitepaper_simple_description?: string;
 }
 
 interface FilterState {
@@ -1254,6 +1255,7 @@ export default function ProjectsRatedPage() {
                               whitepaperGreenFlags={project.whitepaper_green_flags}
                               whitepaperAnalysis={project.whitepaper_analysis}
                               whitepaperAnalyzedAt={project.whitepaper_analyzed_at}
+                              whitepaperSimpleDescription={project.whitepaper_simple_description}
                             >
                               <span
                                 className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"

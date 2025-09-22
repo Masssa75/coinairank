@@ -42,113 +42,24 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Processing ${nextProjects.length} projects in this run`);
+    console.log(`Found ${nextProjects.length} projects to process`);
 
-    // Process each project
-    const results = [];
-    for (const project of nextProjects) {
-      const twitterHandle = extractTwitterHandle(project.twitter_url);
-
-      if (!twitterHandle) {
-        console.error(`Invalid Twitter URL for ${project.symbol}: ${project.twitter_url}`);
-
-        // Mark as attempted to skip next time
-        await supabase
-          .from('crypto_projects_rated')
-          .update({ x_analysis_attempted: new Date().toISOString() })
-          .eq('id', project.id);
-
-        results.push({
-          symbol: project.symbol,
-          status: 'skipped',
-          reason: 'Invalid Twitter handle'
-        });
-        continue;
-      }
-
-      console.log(`Starting X analysis for ${project.symbol} (@${twitterHandle})`);
-
-      try {
-        // Call the V3 X analyzer function
-        const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/x-signal-analyzer-v3`;
-
-        const analyzerResponse = await fetch(analyzerUrl, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            action: 'analyze',
-            symbol: project.symbol,
-            handle: twitterHandle,
-            projectId: project.id
-          }),
-        });
-
-        if (!analyzerResponse.ok) {
-          throw new Error(`Analyzer returned ${analyzerResponse.status}`);
-        }
-
-        // Process the SSE stream
-        const reader = analyzerResponse.body?.getReader();
-        const decoder = new TextDecoder();
-        let result = {
-          symbol: project.symbol,
-          handle: twitterHandle,
-          status: 'processing'
-        };
-
-        if (reader) {
-          let done = false;
-          while (!done) {
-            const { value, done: readerDone } = await reader.read();
-            done = readerDone;
-
-            if (value) {
-              const chunk = decoder.decode(value);
-              // Check for completion events in the SSE stream
-              if (chunk.includes('phase1_complete')) {
-                result.status = 'phase1_complete';
-              }
-              if (chunk.includes('phase2_complete') || chunk.includes('complete')) {
-                result.status = 'completed';
-                break;
-              }
-              if (chunk.includes('error')) {
-                result.status = 'error';
-                break;
-              }
-            }
-          }
-        }
-
-        results.push(result);
-        console.log(`Completed ${project.symbol}: ${result.status}`);
-
-        // Small delay between projects to avoid overload
-        if (nextProjects.indexOf(project) < nextProjects.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
-        }
-
-      } catch (error) {
-        console.error(`Error processing ${project.symbol}:`, error);
-        results.push({
-          symbol: project.symbol,
-          status: 'error',
-          error: error.message
-        });
-      }
-    }
-
-    // Get stats for response
+    // Get stats for immediate response
     const stats = await getAnalysisStats(supabase);
 
+    // Process projects asynchronously (fire and forget)
+    // This runs in the background and won't block the response
+    processProjectsAsync(nextProjects, supabase).catch(error => {
+      console.error('Background processing error:', error);
+    });
+
+    // Return immediately with success status
     return new Response(
       JSON.stringify({
-        message: `Processed ${results.length} projects`,
-        results,
-        stats
+        message: `Started processing ${nextProjects.length} projects`,
+        queued: nextProjects.map(p => ({ symbol: p.symbol, twitter_url: p.twitter_url })),
+        stats,
+        note: 'Processing in background, check x_analyzed_at for completion'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -161,6 +72,110 @@ serve(async (req) => {
     );
   }
 });
+
+// Async function to process projects in the background
+async function processProjectsAsync(projects: any[], supabase: any) {
+  console.log(`Background: Starting processing of ${projects.length} projects`);
+
+  const results = [];
+  for (const project of projects) {
+    const twitterHandle = extractTwitterHandle(project.twitter_url);
+
+    if (!twitterHandle) {
+      console.error(`Invalid Twitter URL for ${project.symbol}: ${project.twitter_url}`);
+
+      // Mark as attempted to skip next time
+      await supabase
+        .from('crypto_projects_rated')
+        .update({ x_analysis_attempted: new Date().toISOString() })
+        .eq('id', project.id);
+
+      results.push({
+        symbol: project.symbol,
+        status: 'skipped',
+        reason: 'Invalid Twitter handle'
+      });
+      continue;
+    }
+
+    console.log(`Background: Starting X analysis for ${project.symbol} (@${twitterHandle})`);
+
+    try {
+      // Call the V3 X analyzer function
+      const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/x-signal-analyzer-v3`;
+
+      const analyzerResponse = await fetch(analyzerUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'analyze',
+          symbol: project.symbol,
+          handle: twitterHandle,
+          projectId: project.id
+        }),
+      });
+
+      if (!analyzerResponse.ok) {
+        throw new Error(`Analyzer returned ${analyzerResponse.status}`);
+      }
+
+      // Process the SSE stream
+      const reader = analyzerResponse.body?.getReader();
+      const decoder = new TextDecoder();
+      let result = {
+        symbol: project.symbol,
+        handle: twitterHandle,
+        status: 'processing'
+      };
+
+      if (reader) {
+        let done = false;
+        while (!done) {
+          const { value, done: readerDone } = await reader.read();
+          done = readerDone;
+
+          if (value) {
+            const chunk = decoder.decode(value);
+            // Check for completion events in the SSE stream
+            if (chunk.includes('phase1_complete')) {
+              result.status = 'phase1_complete';
+            }
+            if (chunk.includes('phase2_complete') || chunk.includes('complete')) {
+              result.status = 'completed';
+              break;
+            }
+            if (chunk.includes('error')) {
+              result.status = 'error';
+              break;
+            }
+          }
+        }
+      }
+
+      results.push(result);
+      console.log(`Background: Completed ${project.symbol}: ${result.status}`);
+
+      // Small delay between projects to avoid overload
+      if (projects.indexOf(project) < projects.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second delay
+      }
+
+    } catch (error) {
+      console.error(`Background: Error processing ${project.symbol}:`, error);
+      results.push({
+        symbol: project.symbol,
+        status: 'error',
+        error: error.message
+      });
+    }
+  }
+
+  console.log(`Background: Completed all ${results.length} projects`);
+  return results;
+}
 
 // Helper function to extract Twitter handle from URL
 function extractTwitterHandle(twitterUrl: string): string | null {
@@ -186,16 +201,6 @@ function extractTwitterHandle(twitterUrl: string): string | null {
   }
 
   return null;
-}
-
-// Get count of analyzed projects
-async function getAnalyzedCount(supabase: any): Promise<number> {
-  const { count } = await supabase
-    .from('crypto_projects_rated')
-    .select('*', { count: 'exact', head: true })
-    .not('x_analyzed_at', 'is', null);
-
-  return count || 0;
 }
 
 // Get analysis statistics
