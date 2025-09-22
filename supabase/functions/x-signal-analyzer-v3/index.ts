@@ -314,7 +314,7 @@ async function fetchTwitterHistoryWithProgress(
     });
 
     const response = await fetch(scraperUrl, {
-      signal: AbortSignal.timeout(30000) // 30 second timeout
+      signal: AbortSignal.timeout(180000) // 3 minute timeout for fetching tweets
     });
 
     if (!response.ok) {
@@ -543,10 +543,14 @@ ${t.text}`).join('\n---')}
       model: 'kimi-k2-0905-preview',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3
-    })
+    }),
+    signal: AbortSignal.timeout(180000) // 3 minute timeout for AI analysis
   });
 
   if (!response.ok) {
+    if (response.status === 429) {
+      throw new Error('AI rate limit exceeded - please wait before trying again');
+    }
     throw new Error(`AI API error: ${response.status}`);
   }
 
@@ -565,9 +569,13 @@ ${t.text}`).join('\n---')}
 
   try {
     return JSON.parse(content);
-  } catch (error) {
+  } catch (parseError: any) {
+    // Check if this was due to timeout
+    if (parseError?.name === 'AbortError' || parseError?.message?.includes('timeout')) {
+      throw new Error('AI analysis timed out - the request took too long. Please try again.');
+    }
     console.error('Failed to parse AI response:', content);
-    throw new Error(`Failed to parse AI response: ${error.message}`);
+    throw new Error(`Failed to parse AI response: ${parseError.message}`);
   }
 }
 
@@ -624,7 +632,8 @@ Return JSON:
       model: 'kimi-k2-0905-preview',
       messages: [{ role: 'user', content: COMPARISON_PROMPT }],
       temperature: 0.3
-    })
+    }),
+    signal: AbortSignal.timeout(180000) // 3 minute timeout for comparison
   });
 
   if (!response.ok) {

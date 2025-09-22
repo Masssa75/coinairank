@@ -61,12 +61,10 @@ export function XAnalysisTooltip({
 }: XAnalysisTooltipProps) {
   const [showTooltip, setShowTooltip] = React.useState(false);
   const [isPersistent, setIsPersistent] = React.useState(false);
-  const [selectedSignalIdx, setSelectedSignalIdx] = React.useState<number | null>(null);
   const [tooltipPosition, setTooltipPosition] = React.useState<{ x: number; y: number; placement: 'above' | 'below' } | null>(null);
   const tooltipRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = React.useState(false);
-  const [showSignalDetails, setShowSignalDetails] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     setMounted(true);
@@ -74,26 +72,20 @@ export function XAnalysisTooltip({
 
   const calculateTooltipPosition = React.useCallback((element: HTMLElement) => {
     const rect = element.getBoundingClientRect();
-    const tooltipHeight = 400; // Estimated tooltip height
-    const tooltipWidth = 500; // Estimated tooltip width
-
+    const tooltipHeight = 400;
+    const tooltipWidth = 500;
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
 
-    // Determine vertical placement
     const spaceAbove = rect.top;
     const spaceBelow = viewportHeight - rect.bottom;
     const placement = spaceBelow >= tooltipHeight || spaceBelow > spaceAbove ? 'below' : 'above';
 
-    // Calculate position
     let x = rect.left + rect.width / 2 - tooltipWidth / 2;
     let y = placement === 'below' ? rect.bottom + 8 : rect.top - tooltipHeight - 8;
 
-    // Keep tooltip within viewport horizontally
     if (x < 8) x = 8;
     if (x + tooltipWidth > viewportWidth - 8) x = viewportWidth - tooltipWidth - 8;
-
-    // Keep tooltip within viewport vertically
     if (y < 8) y = 8;
     if (y + tooltipHeight > viewportHeight - 8) y = viewportHeight - tooltipHeight - 8;
 
@@ -102,7 +94,6 @@ export function XAnalysisTooltip({
 
   const handleMouseEnter = React.useCallback(() => {
     if (isPersistent) return;
-
     if (containerRef.current) {
       const position = calculateTooltipPosition(containerRef.current);
       setTooltipPosition(position);
@@ -119,7 +110,6 @@ export function XAnalysisTooltip({
   const handleClick = React.useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
     if (containerRef.current) {
       const position = calculateTooltipPosition(containerRef.current);
       setTooltipPosition(position);
@@ -132,34 +122,19 @@ export function XAnalysisTooltip({
     setShowTooltip(false);
     setIsPersistent(false);
     setTooltipPosition(null);
-    setSelectedSignalIdx(null);
-    setShowSignalDetails(null);
   }, []);
 
-  // Close tooltip when clicking outside
   React.useEffect(() => {
     if (!isPersistent) return;
-
     const handleClickOutside = (event: MouseEvent) => {
       if (tooltipRef.current && !tooltipRef.current.contains(event.target as Node) &&
           containerRef.current && !containerRef.current.contains(event.target as Node)) {
         handleCloseTooltip();
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isPersistent, handleCloseTooltip]);
-
-  const getTierColor = (tier: string) => {
-    switch (tier?.toUpperCase()) {
-      case 'ALPHA': return { bg: '#10b981', text: '#ffffff' };
-      case 'SOLID': return { bg: '#3b82f6', text: '#ffffff' };
-      case 'BASIC': return { bg: '#f59e0b', text: '#ffffff' };
-      case 'TRASH': return { bg: '#ef4444', text: '#ffffff' };
-      default: return { bg: '#6b7280', text: '#ffffff' };
-    }
-  };
 
   const getCategoryIcon = (category: string) => {
     switch (category?.toLowerCase()) {
@@ -196,7 +171,6 @@ export function XAnalysisTooltip({
           }}
         >
           <div className="bg-gray-900 border border-gray-700 rounded-lg shadow-2xl p-4 text-white relative">
-            {/* Close button for persistent tooltips */}
             {isPersistent && (
               <button
                 onClick={handleCloseTooltip}
@@ -206,7 +180,6 @@ export function XAnalysisTooltip({
               </button>
             )}
 
-            {/* Header */}
             <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-700">
               <Twitter className="w-5 h-5 text-blue-400" />
               <h3 className="font-semibold text-lg">X/Twitter Analysis</h3>
@@ -215,7 +188,6 @@ export function XAnalysisTooltip({
               )}
             </div>
 
-            {/* Analysis Summary */}
             {analysisSummary && (
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -226,7 +198,6 @@ export function XAnalysisTooltip({
               </div>
             )}
 
-            {/* Strongest Signal */}
             {strongestSignal && (
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -237,7 +208,6 @@ export function XAnalysisTooltip({
               </div>
             )}
 
-            {/* Signals Found */}
             {signals && signals.length > 0 && (
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -276,7 +246,6 @@ export function XAnalysisTooltip({
               </div>
             )}
 
-            {/* Red Flags */}
             {redFlags && redFlags.length > 0 && (
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -298,14 +267,12 @@ export function XAnalysisTooltip({
               </div>
             )}
 
-            {/* Analysis Date */}
             {analyzedAt && (
               <div className="text-xs text-gray-500 border-t border-gray-700 pt-2 mt-3">
                 Analyzed: {new Date(analyzedAt).toLocaleDateString()}
               </div>
             )}
 
-            {/* No Data Message */}
             {!signals?.length && !redFlags?.length && !analysisSummary && (
               <div className="text-center py-4">
                 <Twitter className="w-8 h-8 text-gray-600 mx-auto mb-2" />
