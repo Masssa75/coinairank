@@ -21,12 +21,13 @@ serve(async (req) => {
     // Configuration
     const PROJECTS_PER_RUN = 3;  // Process 3 projects per cron run
 
-    // Get the next unanalyzed projects (prioritize older projects first)
+    // Get the next unanalyzed UTILITY projects (CSR = Core Service Representative)
     const { data: nextProjects, error: fetchError } = await supabase
       .from('crypto_projects_rated')
       .select('id, symbol, twitter_url')
       .not('twitter_url', 'is', null)        // Must have Twitter handle
       .is('x_analyzed_at', null)             // Never analyzed
+      .eq('ssr_csr_classification', 'CSR')   // ONLY utility tokens
       .order('created_at', { ascending: true })  // Oldest projects first
       .limit(PROJECTS_PER_RUN);
 
@@ -203,27 +204,34 @@ function extractTwitterHandle(twitterUrl: string): string | null {
   return null;
 }
 
-// Get analysis statistics
+// Get analysis statistics (filtered for utility tokens only)
 async function getAnalysisStats(supabase: any): Promise<any> {
-  const { count: totalCount } = await supabase
+  // Total utility tokens with Twitter
+  const { count: totalUtilityCount } = await supabase
     .from('crypto_projects_rated')
     .select('*', { count: 'exact', head: true })
+    .eq('ssr_csr_classification', 'CSR')
     .not('twitter_url', 'is', null);
 
-  const { count: analyzedCount } = await supabase
+  // Analyzed utility tokens
+  const { count: analyzedUtilityCount } = await supabase
     .from('crypto_projects_rated')
     .select('*', { count: 'exact', head: true })
+    .eq('ssr_csr_classification', 'CSR')
     .not('x_analyzed_at', 'is', null);
 
-  const { count: withScoreCount } = await supabase
+  // Utility tokens with score
+  const { count: withScoreUtilityCount } = await supabase
     .from('crypto_projects_rated')
     .select('*', { count: 'exact', head: true })
+    .eq('ssr_csr_classification', 'CSR')
     .not('x_score', 'is', null);
 
   return {
-    total_with_twitter: totalCount || 0,
-    analyzed: analyzedCount || 0,
-    with_score: withScoreCount || 0,
-    remaining: (totalCount || 0) - (analyzedCount || 0)
+    total_utility_with_twitter: totalUtilityCount || 0,
+    analyzed_utility: analyzedUtilityCount || 0,
+    utility_with_score: withScoreUtilityCount || 0,
+    remaining_utility: (totalUtilityCount || 0) - (analyzedUtilityCount || 0),
+    note: 'Statistics for CSR (utility) tokens only'
   };
 }

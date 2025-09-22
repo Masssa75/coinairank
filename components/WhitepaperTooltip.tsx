@@ -40,6 +40,7 @@ export function WhitepaperTooltip({
   const [showTooltip, setShowTooltip] = React.useState(false);
   const [isPersistent, setIsPersistent] = React.useState(false);
   const [tooltipPosition, setTooltipPosition] = React.useState<{ x: number; y: number; placement: 'above' | 'below' } | null>(null);
+  const [selectedSignalIdx, setSelectedSignalIdx] = React.useState<string | null>(null);
   const tooltipRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = React.useState(false);
@@ -118,6 +119,13 @@ export function WhitepaperTooltip({
     setIsPersistent(!isPersistent);
   };
 
+  const handleSignalClick = (signalKey: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isPersistent) {
+      setSelectedSignalIdx(selectedSignalIdx === signalKey ? null : signalKey);
+    }
+  };
+
   const getTooltipContent = () => {
     return (
       <div className="p-4 w-full relative">
@@ -159,20 +167,37 @@ export function WhitepaperTooltip({
                   if (score >= 4) return 'text-[#ff8800]'; // orange
                   return 'text-[#ff4444]'; // red
                 };
+                const signalKey = `tech-${idx}`;
+                const isExpanded = selectedSignalIdx === signalKey;
 
                 return (
-                  <div key={idx} className="text-[#ccc] text-sm flex items-start gap-2">
-                    <span className="text-[#666] text-xs mt-0.5 flex-shrink-0 min-w-[15px]">
-                      •
-                    </span>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <span className="block flex-1">{innovation.claim}</span>
-                        <span className={`text-xs font-bold ${getScoreColor(score)} ml-2`}>
-                          [{score}]
-                        </span>
+                  <div key={idx}>
+                    <div className="text-[#ccc] text-sm flex items-start gap-2">
+                      <span className="text-[#666] text-xs mt-0.5 flex-shrink-0 min-w-[15px]">
+                        •
+                      </span>
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between">
+                          <span className="block flex-1">{innovation.claim}</span>
+                          <span
+                            className={`text-xs font-bold ${getScoreColor(score)} ml-2 ${isPersistent ? 'cursor-pointer hover:underline' : ''}`}
+                            onClick={(e) => handleSignalClick(signalKey, e)}
+                            title={isPersistent ? 'Click to see reasoning' : ''}
+                          >
+                            [{score}]
+                          </span>
+                        </div>
                       </div>
                     </div>
+                    {/* Show reasoning if expanded */}
+                    {isPersistent && isExpanded && (
+                      <div className="mt-2 ml-6 p-2 bg-[#2a2d31] rounded text-[10px] text-[#999]">
+                        <div className="font-semibold text-[#aaa] mb-1">Score Reasoning:</div>
+                        <div>{innovation.strength === 'HIGH' ? 'High strength technical innovation with significant impact' :
+                              innovation.strength === 'MEDIUM' ? 'Medium strength innovation with moderate impact' :
+                              'Low strength innovation with limited impact'}</div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -312,7 +337,13 @@ export function WhitepaperTooltip({
         {whitepaperScore !== undefined && (
           <div className="pt-2 mt-2 border-t border-[#2a2d31]">
             <div className="text-[#666] text-xs">
-              Score: <span className="text-[#ccc] font-bold">{whitepaperScore}/100</span>
+              Score: <span
+                className={`text-[#ccc] font-bold ${isPersistent ? 'cursor-pointer hover:underline' : ''}`}
+                onClick={(e) => handleSignalClick('overall-score', e)}
+                title={isPersistent ? 'Click for scoring details' : ''}
+              >
+                {whitepaperScore}/100
+              </span>
               {whitepaperTier && (
                 <>
                   {' • Tier: '}
@@ -327,7 +358,18 @@ export function WhitepaperTooltip({
                 </>
               )}
             </div>
-            {(whitepaperAnalysis?.signals_extracted?.benchmark_comparison?.reasoning || whitepaperAnalysis?.benchmark_comparison?.reasoning) && (
+            {/* Show full reasoning when clicked */}
+            {isPersistent && selectedSignalIdx === 'overall-score' && (
+              <div className="mt-2 p-2 bg-[#2a2d31] rounded text-[10px] text-[#999]">
+                <div className="font-semibold text-[#aaa] mb-1">Tier Assignment Reasoning:</div>
+                <div>{whitepaperAnalysis?.signals_extracted?.benchmark_comparison?.reasoning ||
+                      whitepaperAnalysis?.benchmark_comparison?.reasoning ||
+                      'Score based on technical innovations, academic rigor, and documentation quality'}</div>
+              </div>
+            )}
+            {/* Show brief reasoning by default */}
+            {(!isPersistent || selectedSignalIdx !== 'overall-score') &&
+             (whitepaperAnalysis?.signals_extracted?.benchmark_comparison?.reasoning || whitepaperAnalysis?.benchmark_comparison?.reasoning) && (
               <div className="text-[#999] text-xs mt-1">
                 {whitepaperAnalysis?.signals_extracted?.benchmark_comparison?.reasoning || whitepaperAnalysis?.benchmark_comparison?.reasoning}
               </div>
