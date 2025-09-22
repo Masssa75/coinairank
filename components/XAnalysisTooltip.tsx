@@ -266,11 +266,12 @@ export function XAnalysisTooltip({
                       <Radio className="w-3 h-3" />
                       Tweet Breakdown ({total} tweets)
                     </h4>
-                    <div className="flex gap-3 text-xs text-[#ccc]">
+                    <div className="space-y-1">
                       {topCategories.map(([category, count]) => (
-                        <span key={category}>
-                          {Math.round(((count as number) / total) * 100)}% {category}
-                        </span>
+                        <div key={category} className="text-[#ccc] text-sm flex items-start gap-2">
+                          <Star className="w-3 h-3 text-[#00ff88] mt-0.5 flex-shrink-0" />
+                          <span>{Math.round(((count as number) / total) * 100)}% {category}</span>
+                        </div>
                       ))}
                     </div>
                   </div>
