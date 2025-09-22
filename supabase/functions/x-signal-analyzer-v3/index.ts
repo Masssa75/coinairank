@@ -71,8 +71,20 @@ serve(async (req) => {
     (async () => {
       try {
         if (action === 'analyze') {
+          // Process Phase 1 - fetch tweets and extract signals
           await processPhase1WithSSE(symbol, handle, projectId, sendEvent);
-          await processPhase2WithSSE(symbol, projectId, sendEvent);
+
+          // Process Phase 2 separately with its own error handling
+          try {
+            await processPhase2WithSSE(symbol, projectId, sendEvent);
+          } catch (phase2Error) {
+            console.error('Phase 2 error (continuing):', phase2Error);
+            await sendEvent('phase2_error', {
+              message: 'Phase 2 comparison failed, but Phase 1 data was saved',
+              error: phase2Error.message,
+              phase1_status: 'completed'
+            });
+          }
         } else if (action === 'compare') {
           await processPhase2WithSSE(symbol, projectId, sendEvent);
         }
@@ -494,7 +506,7 @@ ${t.text}`).join('\n---')}
     - Product releases with details/links
     - Verifiable technical milestones
 
-    Return ONLY a valid JSON object with this exact structure (no markdown, no extra text):
+    Return ONLY a valid JSON object with this exact structure (no markdown formatting, no code blocks, no explanations before or after):
     {
       "signals_found": [
         {
@@ -568,7 +580,22 @@ ${t.text}`).join('\n---')}
   const content = result.choices[0].message.content;
 
   try {
-    return JSON.parse(content);
+    // Clean the content in case AI adds markdown or extra text
+    let cleanedContent = content.trim();
+
+    // Remove markdown code blocks if present
+    cleanedContent = cleanedContent.replace(/^```json\s*/i, '').replace(/```\s*$/, '');
+    cleanedContent = cleanedContent.replace(/^```\s*/i, '').replace(/```\s*$/, '');
+
+    // Find JSON object boundaries
+    const jsonStart = cleanedContent.indexOf('{');
+    const jsonEnd = cleanedContent.lastIndexOf('}');
+
+    if (jsonStart !== -1 && jsonEnd !== -1) {
+      cleanedContent = cleanedContent.substring(jsonStart, jsonEnd + 1);
+    }
+
+    return JSON.parse(cleanedContent);
   } catch (parseError: any) {
     // Check if this was due to timeout
     if (parseError?.name === 'AbortError' || parseError?.message?.includes('timeout')) {
@@ -601,7 +628,7 @@ EVALUATION PROCESS:
    - Stronger than ANY Tier 2 benchmark? → Consider for Tier 1
 3. Project tier = highest tier achieved by ANY signal
 
-Return JSON:
+Return ONLY a valid JSON object with this exact structure (no markdown formatting, no code blocks, no explanations before or after):
 {
   "final_tier": 1-4,
   "tier_name": "ALPHA/SOLID/BASIC/TRASH",
@@ -644,10 +671,45 @@ Return JSON:
   const content = result.choices[0].message.content;
 
   try {
-    return JSON.parse(content);
+    // Clean the content in case AI adds markdown or extra text
+    let cleanedContent = content.trim();
+
+    // Remove markdown code blocks if present
+    cleanedContent = cleanedContent.replace(/^```json\s*/i, '').replace(/```\s*$/, '');
+    cleanedContent = cleanedContent.replace(/^```\s*/i, '').replace(/```\s*$/, '');
+
+    // Find JSON object boundaries
+    const jsonStart = cleanedContent.indexOf('{');
+    const jsonEnd = cleanedContent.lastIndexOf('}');
+
+    if (jsonStart !== -1 && jsonEnd !== -1) {
+      cleanedContent = cleanedContent.substring(jsonStart, jsonEnd + 1);
+    }
+
+    const parsed = JSON.parse(cleanedContent);
+
+    // Ensure required fields exist with defaults if missing
+    return {
+      final_score: parsed.final_score || 0,
+      final_tier: parsed.final_tier || 4,
+      tier_name: parsed.tier_name || 'TRASH',
+      strongest_signal: parsed.strongest_signal || 'No strong signals found',
+      signal_evaluations: parsed.signal_evaluations || [],
+      explanation: parsed.explanation || 'Unable to evaluate signals',
+      ...parsed
+    };
   } catch (error) {
     console.error('Failed to parse comparison:', content);
-    throw new Error('Failed to parse comparison result');
+    // Return a default structure instead of throwing
+    return {
+      final_score: 0,
+      final_tier: 4,
+      tier_name: 'TRASH',
+      strongest_signal: 'Error parsing comparison',
+      signal_evaluations: [],
+      explanation: `Failed to parse comparison: ${error.message}`,
+      error: true
+    };
   }
 }
 

@@ -82,8 +82,7 @@ export async function GET(request: NextRequest) {
       query = query.lte('current_liquidity_usd', maxLiquidity);
     }
     
-    // Filter out dead websites - only show active or pending (not yet checked)
-    query = query.or('website_status.eq.active,website_status.eq.pending,website_status.is.null');
+    // Note: website_status column doesn't exist yet, so no filtering by website status for now
     
     // Apply network filter - support both single and multiple networks
     // By default (no filter), show ALL networks including custom ones
