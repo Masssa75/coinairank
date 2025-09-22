@@ -170,97 +170,127 @@ export function XAnalysisTooltip({
             width: '500px'
           }}
         >
-          <div className="bg-gray-900 border border-gray-700 rounded-lg shadow-2xl p-4 text-white relative">
-            {isPersistent && (
-              <button
-                onClick={handleCloseTooltip}
-                className="absolute top-2 right-2 text-gray-400 hover:text-white transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-
-            {strongestSignal && (
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Star className="w-4 h-4 text-yellow-400" />
-                  <span className="text-sm font-medium text-gray-300">Strongest Signal</span>
-                </div>
-                <p className="text-sm text-gray-200 leading-relaxed">{strongestSignal}</p>
+          <div className="bg-[#1a1c1f] border border-[#2a2d31] rounded-lg shadow-2xl text-white relative" style={{ width: '500px' }}>
+            <div className="p-4 w-full">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-white font-semibold text-lg flex items-center gap-2">
+                  <Twitter className="w-5 h-5 text-[#00ff88]" />
+                  X Analysis
+                </h3>
+                {isPersistent && (
+                  <button
+                    onClick={handleCloseTooltip}
+                    className="text-[#666] hover:text-white transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </div>
-            )}
 
-            {signals && signals.length > 0 && (
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="w-4 h-4 text-green-400" />
-                  <span className="text-sm font-medium text-gray-300">
-                    Signals Found ({signals.length})
-                  </span>
-                </div>
-                <div className="space-y-2 max-h-32 overflow-y-auto">
-                  {signals.slice(0, 5).map((signal, idx) => (
-                    <div key={idx} className="flex items-start gap-2 p-2 bg-gray-800 rounded">
-                      {getCategoryIcon(signal.category || '')}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-200 leading-relaxed line-clamp-2">
-                          {signal.signal}
-                        </p>
-                        {signal.category && (
-                          <span className="inline-block mt-1 px-1.5 py-0.5 bg-gray-700 text-xs rounded text-gray-300">
-                            {signal.category.replace('_', ' ')}
-                          </span>
-                        )}
-                        {signal.success_indicator && (
-                          <span className="inline-block mt-1 ml-1 px-1.5 py-0.5 bg-blue-600 text-xs rounded text-white">
-                            Score: {signal.success_indicator}
-                          </span>
-                        )}
+              {/* Tier and Score - get from analysisData */}
+              {(() => {
+                const tier = analysisData?.tier_name || analysisData?.final_tier;
+                const score = analysisData?.final_score;
+                const tierDisplay = typeof tier === 'number' ?
+                  (tier === 1 ? 'ALPHA' : tier === 2 ? 'SOLID' : tier === 3 ? 'BASIC' : 'TRASH') : tier;
+
+                return tierDisplay && (
+                  <div className="mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[#666] text-sm">Tier:</span>
+                      <span className={`px-2 py-1 rounded text-xs font-semibold uppercase ${
+                        tierDisplay === 'ALPHA' ? 'bg-[#00ff88] text-black' :
+                        tierDisplay === 'SOLID' ? 'bg-[#ffcc00] text-black' :
+                        tierDisplay === 'BASIC' ? 'bg-[#ff8800] text-black' :
+                        'bg-[#ff4444] text-white'
+                      }`}>
+                        {tierDisplay}
+                      </span>
+                      {score && (
+                        <span className="text-[#ccc] text-sm">({score}/100)</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Signal Category Breakdown */}
+              {signals && signals.length > 0 && (() => {
+                const categoryCount = signals.reduce((acc: Record<string, number>, signal: any) => {
+                  const category = signal.category || 'other';
+                  acc[category] = (acc[category] || 0) + 1;
+                  return acc;
+                }, {});
+
+                const total = signals.length;
+                const topCategories = Object.entries(categoryCount)
+                  .sort(([,a], [,b]) => b - a)
+                  .slice(0, 3);
+
+                return topCategories.length > 0 && (
+                  <div className="mb-3">
+                    <h4 className="text-[#00ff88] text-sm font-medium mb-2 flex items-center gap-1">
+                      <TrendingUp className="w-3 h-3" />
+                      Tweet Breakdown ({total} signals)
+                    </h4>
+                    <div className="flex gap-3 text-xs text-[#ccc]">
+                      {topCategories.map(([category, count]) => (
+                        <span key={category}>
+                          {Math.round((count / total) * 100)}% {category.replace('_', ' ')}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Key Signals */}
+              {signals && signals.length > 0 && (
+                <div className="mb-3">
+                  <h4 className="text-[#00ff88] text-sm font-medium mb-2 flex items-center gap-1">
+                    <Star className="w-3 h-3" />
+                    Key Signals
+                  </h4>
+                  <div className="space-y-1">
+                    {signals.slice(0, 3).map((signal: any, idx: number) => (
+                      <div key={idx} className="text-[#ccc] text-sm">
+                        <div className="flex items-start gap-2">
+                          <Star className="w-3 h-3 text-[#00ff88] mt-0.5 flex-shrink-0" />
+                          <div className="flex-1">
+                            <div className="font-medium text-[#fff] mb-1">
+                              {signal.signal}
+                            </div>
+                            {signal.importance && (
+                              <div className="text-[#999] text-xs mb-1">
+                                {signal.importance}
+                              </div>
+                            )}
+                            <div className="flex items-center gap-2 text-xs">
+                              {signal.date && (
+                                <span className="text-[#666]">{signal.date}</span>
+                              )}
+                              {signal.category && (
+                                <span className="px-1.5 py-0.5 bg-[#2a2d31] text-[#999] rounded">
+                                  {signal.category.replace('_', ' ')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                  {signals.length > 5 && (
-                    <p className="text-xs text-gray-400 text-center py-1">
-                      And {signals.length - 5} more signals...
-                    </p>
-                  )}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {redFlags && redFlags.length > 0 && (
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle className="w-4 h-4 text-red-400" />
-                  <span className="text-sm font-medium text-gray-300">
-                    Red Flags ({redFlags.length})
-                  </span>
+              {/* No analysis available */}
+              {!signals?.length && (
+                <div className="text-center py-4">
+                  <Twitter className="w-8 h-8 text-[#666] mx-auto mb-2" />
+                  <p className="text-sm text-[#999]">No X analysis data available</p>
                 </div>
-                <div className="space-y-2 max-h-24 overflow-y-auto">
-                  {redFlags.map((flag, idx) => (
-                    <div key={idx} className="flex items-start gap-2 p-2 bg-red-900/20 border border-red-800 rounded">
-                      <AlertTriangle className="w-3 h-3 text-red-400 mt-0.5 flex-shrink-0" />
-                      <p className="text-xs text-red-200 leading-relaxed">
-                        {typeof flag === 'string' ? flag : flag.flag}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {analyzedAt && (
-              <div className="text-xs text-gray-500 border-t border-gray-700 pt-2 mt-3">
-                Analyzed: {new Date(analyzedAt).toLocaleDateString()}
-              </div>
-            )}
-
-            {!signals?.length && !redFlags?.length && !analysisSummary && (
-              <div className="text-center py-4">
-                <Twitter className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-                <p className="text-sm text-gray-400">No X analysis data available</p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>,
         document.body
