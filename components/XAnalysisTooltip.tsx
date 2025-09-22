@@ -231,7 +231,7 @@ export function XAnalysisTooltip({
 
                 const total = rawTweets.length;
                 const topCategories = Object.entries(categories)
-                  .sort(([,a], [,b]) => b - a)
+                  .sort(([,a], [,b]) => (b as number) - (a as number))
                   .slice(0, 3);
 
                 return (
