@@ -70,7 +70,7 @@ export function XAnalysisTooltip({
     setMounted(true);
   }, []);
 
-  const calculateTooltipPosition = React.useCallback((element: HTMLElement) => {
+  const calculateTooltipPosition = React.useCallback((element: HTMLElement): { x: number; y: number; placement: 'above' | 'below' } => {
     const rect = element.getBoundingClientRect();
     const tooltipHeight = 400;
     const tooltipWidth = 500;
@@ -79,7 +79,7 @@ export function XAnalysisTooltip({
 
     const spaceAbove = rect.top;
     const spaceBelow = viewportHeight - rect.bottom;
-    const placement = spaceBelow >= tooltipHeight || spaceBelow > spaceAbove ? 'below' : 'above';
+    const placement: 'above' | 'below' = spaceBelow >= tooltipHeight || spaceBelow > spaceAbove ? 'below' : 'above';
 
     let x = rect.left + rect.width / 2 - tooltipWidth / 2;
     let y = placement === 'below' ? rect.bottom + 8 : rect.top - tooltipHeight - 8;
