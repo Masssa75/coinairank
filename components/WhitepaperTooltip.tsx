@@ -118,92 +118,91 @@ export function WhitepaperTooltip({
 
   const getTooltipContent = () => {
     return (
-      <div className="p-4 w-full">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-white font-semibold text-lg flex items-center gap-2">
-            <FileText className="w-5 h-5 text-[#00ff88]" />
-            Whitepaper Analysis
-          </h3>
-          {isPersistent && (
-            <button
-              onClick={() => {
-                setIsPersistent(false);
-                setShowTooltip(false);
-              }}
-              className="text-[#666] hover:text-white transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        {/* Tier and Score */}
-        {whitepaperTier && (
-          <div className="mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-[#666] text-sm">Tier:</span>
-              <span className={`px-2 py-1 rounded text-xs font-semibold uppercase ${
-                whitepaperTier === 'ALPHA' ? 'bg-[#00ff88] text-black' :
-                whitepaperTier === 'SOLID' ? 'bg-[#ffcc00] text-black' :
-                whitepaperTier === 'BASIC' ? 'bg-[#ff8800] text-black' :
-                'bg-[#ff4444] text-white'
-              }`}>
-                {whitepaperTier}
-              </span>
-              {whitepaperScore && (
-                <span className="text-[#ccc] text-sm">({whitepaperScore}/100)</span>
-              )}
-            </div>
-          </div>
+      <div className="p-4 w-full relative">
+        {isPersistent && (
+          <button
+            onClick={() => {
+              setIsPersistent(false);
+              setShowTooltip(false);
+            }}
+            className="absolute top-2 right-2 text-[#666] hover:text-white transition-colors z-10"
+          >
+            <X className="w-4 h-4" />
+          </button>
         )}
 
-        {/* Whitepaper URL */}
-        {whitepaperUrl && (
-          <div className="mb-3">
-            <span className="text-[#666] text-sm">Document: </span>
-            <a
-              href={whitepaperUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#00ff88] hover:underline text-sm"
-            >
-              View Whitepaper ↗
-            </a>
-          </div>
-        )}
-
-        {/* Key Signals */}
-        {whitepaperSignals && whitepaperSignals.length > 0 && (
+        {/* Key Technical Innovations */}
+        {whitepaperSignals?.technical_innovations && whitepaperSignals.technical_innovations.length > 0 && (
           <div className="mb-3">
             <h4 className="text-[#00ff88] text-sm font-medium mb-2 flex items-center gap-1">
               <Radio className="w-3 h-3" />
-              Key Signals
+              Technical Innovations
             </h4>
             <div className="space-y-1">
-              {whitepaperSignals.slice(0, 3).map((signal: any, idx: number) => (
-                <div key={idx} className="text-[#ccc] text-sm flex items-start gap-2">
-                  <Star className="w-3 h-3 text-[#00ff88] mt-0.5 flex-shrink-0" />
-                  <span>{typeof signal === 'string' ? signal : signal.signal || signal.description}</span>
-                </div>
-              ))}
+              {whitepaperSignals.technical_innovations.slice(0, 3).map((innovation: any, idx: number) => {
+                // Map strength to score
+                const score = innovation.strength === 'HIGH' ? 8 : innovation.strength === 'MEDIUM' ? 5 : 3;
+                const getScoreColor = (score: number) => {
+                  if (score >= 8) return 'text-[#00ff88]'; // green
+                  if (score >= 6) return 'text-[#ffcc00]'; // yellow
+                  if (score >= 4) return 'text-[#ff8800]'; // orange
+                  return 'text-[#ff4444]'; // red
+                };
+
+                return (
+                  <div key={idx} className="text-[#ccc] text-sm flex items-start gap-2">
+                    <span className="text-[#666] text-xs mt-0.5 flex-shrink-0 min-w-[15px]">
+                      •
+                    </span>
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between">
+                        <span className="block flex-1">{innovation.claim}</span>
+                        <span className={`text-xs font-bold ${getScoreColor(score)} ml-2`}>
+                          [{score}]
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* Red Flags */}
-        {whitepaperRedFlags && whitepaperRedFlags.length > 0 && (
+        {/* Academic Rigor */}
+        {whitepaperSignals?.academic_rigor && whitepaperSignals.academic_rigor.length > 0 && (
           <div className="mb-3">
-            <h4 className="text-red-400 text-sm font-medium mb-2 flex items-center gap-1">
-              <AlertTriangle className="w-3 h-3" />
-              Concerns
+            <h4 className="text-[#00ff88] text-sm font-medium mb-2 flex items-center gap-1">
+              <Radio className="w-3 h-3" />
+              Academic Rigor
             </h4>
             <div className="space-y-1">
-              {whitepaperRedFlags.slice(0, 2).map((flag: any, idx: number) => (
-                <div key={idx} className="text-red-300 text-sm flex items-start gap-2">
-                  <AlertTriangle className="w-3 h-3 text-red-400 mt-0.5 flex-shrink-0" />
-                  <span>{typeof flag === 'string' ? flag : flag.flag || flag.description}</span>
-                </div>
-              ))}
+              {whitepaperSignals.academic_rigor.slice(0, 2).map((signal: any, idx: number) => {
+                // Map strength to score
+                const score = signal.strength === 'VERY HIGH' ? 9 : signal.strength === 'HIGH' ? 7 : signal.strength === 'MEDIUM' ? 5 : 3;
+                const getScoreColor = (score: number) => {
+                  if (score >= 8) return 'text-[#00ff88]';
+                  if (score >= 6) return 'text-[#ffcc00]';
+                  if (score >= 4) return 'text-[#ff8800]';
+                  return 'text-[#ff4444]';
+                };
+
+                return (
+                  <div key={idx} className="text-[#ccc] text-sm flex items-start gap-2">
+                    <span className="text-[#666] text-xs mt-0.5 flex-shrink-0 min-w-[15px]">
+                      •
+                    </span>
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between">
+                        <span className="block flex-1">{signal.signal}</span>
+                        <span className={`text-xs font-bold ${getScoreColor(score)} ml-2`}>
+                          [{score}]
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -211,18 +210,97 @@ export function WhitepaperTooltip({
         {/* Green Flags */}
         {whitepaperGreenFlags && whitepaperGreenFlags.length > 0 && (
           <div className="mb-3">
-            <h4 className="text-green-400 text-sm font-medium mb-2 flex items-center gap-1">
-              <Check className="w-3 h-3" />
-              Strengths
+            <h4 className="text-[#00ff88] text-sm font-medium mb-2 flex items-center gap-1">
+              <Radio className="w-3 h-3" />
+              Positive Indicators
             </h4>
             <div className="space-y-1">
-              {whitepaperGreenFlags.slice(0, 2).map((flag: any, idx: number) => (
-                <div key={idx} className="text-green-300 text-sm flex items-start gap-2">
-                  <Check className="w-3 h-3 text-green-400 mt-0.5 flex-shrink-0" />
-                  <span>{typeof flag === 'string' ? flag : flag.flag || flag.description}</span>
-                </div>
-              ))}
+              {whitepaperGreenFlags.slice(0, 3).map((flag: any, idx: number) => {
+                const signal = typeof flag === 'string' ? flag : flag.signal || flag.flag;
+                const score = flag.ratio ? Math.min(9, Math.round(flag.ratio)) : 6;
+                const getScoreColor = (score: number) => {
+                  if (score >= 8) return 'text-[#00ff88]';
+                  if (score >= 6) return 'text-[#ffcc00]';
+                  if (score >= 4) return 'text-[#ff8800]';
+                  return 'text-[#ff4444]';
+                };
+
+                return (
+                  <div key={idx} className="text-[#ccc] text-sm flex items-start gap-2">
+                    <span className="text-[#666] text-xs mt-0.5 flex-shrink-0 min-w-[15px]">
+                      •
+                    </span>
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between">
+                        <span className="block flex-1">{signal}</span>
+                        <span className={`text-xs font-bold ${getScoreColor(score)} ml-2`}>
+                          [{score}]
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
+          </div>
+        )}
+
+        {/* Red Flags */}
+        {whitepaperRedFlags && whitepaperRedFlags.length > 0 && (
+          <div className="mb-3">
+            <h4 className="text-[#ff4444] text-sm font-medium mb-2 flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" />
+              Red Flags
+            </h4>
+            <div className="space-y-1">
+              {whitepaperRedFlags.slice(0, 3).map((flag: any, idx: number) => {
+                const signal = typeof flag === 'string' ? flag : flag.signal || flag.flag;
+                const score = 2; // Red flags get low score
+
+                return (
+                  <div key={idx} className="text-[#ccc] text-sm flex items-start gap-2">
+                    <span className="text-[#666] text-xs mt-0.5 flex-shrink-0 min-w-[15px]">
+                      •
+                    </span>
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between">
+                        <span className="block flex-1">{signal}</span>
+                        <span className="text-xs font-bold text-[#ff4444] ml-2">
+                          [{score}]
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Scoring Reasoning - Show at bottom */}
+        {whitepaperScore !== undefined && (
+          <div className="pt-2 mt-2 border-t border-[#2a2d31]">
+            <div className="text-[#666] text-xs">
+              Score: <span className="text-[#ccc] font-bold">{whitepaperScore}/100</span>
+              {whitepaperTier && (
+                <>
+                  {' • Tier: '}
+                  <span className={`font-bold ${
+                    whitepaperTier === 'ALPHA' ? 'text-[#00ff88]' :
+                    whitepaperTier === 'SOLID' ? 'text-[#ffcc00]' :
+                    whitepaperTier === 'BASIC' ? 'text-[#ff8800]' :
+                    'text-[#ff4444]'
+                  }`}>
+                    {whitepaperTier}
+                  </span>
+                </>
+              )}
+            </div>
+            {whitepaperAnalysis?.benchmark_comparison?.reasoning && (
+              <div className="text-[#999] text-xs mt-1">
+                {whitepaperAnalysis.benchmark_comparison.reasoning}
+              </div>
+            )}
           </div>
         )}
 

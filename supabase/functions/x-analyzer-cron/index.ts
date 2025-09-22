@@ -21,13 +21,13 @@ serve(async (req) => {
     // Configuration
     const PROJECTS_PER_RUN = 3;  // Process 3 projects per cron run
 
-    // Get the next unanalyzed projects by market cap
+    // Get the next unanalyzed projects (prioritize older projects first)
     const { data: nextProjects, error: fetchError } = await supabase
       .from('crypto_projects_rated')
       .select('id, symbol, twitter_url')
       .not('twitter_url', 'is', null)        // Must have Twitter handle
       .is('x_analyzed_at', null)             // Never analyzed
-      .order('market_cap', { ascending: false })  // Highest market cap first
+      .order('created_at', { ascending: true })  // Oldest projects first
       .limit(PROJECTS_PER_RUN);
 
     if (fetchError || !nextProjects || nextProjects.length === 0) {
@@ -200,25 +200,25 @@ async function getAnalyzedCount(supabase: any): Promise<number> {
 
 // Get analysis statistics
 async function getAnalysisStats(supabase: any): Promise<any> {
-  const { data: total } = await supabase
+  const { count: totalCount } = await supabase
     .from('crypto_projects_rated')
     .select('*', { count: 'exact', head: true })
     .not('twitter_url', 'is', null);
 
-  const { data: analyzed } = await supabase
+  const { count: analyzedCount } = await supabase
     .from('crypto_projects_rated')
     .select('*', { count: 'exact', head: true })
     .not('x_analyzed_at', 'is', null);
 
-  const { data: withScore } = await supabase
+  const { count: withScoreCount } = await supabase
     .from('crypto_projects_rated')
     .select('*', { count: 'exact', head: true })
     .not('x_score', 'is', null);
 
   return {
-    total_with_twitter: total?.count || 0,
-    analyzed: analyzed?.count || 0,
-    with_score: withScore?.count || 0,
-    remaining: (total?.count || 0) - (analyzed?.count || 0)
+    total_with_twitter: totalCount || 0,
+    analyzed: analyzedCount || 0,
+    with_score: withScoreCount || 0,
+    remaining: (totalCount || 0) - (analyzedCount || 0)
   };
 }
