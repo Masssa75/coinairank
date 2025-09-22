@@ -1292,7 +1292,7 @@ export default function ProjectsRatedPage() {
                           if (xTier) {
                             return (
                               <XAnalysisTooltip
-                                analysisData={project.x_analysis}
+                                analysisData={{...project.x_analysis, x_raw_tweets: project.x_raw_tweets}}
                                 signals={project.x_signals_found}
                                 redFlags={project.x_red_flags}
                                 analysisSummary={project.x_analysis_summary}
@@ -1513,7 +1513,7 @@ export default function ProjectsRatedPage() {
                         if (xTier) {
                           return (
                             <XAnalysisTooltip
-                              analysisData={project.x_analysis}
+                              analysisData={{...project.x_analysis, x_raw_tweets: project.x_raw_tweets}}
                               signals={project.x_signals_found}
                               redFlags={project.x_red_flags}
                               analysisSummary={project.x_analysis_summary}

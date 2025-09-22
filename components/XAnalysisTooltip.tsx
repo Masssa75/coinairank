@@ -172,22 +172,16 @@ export function XAnalysisTooltip({
         >
           <div className="bg-[#1a1c1f] border border-[#2a2d31] rounded-lg shadow-2xl text-white relative" style={{ width: '500px' }}>
             <div className="p-4 w-full">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-white font-semibold text-lg flex items-center gap-2">
-                  <Twitter className="w-5 h-5 text-[#00ff88]" />
-                  X Analysis
-                </h3>
-                {isPersistent && (
-                  <button
-                    onClick={handleCloseTooltip}
-                    className="text-[#666] hover:text-white transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
+              {isPersistent && (
+                <button
+                  onClick={handleCloseTooltip}
+                  className="absolute top-2 right-2 text-[#666] hover:text-white transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
 
-              {/* Tier and Score - get from analysisData */}
+              {/* Tier and Score */}
               {(() => {
                 const tier = analysisData?.tier_name || analysisData?.final_tier;
                 const score = analysisData?.final_score;
@@ -214,29 +208,42 @@ export function XAnalysisTooltip({
                 );
               })()}
 
-              {/* Signal Category Breakdown */}
-              {signals && signals.length > 0 && (() => {
-                const categoryCount = signals.reduce((acc: Record<string, number>, signal: any) => {
-                  const category = signal.category || 'other';
-                  acc[category] = (acc[category] || 0) + 1;
+              {/* Tweet Breakdown */}
+              {(() => {
+                // Use x_raw_tweets from props for full tweet breakdown
+                const rawTweets = analysisData?.x_raw_tweets || [];
+                if (rawTweets.length === 0) return null;
+
+                // Simple categorization based on content
+                const categories = rawTweets.reduce((acc: Record<string, number>, tweet: any) => {
+                  const text = tweet.text?.toLowerCase() || '';
+                  if (text.includes('gm ') || text.includes('gizamorning') || text.includes('happy sunday')) {
+                    acc['community'] = (acc['community'] || 0) + 1;
+                  } else if (text.includes('introducing') || text.includes('live on') || text.includes('partner')) {
+                    acc['announcements'] = (acc['announcements'] || 0) + 1;
+                  } else if (text.includes('milestone') || text.includes('crossed') || text.includes('volume')) {
+                    acc['milestones'] = (acc['milestones'] || 0) + 1;
+                  } else {
+                    acc['engagement'] = (acc['engagement'] || 0) + 1;
+                  }
                   return acc;
                 }, {});
 
-                const total = signals.length;
-                const topCategories = Object.entries(categoryCount)
+                const total = rawTweets.length;
+                const topCategories = Object.entries(categories)
                   .sort(([,a], [,b]) => b - a)
                   .slice(0, 3);
 
-                return topCategories.length > 0 && (
+                return (
                   <div className="mb-3">
                     <h4 className="text-[#00ff88] text-sm font-medium mb-2 flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3" />
-                      Tweet Breakdown ({total} signals)
+                      <Radio className="w-3 h-3" />
+                      Tweet Breakdown ({total} tweets)
                     </h4>
                     <div className="flex gap-3 text-xs text-[#ccc]">
                       {topCategories.map(([category, count]) => (
                         <span key={category}>
-                          {Math.round((count / total) * 100)}% {category.replace('_', ' ')}
+                          {Math.round((count / total) * 100)}% {category}
                         </span>
                       ))}
                     </div>
@@ -248,33 +255,42 @@ export function XAnalysisTooltip({
               {signals && signals.length > 0 && (
                 <div className="mb-3">
                   <h4 className="text-[#00ff88] text-sm font-medium mb-2 flex items-center gap-1">
-                    <Star className="w-3 h-3" />
+                    <Radio className="w-3 h-3" />
                     Key Signals
                   </h4>
                   <div className="space-y-1">
                     {signals.slice(0, 3).map((signal: any, idx: number) => (
-                      <div key={idx} className="text-[#ccc] text-sm">
-                        <div className="flex items-start gap-2">
-                          <Star className="w-3 h-3 text-[#00ff88] mt-0.5 flex-shrink-0" />
-                          <div className="flex-1">
-                            <div className="font-medium text-[#fff] mb-1">
-                              {signal.signal}
-                            </div>
-                            {signal.importance && (
-                              <div className="text-[#999] text-xs mb-1">
-                                {signal.importance}
-                              </div>
+                      <div key={idx} className="text-[#ccc] text-sm flex items-start gap-2">
+                        <Star className="w-3 h-3 text-[#00ff88] mt-0.5 flex-shrink-0" />
+                        <div className="flex-1">
+                          <span className="block">{signal.signal}</span>
+                          {signal.importance && (
+                            <span className="block text-[#999] text-xs mt-1">{signal.importance}</span>
+                          )}
+                          <div className="flex items-center gap-2 mt-1">
+                            {signal.date && (
+                              <span className="text-[#666] text-xs">{signal.date}</span>
                             )}
-                            <div className="flex items-center gap-2 text-xs">
-                              {signal.date && (
-                                <span className="text-[#666]">{signal.date}</span>
-                              )}
-                              {signal.category && (
-                                <span className="px-1.5 py-0.5 bg-[#2a2d31] text-[#999] rounded">
-                                  {signal.category.replace('_', ' ')}
+                            {(() => {
+                              // Add color-coded score at the end
+                              const score = signal.success_indicator;
+                              if (!score) return null;
+                              const numScore = typeof score === 'string' ? parseInt(score) : score;
+                              if (isNaN(numScore)) return null;
+
+                              const getScoreColor = (score: number) => {
+                                if (score >= 8) return 'text-[#00ff88]'; // green
+                                if (score >= 6) return 'text-[#ffcc00]'; // yellow
+                                if (score >= 4) return 'text-[#ff8800]'; // orange
+                                return 'text-[#ff4444]'; // red
+                              };
+
+                              return (
+                                <span className={`text-xs font-medium ${getScoreColor(numScore)}`}>
+                                  {numScore}/10
                                 </span>
-                              )}
-                            </div>
+                              );
+                            })()}
                           </div>
                         </div>
                       </div>
