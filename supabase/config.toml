@@ -2,9 +2,6 @@
 verify_jwt = false
 
 
-[functions.website-analyzer]
-verify_jwt = false
-
 [functions.project-ingestion]
 verify_jwt = false
 
