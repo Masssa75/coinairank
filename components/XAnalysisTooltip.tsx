@@ -181,6 +181,59 @@ export function XAnalysisTooltip({
                 </button>
               )}
 
+              {/* Key Signals */}
+              {signals && signals.length > 0 && (
+                <div className="mb-3">
+                  <h4 className="text-[#00ff88] text-sm font-medium mb-2 flex items-center gap-1">
+                    <Radio className="w-3 h-3" />
+                    Key Signals
+                  </h4>
+                  <div className="space-y-1">
+                    {signals
+                      .sort((a: any, b: any) => {
+                        const scoreA = a.success_indicator || 0;
+                        const scoreB = b.success_indicator || 0;
+                        return scoreB - scoreA;
+                      })
+                      .slice(0, 3)
+                      .map((signal: any, idx: number) => (
+                      <div key={idx} className="text-[#ccc] text-sm flex items-start gap-2">
+                        <span className="text-[#666] text-xs mt-0.5 flex-shrink-0 min-w-[35px]">
+                          {signal.date || 'N/A'}
+                        </span>
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between">
+                            <span className="block flex-1">{signal.signal}</span>
+                            {(() => {
+                              const score = signal.success_indicator;
+                              if (!score) return null;
+                              const numScore = typeof score === 'string' ? parseInt(score) : score;
+                              if (isNaN(numScore)) return null;
+
+                              const getScoreColor = (score: number) => {
+                                if (score >= 8) return 'text-[#00ff88]'; // green
+                                if (score >= 6) return 'text-[#ffcc00]'; // yellow
+                                if (score >= 4) return 'text-[#ff8800]'; // orange
+                                return 'text-[#ff4444]'; // red
+                              };
+
+                              return (
+                                <span className={`text-xs font-bold ${getScoreColor(numScore)} ml-2`}>
+                                  [{numScore}]
+                                </span>
+                              );
+                            })()}
+                          </div>
+                          {signal.importance && (
+                            <span className="block text-[#999] text-xs mt-1">{signal.importance}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Tweet Breakdown */}
               {(() => {
                 // Use x_raw_tweets from props for full tweet breakdown
@@ -223,53 +276,6 @@ export function XAnalysisTooltip({
                   </div>
                 );
               })()}
-
-              {/* Key Signals */}
-              {signals && signals.length > 0 && (
-                <div className="mb-3">
-                  <h4 className="text-[#00ff88] text-sm font-medium mb-2 flex items-center gap-1">
-                    <Radio className="w-3 h-3" />
-                    Key Signals
-                  </h4>
-                  <div className="space-y-1">
-                    {signals.slice(0, 3).map((signal: any, idx: number) => (
-                      <div key={idx} className="text-[#ccc] text-sm flex items-start gap-2">
-                        <Star className="w-3 h-3 text-[#00ff88] mt-0.5 flex-shrink-0" />
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between">
-                            <span className="block flex-1">{signal.signal}</span>
-                            {(() => {
-                              const score = signal.success_indicator;
-                              if (!score) return null;
-                              const numScore = typeof score === 'string' ? parseInt(score) : score;
-                              if (isNaN(numScore)) return null;
-
-                              const getScoreColor = (score: number) => {
-                                if (score >= 8) return 'text-[#00ff88]'; // green
-                                if (score >= 6) return 'text-[#ffcc00]'; // yellow
-                                if (score >= 4) return 'text-[#ff8800]'; // orange
-                                return 'text-[#ff4444]'; // red
-                              };
-
-                              return (
-                                <span className={`text-xs font-bold ${getScoreColor(numScore)} ml-2`}>
-                                  [{numScore}]
-                                </span>
-                              );
-                            })()}
-                          </div>
-                          {signal.importance && (
-                            <span className="block text-[#999] text-xs mt-1">{signal.importance}</span>
-                          )}
-                          {signal.date && (
-                            <span className="text-[#666] text-xs">{signal.date}</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {/* No analysis available */}
               {!signals?.length && (
