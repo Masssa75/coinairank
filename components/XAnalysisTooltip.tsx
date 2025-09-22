@@ -243,7 +243,7 @@ export function XAnalysisTooltip({
                     <div className="flex gap-3 text-xs text-[#ccc]">
                       {topCategories.map(([category, count]) => (
                         <span key={category}>
-                          {Math.round((count / total) * 100)}% {category}
+                          {Math.round(((count as number) / total) * 100)}% {category}
                         </span>
                       ))}
                     </div>
