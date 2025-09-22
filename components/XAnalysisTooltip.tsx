@@ -170,7 +170,7 @@ export function XAnalysisTooltip({
             width: '500px'
           }}
         >
-          <div className="bg-[#1a1c1f] border border-[#2a2d31] rounded-lg shadow-2xl text-white relative" style={{ width: '500px' }}>
+          <div className="bg-[#111214] border border-[#2a2d31] rounded-lg shadow-2xl text-white relative" style={{ width: '500px' }}>
             <div className="p-4 w-full">
               {isPersistent && (
                 <button
@@ -180,33 +180,6 @@ export function XAnalysisTooltip({
                   <X className="w-4 h-4" />
                 </button>
               )}
-
-              {/* Tier and Score */}
-              {(() => {
-                const tier = analysisData?.tier_name || analysisData?.final_tier;
-                const score = analysisData?.final_score;
-                const tierDisplay = typeof tier === 'number' ?
-                  (tier === 1 ? 'ALPHA' : tier === 2 ? 'SOLID' : tier === 3 ? 'BASIC' : 'TRASH') : tier;
-
-                return tierDisplay && (
-                  <div className="mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[#666] text-sm">Tier:</span>
-                      <span className={`px-2 py-1 rounded text-xs font-semibold uppercase ${
-                        tierDisplay === 'ALPHA' ? 'bg-[#00ff88] text-black' :
-                        tierDisplay === 'SOLID' ? 'bg-[#ffcc00] text-black' :
-                        tierDisplay === 'BASIC' ? 'bg-[#ff8800] text-black' :
-                        'bg-[#ff4444] text-white'
-                      }`}>
-                        {tierDisplay}
-                      </span>
-                      {score && (
-                        <span className="text-[#ccc] text-sm">({score}/100)</span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
 
               {/* Tweet Breakdown */}
               {(() => {
@@ -263,16 +236,9 @@ export function XAnalysisTooltip({
                       <div key={idx} className="text-[#ccc] text-sm flex items-start gap-2">
                         <Star className="w-3 h-3 text-[#00ff88] mt-0.5 flex-shrink-0" />
                         <div className="flex-1">
-                          <span className="block">{signal.signal}</span>
-                          {signal.importance && (
-                            <span className="block text-[#999] text-xs mt-1">{signal.importance}</span>
-                          )}
-                          <div className="flex items-center gap-2 mt-1">
-                            {signal.date && (
-                              <span className="text-[#666] text-xs">{signal.date}</span>
-                            )}
+                          <div className="flex items-start justify-between">
+                            <span className="block flex-1">{signal.signal}</span>
                             {(() => {
-                              // Add color-coded score at the end
                               const score = signal.success_indicator;
                               if (!score) return null;
                               const numScore = typeof score === 'string' ? parseInt(score) : score;
@@ -286,12 +252,18 @@ export function XAnalysisTooltip({
                               };
 
                               return (
-                                <span className={`text-xs font-medium ${getScoreColor(numScore)}`}>
-                                  {numScore}/10
+                                <span className={`text-xs font-bold ${getScoreColor(numScore)} ml-2`}>
+                                  [{numScore}]
                                 </span>
                               );
                             })()}
                           </div>
+                          {signal.importance && (
+                            <span className="block text-[#999] text-xs mt-1">{signal.importance}</span>
+                          )}
+                          {signal.date && (
+                            <span className="text-[#666] text-xs">{signal.date}</span>
+                          )}
                         </div>
                       </div>
                     ))}
