@@ -21,13 +21,13 @@ serve(async (req) => {
     // Configuration
     const PROJECTS_PER_RUN = 3;  // Process 3 projects per cron run
 
-    // Get the next unanalyzed UTILITY projects (CSR = Core Service Representative)
+    // Get the next unanalyzed UTILITY projects (token_type = 'utility')
     const { data: nextProjects, error: fetchError } = await supabase
       .from('crypto_projects_rated')
       .select('id, symbol, twitter_url')
       .not('twitter_url', 'is', null)        // Must have Twitter handle
       .is('x_analyzed_at', null)             // Never analyzed
-      .eq('ssr_csr_classification', 'CSR')   // ONLY utility tokens
+      .eq('token_type', 'utility')           // ONLY utility tokens
       .order('created_at', { ascending: true })  // Oldest projects first
       .limit(PROJECTS_PER_RUN);
 
@@ -210,21 +210,21 @@ async function getAnalysisStats(supabase: any): Promise<any> {
   const { count: totalUtilityCount } = await supabase
     .from('crypto_projects_rated')
     .select('*', { count: 'exact', head: true })
-    .eq('ssr_csr_classification', 'CSR')
+    .eq('token_type', 'utility')
     .not('twitter_url', 'is', null);
 
   // Analyzed utility tokens
   const { count: analyzedUtilityCount } = await supabase
     .from('crypto_projects_rated')
     .select('*', { count: 'exact', head: true })
-    .eq('ssr_csr_classification', 'CSR')
+    .eq('token_type', 'utility')
     .not('x_analyzed_at', 'is', null);
 
   // Utility tokens with score
   const { count: withScoreUtilityCount } = await supabase
     .from('crypto_projects_rated')
     .select('*', { count: 'exact', head: true })
-    .eq('ssr_csr_classification', 'CSR')
+    .eq('token_type', 'utility')
     .not('x_score', 'is', null);
 
   return {
@@ -232,6 +232,6 @@ async function getAnalysisStats(supabase: any): Promise<any> {
     analyzed_utility: analyzedUtilityCount || 0,
     utility_with_score: withScoreUtilityCount || 0,
     remaining_utility: (totalUtilityCount || 0) - (analyzedUtilityCount || 0),
-    note: 'Statistics for CSR (utility) tokens only'
+    note: 'Statistics for utility tokens only'
   };
 }

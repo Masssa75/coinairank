@@ -222,20 +222,38 @@ export function WhitepaperTooltip({
                   if (score >= 4) return 'text-[#ff8800]';
                   return 'text-[#ff4444]';
                 };
+                const signalKey = `academic-${idx}`;
+                const isExpanded = selectedSignalIdx === signalKey;
 
                 return (
-                  <div key={idx} className="text-[#ccc] text-sm flex items-start gap-2">
-                    <span className="text-[#666] text-xs mt-0.5 flex-shrink-0 min-w-[15px]">
-                      •
-                    </span>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <span className="block flex-1">{signal.signal}</span>
-                        <span className={`text-xs font-bold ${getScoreColor(score)} ml-2`}>
-                          [{score}]
-                        </span>
+                  <div key={idx}>
+                    <div className="text-[#ccc] text-sm flex items-start gap-2">
+                      <span className="text-[#666] text-xs mt-0.5 flex-shrink-0 min-w-[15px]">
+                        •
+                      </span>
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between">
+                          <span className="block flex-1">{signal.signal}</span>
+                          <span
+                            className={`text-xs font-bold ${getScoreColor(score)} ml-2 ${isPersistent ? 'cursor-pointer hover:underline' : ''}`}
+                            onClick={(e) => handleSignalClick(signalKey, e)}
+                            title={isPersistent ? 'Click to see reasoning' : ''}
+                          >
+                            [{score}]
+                          </span>
+                        </div>
                       </div>
                     </div>
+                    {/* Show reasoning if expanded */}
+                    {isPersistent && isExpanded && (
+                      <div className="mt-2 ml-6 p-2 bg-[#2a2d31] rounded text-[10px] text-[#999]">
+                        <div className="font-semibold text-[#aaa] mb-1">Score Reasoning:</div>
+                        <div>{signal.strength === 'VERY HIGH' ? 'Very high academic rigor with exceptional research quality' :
+                              signal.strength === 'HIGH' ? 'High academic rigor with strong research foundation' :
+                              signal.strength === 'MEDIUM' ? 'Medium academic rigor with decent research' :
+                              'Basic academic rigor with limited research'}</div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -260,20 +278,43 @@ export function WhitepaperTooltip({
                   if (score >= 4) return 'text-[#ff8800]';
                   return 'text-[#ff4444]';
                 };
+                const signalKey = `green-${idx}`;
+                const isExpanded = selectedSignalIdx === signalKey;
 
                 return (
-                  <div key={idx} className="text-[#ccc] text-sm flex items-start gap-2">
-                    <span className="text-[#666] text-xs mt-0.5 flex-shrink-0 min-w-[15px]">
-                      •
-                    </span>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <span className="block flex-1">{signal}</span>
-                        <span className={`text-xs font-bold ${getScoreColor(score)} ml-2`}>
-                          [{score}]
-                        </span>
+                  <div key={idx}>
+                    <div className="text-[#ccc] text-sm flex items-start gap-2">
+                      <span className="text-[#666] text-xs mt-0.5 flex-shrink-0 min-w-[15px]">
+                        •
+                      </span>
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between">
+                          <span className="block flex-1">{signal}</span>
+                          <span
+                            className={`text-xs font-bold ${getScoreColor(score)} ml-2 ${isPersistent ? 'cursor-pointer hover:underline' : ''}`}
+                            onClick={(e) => handleSignalClick(signalKey, e)}
+                            title={isPersistent ? 'Click to see reasoning' : ''}
+                          >
+                            [{score}]
+                          </span>
+                        </div>
                       </div>
                     </div>
+                    {/* Show reasoning if expanded */}
+                    {isPersistent && isExpanded && (
+                      <div className="mt-2 ml-6 p-2 bg-[#2a2d31] rounded text-[10px] text-[#999]">
+                        <div className="font-semibold text-[#aaa] mb-1">Score Reasoning:</div>
+                        <div>
+                          {flag.source === 'Character assessment' ?
+                            'Positive indicator from document character assessment' :
+                          flag.ratio ?
+                            `Strong technical-to-marketing ratio (${flag.ratio.toFixed(1)}:1)` :
+                          score >= 8 ? 'Exceptionally positive indicator for project quality' :
+                          score >= 6 ? 'Strong positive indicator for project quality' :
+                          'Moderate positive indicator for project quality'}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -292,20 +333,43 @@ export function WhitepaperTooltip({
               {whitepaperRedFlags.slice(0, 3).map((flag: any, idx: number) => {
                 const signal = typeof flag === 'string' ? flag : flag.signal || flag.flag;
                 const score = 2; // Red flags get low score
+                const signalKey = `red-${idx}`;
+                const isExpanded = selectedSignalIdx === signalKey;
 
                 return (
-                  <div key={idx} className="text-[#ccc] text-sm flex items-start gap-2">
-                    <span className="text-[#666] text-xs mt-0.5 flex-shrink-0 min-w-[15px]">
-                      •
-                    </span>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <span className="block flex-1">{signal}</span>
-                        <span className="text-xs font-bold text-[#ff4444] ml-2">
-                          [{score}]
-                        </span>
+                  <div key={idx}>
+                    <div className="text-[#ccc] text-sm flex items-start gap-2">
+                      <span className="text-[#666] text-xs mt-0.5 flex-shrink-0 min-w-[15px]">
+                        •
+                      </span>
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between">
+                          <span className="block flex-1">{signal}</span>
+                          <span
+                            className={`text-xs font-bold text-[#ff4444] ml-2 ${isPersistent ? 'cursor-pointer hover:underline' : ''}`}
+                            onClick={(e) => handleSignalClick(signalKey, e)}
+                            title={isPersistent ? 'Click to see reasoning' : ''}
+                          >
+                            [{score}]
+                          </span>
+                        </div>
                       </div>
                     </div>
+                    {/* Show reasoning if expanded */}
+                    {isPersistent && isExpanded && (
+                      <div className="mt-2 ml-6 p-2 bg-[#2a2d31] rounded text-[10px] text-[#999]">
+                        <div className="font-semibold text-[#aaa] mb-1">Score Reasoning:</div>
+                        <div>
+                          {flag.source === 'Character assessment' ?
+                            'Concerning indicator from document character assessment' :
+                          signal.includes('marketing') || signal.toLowerCase().includes('marketing') ?
+                            'Heavy marketing language indicates lack of technical substance' :
+                          signal.includes('proof') || signal.includes('mathematical') ?
+                            'Lack of mathematical rigor or formal proofs is a major concern' :
+                          'Critical weakness that significantly impacts project credibility'}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
