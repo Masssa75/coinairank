@@ -180,24 +180,6 @@ export function XAnalysisTooltip({
               </button>
             )}
 
-            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-700">
-              <Twitter className="w-5 h-5 text-blue-400" />
-              <h3 className="font-semibold text-lg">X/Twitter Analysis</h3>
-              {twitterHandle && (
-                <span className="text-sm text-gray-400">@{twitterHandle}</span>
-              )}
-            </div>
-
-            {analysisSummary && (
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Info className="w-4 h-4 text-blue-400" />
-                  <span className="text-sm font-medium text-gray-300">Summary</span>
-                </div>
-                <p className="text-sm text-gray-200 leading-relaxed">{analysisSummary}</p>
-              </div>
-            )}
-
             {strongestSignal && (
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">

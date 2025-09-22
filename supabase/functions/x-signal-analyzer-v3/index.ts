@@ -554,7 +554,8 @@ ${t.text}`).join('\n---')}
     body: JSON.stringify({
       model: 'kimi-k2-0905-preview',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3
+      temperature: 0.3,
+      max_tokens: 2000  // Increased from default 1024 to handle longer responses
     }),
     signal: AbortSignal.timeout(180000) // 3 minute timeout for AI analysis
   });
@@ -658,7 +659,8 @@ Return ONLY a valid JSON object with this exact structure (no markdown formattin
     body: JSON.stringify({
       model: 'kimi-k2-0905-preview',
       messages: [{ role: 'user', content: COMPARISON_PROMPT }],
-      temperature: 0.3
+      temperature: 0.3,
+      max_tokens: 2000  // Increased from default 1024 to handle longer responses
     }),
     signal: AbortSignal.timeout(180000) // 3 minute timeout for comparison
   });
