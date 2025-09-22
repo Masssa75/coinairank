@@ -70,6 +70,7 @@ interface CryptoProject {
   x_analysis?: any;
   x_score?: number;
   x_tier?: string;
+  x_raw_tweets?: any;
   social_urls?: Array<{
     url: string;
     type: string;
