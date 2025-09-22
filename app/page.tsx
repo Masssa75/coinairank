@@ -1272,7 +1272,7 @@ export default function ProjectsRatedPage() {
                       <div className="col-span-2 text-center">
                         {(() => {
                           const isAnalyzing = analyzingXProjects.has(project.id);
-                          const xTier = project.x_stage1_tier;
+                          const xTier = project.x_tier;
 
                           if (isAnalyzing) {
                             return (

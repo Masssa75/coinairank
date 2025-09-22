@@ -261,10 +261,13 @@ async function processPhase2WithSSE(
   });
 
   // Compare with benchmarks
+  const comparisonStart = Date.now();
   const comparison = await compareWithBenchmarks(signals, benchmarks, symbol, sendEvent);
+  const comparisonDuration = Date.now() - comparisonStart;
 
   await sendEvent('tier_calculation', {
-    message: `Calculating final tier and score...`
+    message: `Calculating final tier and score...`,
+    comparison_duration_ms: comparisonDuration
   });
 
   // Store results to the correct fields (x_score, x_tier, x_analysis)
@@ -555,7 +558,7 @@ ${t.text}`).join('\n---')}
       model: 'kimi-k2-0905-preview',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
-      max_tokens: 2000  // Increased from default 1024 to handle longer responses
+      max_tokens: 4000  // Increased to 4000 to handle complex responses
     }),
     signal: AbortSignal.timeout(180000) // 3 minute timeout for AI analysis
   });
@@ -660,7 +663,7 @@ Return ONLY a valid JSON object with this exact structure (no markdown formattin
       model: 'kimi-k2-0905-preview',
       messages: [{ role: 'user', content: COMPARISON_PROMPT }],
       temperature: 0.3,
-      max_tokens: 2000  // Increased from default 1024 to handle longer responses
+      max_tokens: 4000  // Increased to 4000 to handle complex responses
     }),
     signal: AbortSignal.timeout(180000) // 3 minute timeout for comparison
   });
@@ -670,6 +673,17 @@ Return ONLY a valid JSON object with this exact structure (no markdown formattin
   }
 
   const result = await response.json();
+
+  // Send token usage for Phase 2
+  if (result.usage) {
+    await sendEvent('phase2_tokens', {
+      message: 'Phase 2 token usage',
+      prompt_tokens: result.usage.prompt_tokens,
+      completion_tokens: result.usage.completion_tokens,
+      total_tokens: result.usage.total_tokens
+    });
+  }
+
   const content = result.choices[0].message.content;
 
   try {
