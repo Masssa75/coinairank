@@ -5,6 +5,115 @@ import * as cheerio from 'https://esm.sh/cheerio@1.0.0-rc.12';
 // Prompt version for tracking changes
 const PROMPT_VERSION = 'v3.3.0-categorized-resources';
 
+// Helper function to extract Twitter handle from URL
+function extractTwitterHandle(twitterUrl: string | null): string | null {
+  if (!twitterUrl) return null;
+
+  const patterns = [
+    /twitter\.com\/([^\/\?]+)/i,
+    /x\.com\/([^\/\?]+)/i,
+    /@([^\/\s]+)/
+  ];
+
+  for (const pattern of patterns) {
+    const match = twitterUrl.match(pattern);
+    if (match && match[1]) {
+      return match[1].replace('@', '');
+    }
+  }
+
+  // If no pattern matches, try using it directly if it looks like a handle
+  if (!twitterUrl.includes('/') && !twitterUrl.includes('.')) {
+    return twitterUrl.replace('@', '');
+  }
+
+  return null;
+}
+
+// Trigger follow-up analyses after website analysis completes
+async function triggerFollowUpAnalyses(projectId: number, symbol: string, supabase: any) {
+  try {
+    // Get the project's URLs
+    const { data: project, error } = await supabase
+      .from('crypto_projects_rated')
+      .select('twitter_url, whitepaper_url, x_analyzed_at, whitepaper_analysis')
+      .eq('id', projectId)
+      .single();
+
+    if (error || !project) {
+      console.log(`Could not fetch project data for follow-up analysis: ${error?.message}`);
+      return;
+    }
+
+    // Trigger X analysis if we have a Twitter URL and haven't analyzed yet
+    if (project.twitter_url && !project.x_analyzed_at) {
+      const handle = extractTwitterHandle(project.twitter_url);
+      if (handle) {
+        console.log(`🐦 Triggering X analysis for @${handle}`);
+
+        try {
+          const xResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/x-signal-analyzer-v3`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              action: 'analyze',
+              symbol,
+              handle,
+              projectId
+            })
+          });
+
+          if (!xResponse.ok) {
+            const errorText = await xResponse.text();
+            console.error(`❌ X analysis trigger failed with ${xResponse.status}: ${errorText}`);
+          } else {
+            console.log(`✅ X analysis triggered successfully for @${handle}`);
+          }
+        } catch (error) {
+          console.error('❌ Failed to trigger X analysis:', error);
+        }
+      } else {
+        console.log(`⚠️ Could not extract Twitter handle from: ${project.twitter_url}`);
+      }
+    }
+
+    // Trigger whitepaper analysis if we have a URL and haven't analyzed yet
+    if (project.whitepaper_url && !project.whitepaper_analysis) {
+      console.log(`📄 Triggering whitepaper analysis for ${symbol}`);
+
+      try {
+        const wpResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            symbol,
+            whitepaper_url: project.whitepaper_url,
+            force_refresh: false
+          })
+        });
+
+        if (!wpResponse.ok) {
+          const errorText = await wpResponse.text();
+          console.error(`❌ Whitepaper analysis trigger failed with ${wpResponse.status}: ${errorText}`);
+        } else {
+          console.log(`✅ Whitepaper analysis triggered successfully for ${symbol}`);
+        }
+      } catch (error) {
+        console.error('❌ Failed to trigger whitepaper analysis:', error);
+      }
+    }
+
+  } catch (error) {
+    console.error('Error triggering follow-up analyses:', error);
+  }
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -290,7 +399,10 @@ serve(async (req) => {
       }
       
       console.log(`✅ Phase 2 completed: ${comparison.tier_name} (Score: ${comparison.final_score})`);
-      
+
+      // Trigger X and whitepaper analysis now that website analysis is complete
+      await triggerFollowUpAnalyses(projectId, symbol, supabase);
+
       return new Response(
         JSON.stringify({
           success: true,

@@ -143,8 +143,20 @@ async function fetchCMCAge(symbol: string): Promise<CMCData | null> {
   }
 }
 
-// Fetch CoinGecko data including genesis date and ATL
-async function fetchCoinGeckoAge(symbol: string): Promise<{ genesis_date?: string; atl_date?: string } | null> {
+// Fetch CoinGecko data including genesis date, ATL, and social links
+async function fetchCoinGeckoData(symbol: string): Promise<{
+  genesis_date?: string;
+  atl_date?: string;
+  twitter_url?: string;
+  telegram_url?: string;
+  discord_url?: string;
+  reddit_url?: string;
+  github_url?: string;
+  website_url?: string;
+  whitepaper_url?: string;
+  docs_url?: string;
+  coingecko_url?: string;
+} | null> {
   const cgApiKey = Deno.env.get('COINGECKO_API_KEY');
 
   try {
@@ -176,11 +188,67 @@ async function fetchCoinGeckoAge(symbol: string): Promise<{ genesis_date?: strin
     if (!detailsResponse.ok) return null;
 
     const coinData = await detailsResponse.json();
+    const links = coinData.links || {};
 
-    return {
+    // Extract social links
+    const result: any = {
       genesis_date: coinData.genesis_date,
-      atl_date: coinData.market_data?.atl_date?.usd
+      atl_date: coinData.market_data?.atl_date?.usd,
+      coingecko_url: `https://www.coingecko.com/en/coins/${coin.id}`
     };
+
+    // Twitter
+    if (links.twitter_screen_name) {
+      result.twitter_url = `https://twitter.com/${links.twitter_screen_name}`;
+    }
+
+    // Telegram
+    if (links.telegram_channel_identifier) {
+      result.telegram_url = `https://t.me/${links.telegram_channel_identifier}`;
+    }
+
+    // Reddit
+    if (links.subreddit_url) {
+      result.reddit_url = links.subreddit_url;
+    }
+
+    // GitHub
+    if (links.repos_url?.github && links.repos_url.github.length > 0) {
+      result.github_url = links.repos_url.github[0];
+    }
+
+    // Website (first non-empty homepage)
+    if (links.homepage && Array.isArray(links.homepage)) {
+      const website = links.homepage.find((url: string) => url && url.length > 0);
+      if (website) {
+        result.website_url = website;
+      }
+    }
+
+    // Whitepaper (if exists in blockchain_site)
+    if (links.whitepaper) {
+      result.whitepaper_url = links.whitepaper;
+    }
+
+    // Discord (check chat URLs)
+    if (links.chat_url && Array.isArray(links.chat_url)) {
+      const discord = links.chat_url.find((url: string) => url && url.includes('discord'));
+      if (discord) {
+        result.discord_url = discord;
+      }
+    }
+
+    // Official forum as potential docs
+    if (links.official_forum_url && Array.isArray(links.official_forum_url)) {
+      const docs = links.official_forum_url.find((url: string) => url && url.length > 0);
+      if (docs) {
+        result.docs_url = docs;
+      }
+    }
+
+    console.log(`✅ CoinGecko data fetched for ${symbol}:`, Object.keys(result).filter(k => result[k]).join(', '));
+
+    return result;
   } catch (error) {
     console.error('Error fetching CoinGecko data:', error);
     return null;
@@ -191,7 +259,8 @@ async function fetchCoinGeckoAge(symbol: string): Promise<{ genesis_date?: strin
 async function calculateAge(
   symbol: string,
   dexData?: DexScreenerPairData | null,
-  contractAddress?: string
+  contractAddress?: string,
+  cgData?: any
 ): Promise<AgeData> {
   const ageData: AgeData = {
     project_age_years: null,
@@ -200,7 +269,7 @@ async function calculateAge(
   };
 
   // Priority 1: Try CoinGecko genesis date (most accurate)
-  const cgData = await fetchCoinGeckoAge(symbol);
+  // cgData is now passed in, not fetched here
   if (cgData?.genesis_date) {
     const launch = new Date(cgData.genesis_date);
     const ageDays = (Date.now() - launch.getTime()) / (1000 * 60 * 60 * 24);
@@ -417,6 +486,111 @@ async function triggerWebsiteAnalysis(projectId: number, contractAddress: string
   }
 }
 
+// Trigger X/Twitter analysis
+async function triggerXAnalysis(projectId: number, symbol: string, twitterUrl: string | null) {
+  try {
+    if (!twitterUrl) {
+      console.log(`No Twitter URL for ${symbol}, skipping X analysis`);
+      return false;
+    }
+
+    // Extract handle from Twitter URL
+    const handle = extractTwitterHandle(twitterUrl);
+    if (!handle) {
+      console.log(`Could not extract Twitter handle from ${twitterUrl}`);
+      return false;
+    }
+
+    const functionUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/x-signal-analyzer-v3`;
+
+    const response = await fetch(functionUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'analyze',
+        symbol,
+        handle,
+        projectId
+      })
+    });
+
+    if (!response.ok) {
+      console.error(`X analysis trigger failed: ${response.status}`);
+      return false;
+    }
+
+    console.log(`✅ X analysis triggered for project ${projectId} (@${handle})`);
+    return true;
+  } catch (error) {
+    console.error('Error triggering X analysis:', error);
+    return false;
+  }
+}
+
+// Trigger whitepaper analysis
+async function triggerWhitepaperAnalysis(projectId: number, symbol: string, whitepaperUrl: string | null) {
+  try {
+    if (!whitepaperUrl) {
+      console.log(`No whitepaper URL for ${symbol}, skipping whitepaper analysis`);
+      return false;
+    }
+
+    const functionUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer`;
+
+    const response = await fetch(functionUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        symbol,
+        whitepaper_url: whitepaperUrl,
+        force_refresh: false
+      })
+    });
+
+    if (!response.ok) {
+      console.error(`Whitepaper analysis trigger failed: ${response.status}`);
+      return false;
+    }
+
+    console.log(`✅ Whitepaper analysis triggered for project ${projectId}`);
+    return true;
+  } catch (error) {
+    console.error('Error triggering whitepaper analysis:', error);
+    return false;
+  }
+}
+
+// Helper function to extract Twitter handle from URL
+function extractTwitterHandle(twitterUrl: string): string | null {
+  if (!twitterUrl) return null;
+
+  const patterns = [
+    /twitter\.com\/([^\/\?]+)/i,
+    /x\.com\/([^\/\?]+)/i,
+    /@([^\/\s]+)/
+  ];
+
+  for (const pattern of patterns) {
+    const match = twitterUrl.match(pattern);
+    if (match && match[1]) {
+      return match[1].replace('@', '');
+    }
+  }
+
+  // If no pattern matches, try using it directly if it looks like a handle
+  if (!twitterUrl.includes('/') && !twitterUrl.includes('.')) {
+    return twitterUrl.replace('@', '');
+  }
+
+  return null;
+}
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
@@ -457,7 +631,7 @@ serve(async (req) => {
     // Check if project already exists
     const { data: existing, error: checkError } = await supabase
       .from('crypto_projects_rated')
-      .select('id, symbol, website_stage1_score')
+      .select('id, symbol, website_stage1_score, x_analyzed_at, whitepaper_analysis, twitter_url, whitepaper_url')
       .eq('contract_address', body.contract_address.toLowerCase())
       .eq('network', network)
       .single();
@@ -465,9 +639,8 @@ serve(async (req) => {
     if (existing) {
       console.log(`Project already exists: ${existing.symbol} (ID: ${existing.id})`);
 
-      // If it exists but hasn't been analyzed, trigger analysis
-      if (!existing.website_stage1_score && (body.trigger_analysis !== false)) {
-        // Don't await - let analysis happen in background to avoid timeout
+      // Trigger website analysis if not done - it will extract URLs and trigger other analyses
+      if (body.trigger_analysis !== false && !existing.website_stage1_score && body.website_url) {
         triggerWebsiteAnalysis(
           existing.id,
           body.contract_address,
@@ -522,6 +695,9 @@ serve(async (req) => {
         note: 'Manually submitted token - pending website verification'
       };
     }
+
+    // FIRST: Try to fetch social links from CoinGecko (PRIMARY SOURCE)
+    const cgData = await fetchCoinGeckoData(projectData.symbol);
 
     // Fetch fresh data from DexScreener if we have a pool address
     let dexData: DexScreenerPairData | null = null;
@@ -588,34 +764,6 @@ serve(async (req) => {
           price_data_updated_at: new Date().toISOString(),
         };
 
-        // Extract and add social links
-        const socialLinks = extractSocialLinks(dexData);
-
-        // Override website URL if DexScreener has one and we don't
-        if (socialLinks.website_url && body.website_url === 'pending') {
-          projectData.website_url = socialLinks.website_url;
-          console.log(`Found website from DexScreener: ${socialLinks.website_url}`);
-        }
-
-        // Add other social links
-        if (socialLinks.twitter_url) {
-          projectData.twitter_url = socialLinks.twitter_url;
-          console.log(`Found Twitter: ${socialLinks.twitter_url}`);
-        }
-        if (socialLinks.telegram_url) {
-          projectData.telegram_url = socialLinks.telegram_url;
-          console.log(`Found Telegram: ${socialLinks.telegram_url}`);
-        }
-        if (socialLinks.discord_url) {
-          projectData.discord_url = socialLinks.discord_url;
-          console.log(`Found Discord: ${socialLinks.discord_url}`);
-        }
-
-        // Mark socials as fetched
-        if (socialLinks.twitter_url || socialLinks.telegram_url || socialLinks.discord_url) {
-          projectData.socials_fetched_at = new Date().toISOString();
-        }
-
         console.log(`Price: $${currentPrice.toFixed(8)}, MC: $${marketCap.toLocaleString()}, Liq: $${liquidityUsd.toLocaleString()}`);
       } else {
         console.warn(`Could not fetch DexScreener data for ${poolAddress} - inserting with basic data only`);
@@ -657,8 +805,84 @@ serve(async (req) => {
       };
     }
 
+    // Apply social links with priority: CoinGecko (PRIMARY) > DexScreener (FALLBACK)
+    if (cgData) {
+      // CoinGecko links (PRIMARY SOURCE)
+      if (cgData.website_url && (body.website_url === 'pending' || !body.website_url)) {
+        projectData.website_url = cgData.website_url;
+        console.log(`✅ Website from CoinGecko: ${cgData.website_url}`);
+      }
+      if (cgData.twitter_url) {
+        projectData.twitter_url = cgData.twitter_url;
+        console.log(`✅ Twitter from CoinGecko: ${cgData.twitter_url}`);
+      }
+      if (cgData.telegram_url) {
+        projectData.telegram_url = cgData.telegram_url;
+        console.log(`✅ Telegram from CoinGecko: ${cgData.telegram_url}`);
+      }
+      if (cgData.discord_url) {
+        projectData.discord_url = cgData.discord_url;
+        console.log(`✅ Discord from CoinGecko: ${cgData.discord_url}`);
+      }
+      if (cgData.whitepaper_url) {
+        projectData.whitepaper_url = cgData.whitepaper_url;
+        console.log(`✅ Whitepaper from CoinGecko: ${cgData.whitepaper_url}`);
+      }
+      if (cgData.github_url) {
+        projectData.github_url = cgData.github_url;
+        console.log(`✅ GitHub from CoinGecko: ${cgData.github_url}`);
+      }
+      if (cgData.docs_url) {
+        projectData.docs_url = cgData.docs_url;
+        console.log(`✅ Docs from CoinGecko: ${cgData.docs_url}`);
+      }
+
+      // Add Reddit and CoinGecko URL to social_urls JSON
+      const additionalSocials: any = {};
+      if (cgData.reddit_url) {
+        additionalSocials.reddit = cgData.reddit_url;
+        console.log(`✅ Reddit from CoinGecko: ${cgData.reddit_url}`);
+      }
+      if (cgData.coingecko_url) {
+        additionalSocials.coingecko = cgData.coingecko_url;
+      }
+      if (Object.keys(additionalSocials).length > 0) {
+        projectData.social_urls = additionalSocials;
+      }
+
+      projectData.socials_fetched_at = new Date().toISOString();
+    }
+
+    // Apply DexScreener links as FALLBACK (only if not already set by CoinGecko)
+    if (dexData) {
+      const dexSocialLinks = extractSocialLinks(dexData);
+
+      // Only use DexScreener if CoinGecko didn't provide the link
+      if (!projectData.website_url && dexSocialLinks.website_url && body.website_url === 'pending') {
+        projectData.website_url = dexSocialLinks.website_url;
+        console.log(`📊 Website from DexScreener (fallback): ${dexSocialLinks.website_url}`);
+      }
+      if (!projectData.twitter_url && dexSocialLinks.twitter_url) {
+        projectData.twitter_url = dexSocialLinks.twitter_url;
+        console.log(`📊 Twitter from DexScreener (fallback): ${dexSocialLinks.twitter_url}`);
+      }
+      if (!projectData.telegram_url && dexSocialLinks.telegram_url) {
+        projectData.telegram_url = dexSocialLinks.telegram_url;
+        console.log(`📊 Telegram from DexScreener (fallback): ${dexSocialLinks.telegram_url}`);
+      }
+      if (!projectData.discord_url && dexSocialLinks.discord_url) {
+        projectData.discord_url = dexSocialLinks.discord_url;
+        console.log(`📊 Discord from DexScreener (fallback): ${dexSocialLinks.discord_url}`);
+      }
+
+      // Update fetched timestamp if we got any new links
+      if ((dexSocialLinks.twitter_url || dexSocialLinks.telegram_url || dexSocialLinks.discord_url) && !projectData.socials_fetched_at) {
+        projectData.socials_fetched_at = new Date().toISOString();
+      }
+    }
+
     // CALCULATE AGE FROM MULTIPLE SOURCES
-    const ageData = await calculateAge(projectData.symbol, dexData, body.contract_address);
+    const ageData = await calculateAge(projectData.symbol, dexData, body.contract_address, cgData);
 
     // Add age data to project
     if (ageData.project_age_years !== null) {
@@ -694,9 +918,8 @@ serve(async (req) => {
 
     console.log(`✅ New project ingested: ${newProject.symbol} (ID: ${newProject.id}) with price and age data`);
 
-    // Trigger website analysis if requested (default: true) and we have a valid website
+    // Trigger website analysis first - it will extract URLs and trigger X/whitepaper analysis
     if (body.trigger_analysis !== false && projectData.website_url && projectData.website_url !== 'pending') {
-      // Don't await - let analysis happen in background to avoid timeout
       triggerWebsiteAnalysis(
         newProject.id,
         body.contract_address,
