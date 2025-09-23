@@ -232,7 +232,7 @@ serve(async (req) => {
   try {
     const {
       phase = 1,
-      projectId,
+      projectId: initialProjectId,
       symbol,
       whitepaperUrl,
       whitepaperText,
@@ -245,7 +245,7 @@ serve(async (req) => {
 
     // PHASE 2: Benchmark comparison and final scoring
     if (phase === 2) {
-      if (!projectId) {
+      if (!initialProjectId) {
         return new Response(
           JSON.stringify({
             success: false,
@@ -255,13 +255,13 @@ serve(async (req) => {
         );
       }
 
-      console.log(`📊 Phase 2: Starting benchmark comparison for ${symbol} (Project ID: ${projectId})`);
+      console.log(`📊 Phase 2: Starting benchmark comparison for ${symbol} (Project ID: ${initialProjectId})`);
 
       // Get project data and evidence claims
       const { data: project, error: fetchError } = await supabase
         .from('crypto_projects_rated')
         .select('whitepaper_evidence_claims')
-        .eq('id', projectId)
+        .eq('id', initialProjectId)
         .single();
 
       if (fetchError || !project) {
@@ -319,7 +319,7 @@ serve(async (req) => {
             }
           }
         })
-        .eq('id', projectId);
+        .eq('id', initialProjectId);
 
       if (updateError) {
         console.error(`Failed to update Phase 2 results: ${updateError.message}`);
@@ -348,7 +348,7 @@ serve(async (req) => {
 
     // Get project data and check status
     let project = null;
-    let currentProjectId = projectId; // Use mutable variable for projectId
+    let currentProjectId = initialProjectId; // Use mutable variable for projectId
     if (currentProjectId) {
       const { data, error } = await supabase
         .from('crypto_projects_rated')
