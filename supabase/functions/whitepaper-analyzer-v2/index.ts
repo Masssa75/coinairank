@@ -234,7 +234,7 @@ serve(async (req) => {
       phase = 1,
       projectId: initialProjectId,
       symbol,
-      whitepaperUrl,
+      whitepaperUrl: initialWhitepaperUrl,
       whitepaperText,
       forceReanalysis = false
     } = await req.json();
@@ -370,6 +370,7 @@ serve(async (req) => {
       }
     }
 
+    let whitepaperUrl = initialWhitepaperUrl;
     if (!whitepaperUrl && project?.whitepaper_url) {
       whitepaperUrl = project.whitepaper_url;
     }
