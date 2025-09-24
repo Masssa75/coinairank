@@ -91,6 +91,10 @@ interface CryptoProject {
   whitepaper_analysis?: any;
   whitepaper_analyzed_at?: string;
   whitepaper_simple_description?: string;
+  // V2 Evidence-based fields
+  whitepaper_main_claim?: string;
+  whitepaper_evidence_claims?: any[];
+  whitepaper_evidence_evaluations?: any;
 }
 
 interface FilterState {
@@ -1257,6 +1261,9 @@ export default function ProjectsRatedPage() {
                               whitepaperAnalysis={project.whitepaper_analysis}
                               whitepaperAnalyzedAt={project.whitepaper_analyzed_at}
                               whitepaperSimpleDescription={project.whitepaper_simple_description}
+                              whitepaperMainClaim={(project as any).whitepaper_main_claim}
+                              whitepaperEvidenceClaims={(project as any).whitepaper_evidence_claims}
+                              whitepaperEvidenceEvaluations={(project as any).whitepaper_evidence_evaluations}
                             >
                               <span
                                 className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"

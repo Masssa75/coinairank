@@ -22,6 +22,10 @@ interface WhitepaperTooltipProps {
   whitepaperAnalysis?: any;
   whitepaperAnalyzedAt?: string;
   whitepaperSimpleDescription?: string;
+  // V2 Evidence-based fields
+  whitepaperMainClaim?: string;
+  whitepaperEvidenceClaims?: any[];
+  whitepaperEvidenceEvaluations?: any;
   children: React.ReactNode;
 }
 
@@ -35,6 +39,9 @@ export function WhitepaperTooltip({
   whitepaperAnalysis,
   whitepaperAnalyzedAt,
   whitepaperSimpleDescription,
+  whitepaperMainClaim,
+  whitepaperEvidenceClaims,
+  whitepaperEvidenceEvaluations,
   children
 }: WhitepaperTooltipProps) {
   const [showTooltip, setShowTooltip] = React.useState(false);
@@ -367,6 +374,62 @@ export function WhitepaperTooltip({
                           signal.includes('proof') || signal.includes('mathematical') ?
                             'Lack of mathematical rigor or formal proofs is a major concern' :
                           'Critical weakness that significantly impacts project credibility'}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* V2 Evidence Claims */}
+        {whitepaperEvidenceClaims && whitepaperEvidenceClaims.length > 0 && (
+          <div className="mb-3">
+            <h4 className="text-[#00ff88] text-sm font-medium mb-2 flex items-center gap-1">
+              <FileText className="w-3 h-3" />
+              Evidence Claims (V2)
+            </h4>
+            {whitepaperMainClaim && (
+              <div className="mb-3 p-2 bg-[#1a1c1f] rounded border-l-2 border-[#00ff88]">
+                <div className="text-[#00ff88] text-xs font-medium mb-1">Main Claim:</div>
+                <div className="text-[#ccc] text-xs">{whitepaperMainClaim}</div>
+              </div>
+            )}
+            <div className="space-y-2">
+              {whitepaperEvidenceClaims.slice(0, 3).map((evidenceClaim: any, idx: number) => {
+                const signalKey = `evidence-${idx}`;
+                const isExpanded = selectedSignalIdx === signalKey;
+
+                return (
+                  <div key={idx}>
+                    <div className="text-[#ccc] text-sm">
+                      <div className="flex items-start gap-2">
+                        <span className="text-[#666] text-xs mt-0.5 flex-shrink-0 min-w-[15px]">
+                          {idx + 1}.
+                        </span>
+                        <div className="flex-1">
+                          <div className="mb-2">
+                            <span className="font-medium text-[#fff]">Claim:</span>
+                            <div className="text-[#ccc] text-xs mt-1">{evidenceClaim.claim}</div>
+                          </div>
+                          {isPersistent && (
+                            <button
+                              onClick={(e) => handleSignalClick(signalKey, e)}
+                              className="text-[#00ff88] text-xs hover:underline"
+                            >
+                              {isExpanded ? 'Hide Evaluation' : 'Show Detailed Evaluation'}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Show detailed evaluation if expanded */}
+                    {isPersistent && isExpanded && (
+                      <div className="mt-2 ml-6 p-3 bg-[#2a2d31] rounded text-[11px]">
+                        <div className="prose prose-invert prose-sm max-w-none">
+                          <div dangerouslySetInnerHTML={{ __html: evidenceClaim.evaluation.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>') }} />
                         </div>
                       </div>
                     )}
