@@ -1117,13 +1117,14 @@ export default function ProjectsRatedPage() {
           {/* Project Display - Grid or List based on viewMode */}
           {viewMode === 'list' && (
             /* Table Headers for List View */
-            <div className="grid grid-cols-14 gap-4 py-3 px-0 border-b border-[#2a2d31] text-sm font-medium text-[#666] uppercase tracking-wide">
+            <div className="grid grid-cols-15 gap-4 py-3 px-0 border-b border-[#2a2d31] text-sm font-medium text-[#666] uppercase tracking-wide">
               <div className="col-span-4">Project</div>
               <div className="col-span-2 text-center">Age</div>
               <div className="col-span-2 text-center">Market Cap</div>
               <div className="col-span-2 text-center">Web Tier</div>
               <div className="col-span-2 text-center">WP Tier</div>
               <div className="col-span-2 text-center">X Tier</div>
+              {isAdmin && <div className="col-span-1 text-center"></div>}
             </div>
           )}
 
@@ -1141,7 +1142,7 @@ export default function ProjectsRatedPage() {
                 {viewMode === 'list' ? (
                   /* List View - Table Row */
                   <div className="py-3 px-0 hover:bg-[#1a1c1f] transition-colors">
-                    <div className="grid grid-cols-14 gap-4 items-center">
+                    <div className="grid grid-cols-15 gap-4 items-center">
                       {/* Project Name - col-span-4 */}
                       <div className="col-span-4">
                         <Link href={`/project/${project.symbol}`}>
@@ -1330,6 +1331,52 @@ export default function ProjectsRatedPage() {
                             </span>
                           );
                         })()}
+                      </div>
+
+                      {/* Admin Actions Menu - col-span-1 */}
+                      <div className="col-span-1 text-center">
+                        {isAdmin && (
+                          <div className="relative inline-block">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenActionMenu(openActionMenu === project.id ? null : project.id);
+                              }}
+                              className="p-1.5 text-[#888] hover:text-white transition-colors rounded"
+                              title="Admin actions"
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </button>
+
+                            {openActionMenu === project.id && (
+                              <>
+                                {/* Backdrop to close menu */}
+                                <div
+                                  className="fixed inset-0 z-30"
+                                  onClick={() => setOpenActionMenu(null)}
+                                />
+
+                                {/* Dropdown Menu */}
+                                <div className="absolute right-0 top-full mt-1 w-48 bg-[#111214] border border-[#2a2d31] rounded-lg shadow-lg z-40">
+                                  <button
+                                    onClick={() => handleToggleImposter(project.id, project.is_imposter || false)}
+                                    className="w-full px-4 py-2 text-left text-white hover:bg-[#1a1c1f] transition-colors flex items-center gap-2 text-sm rounded-t-lg"
+                                  >
+                                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                                    {project.is_imposter ? 'Unmark as Imposter' : 'Mark as Imposter'}
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteProject(project.id, project.symbol)}
+                                    className="w-full px-4 py-2 text-left text-red-400 hover:bg-[#1a1c1f] hover:text-red-300 transition-colors flex items-center gap-2 text-sm border-t border-[#2a2d31] rounded-b-lg"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                    Remove Project
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
