@@ -395,6 +395,35 @@ serve(async (req) => {
     }
 
     // Return results
+    // If content was successfully stored, trigger whitepaper-analyzer-v2
+    let analysisTriggered = false;
+    if (projectId && fetchResult.content.length > 100) {
+      try {
+        console.log(`Triggering whitepaper-analyzer-v2 for ${symbol}`);
+        const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-v2`;
+        const analysisResponse = await fetch(analyzerUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            projectId: projectId,
+            symbol: symbol
+          })
+        });
+
+        if (analysisResponse.ok) {
+          console.log(`✅ Whitepaper analysis triggered successfully for ${symbol}`);
+          analysisTriggered = true;
+        } else {
+          console.error(`❌ Failed to trigger whitepaper analysis: ${analysisResponse.status}`);
+        }
+      } catch (error) {
+        console.error('Error triggering whitepaper analysis:', error);
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -405,6 +434,7 @@ serve(async (req) => {
         reason: validation.reason,
         suggestionsTried: validation.suggestions,
         stored: !!projectId && fetchResult.content.length > 100,
+        analysisTriggered: analysisTriggered,
         content: fetchResult.content.substring(0, 500) // Preview
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

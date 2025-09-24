@@ -539,7 +539,7 @@ async function triggerWhitepaperAnalysis(projectId: number, symbol: string, whit
       return false;
     }
 
-    const functionUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer`;
+    const functionUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-fetcher`;
 
     const response = await fetch(functionUrl, {
       method: 'POST',
@@ -548,9 +548,8 @@ async function triggerWhitepaperAnalysis(projectId: number, symbol: string, whit
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        symbol,
-        whitepaper_url: whitepaperUrl,
-        force_refresh: false
+        whitepaperUrl: whitepaperUrl,
+        symbol: symbol
       })
     });
 
