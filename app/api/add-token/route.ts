@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { contractAddress, network, websiteUrl } = body;
+    const { contractAddress, network, websiteUrl, whitepaperUrl } = body;
 
     // Validate required fields
     if (!contractAddress || !network) {
@@ -208,14 +208,14 @@ export async function POST(request: NextRequest) {
       if (!manualWebsiteUrl.startsWith('http://') && !manualWebsiteUrl.startsWith('https://')) {
         manualWebsiteUrl = `https://${manualWebsiteUrl}`;
       }
-      
+
       // Test the URL and follow redirects to get the final URL
       try {
-        const testResponse = await fetch(manualWebsiteUrl, { 
+        const testResponse = await fetch(manualWebsiteUrl, {
           method: 'HEAD',
           redirect: 'follow'
         });
-        
+
         // Use the final URL after redirects
         if (testResponse.ok || testResponse.status === 200 || testResponse.status === 301 || testResponse.status === 302) {
           // Get the final URL after redirects
@@ -230,6 +230,17 @@ export async function POST(request: NextRequest) {
         // Use the URL as-is if test fails
         tokenData.website = manualWebsiteUrl;
       }
+    }
+
+    // Process whitepaper URL if provided
+    let normalizedWhitepaperUrl = null;
+    if (whitepaperUrl && whitepaperUrl.trim()) {
+      normalizedWhitepaperUrl = whitepaperUrl.trim();
+      // Normalize the URL - add https:// if missing
+      if (!normalizedWhitepaperUrl.startsWith('http://') && !normalizedWhitepaperUrl.startsWith('https://')) {
+        normalizedWhitepaperUrl = `https://${normalizedWhitepaperUrl}`;
+      }
+      console.log(`Whitepaper URL provided: ${normalizedWhitepaperUrl}`);
     }
 
     // If no website at all, return error with needsWebsite flag
@@ -260,6 +271,7 @@ export async function POST(request: NextRequest) {
         name: tokenData.name,
         pool_address: tokenData.poolAddress,
         website_url: tokenData.website || 'pending',
+        whitepaper_url: normalizedWhitepaperUrl,
         source: 'manual',
         trigger_analysis: !!tokenData.website // Only trigger if we have a website
       })

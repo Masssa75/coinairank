@@ -32,6 +32,10 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
   const [showWebsiteInput, setShowWebsiteInput] = useState(false);
   const [manualWebsiteUrl, setManualWebsiteUrl] = useState('');
   const [pendingTokenData, setPendingTokenData] = useState<{address: string, network: string, symbol?: string} | null>(null);
+
+  // Advanced fields
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [whitepaperUrl, setWhitepaperUrl] = useState('');
   
   // Progress tracking states
   const [showProgressTracker, setShowProgressTracker] = useState(false);
@@ -137,6 +141,9 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
     setPendingTokenData(null);
     setContractAddress('');
     setManualWebsiteUrl('');
+    // Reset advanced fields
+    setShowAdvanced(false);
+    setWhitepaperUrl('');
     onClose();
   };
 
@@ -154,10 +161,15 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
         contractAddress: pendingTokenData?.address || contractAddress.trim(),
         network: pendingTokenData?.network || network
       };
-      
+
       // Include website URL if provided
       if (websiteUrl) {
         payload.websiteUrl = websiteUrl;
+      }
+
+      // Include whitepaper URL if provided
+      if (whitepaperUrl.trim()) {
+        payload.whitepaperUrl = whitepaperUrl.trim();
       }
 
       const response = await fetch('/api/add-token', {
@@ -239,6 +251,8 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
         setManualWebsiteUrl('');
         setShowWebsiteInput(false);
         setPendingTokenData(null);
+        setShowAdvanced(false);
+        setWhitepaperUrl('');
         
         setTimeout(() => {
           handleClose();
@@ -457,6 +471,43 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
             />
           </div>
 
+          {/* Advanced Section Toggle */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="w-full text-left text-sm text-gray-400 hover:text-gray-300 transition-colors flex items-center justify-between py-2"
+            >
+              <span>Advanced Options</span>
+              <span className={`transition-transform ${showAdvanced ? 'rotate-180' : ''}`}>
+                ▼
+              </span>
+            </button>
+
+            {showAdvanced && (
+              <div className="mt-3 p-4 bg-[#15161a] border border-[#2a2d31] rounded-lg space-y-3">
+                {/* Whitepaper URL */}
+                <div>
+                  <label htmlFor="whitepaperUrl" className="block text-sm font-medium text-gray-300 mb-1">
+                    Whitepaper URL (optional)
+                  </label>
+                  <input
+                    id="whitepaperUrl"
+                    type="url"
+                    value={whitepaperUrl}
+                    onChange={(e) => setWhitepaperUrl(e.target.value)}
+                    placeholder="https://example.com/whitepaper.pdf"
+                    className="w-full bg-[#1a1c1f] border border-[#2a2d31] rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                    disabled={isSubmitting}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Provide a direct link to the project's whitepaper for faster analysis
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Error Message */}
           {error && (
             <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-red-400 text-sm">
@@ -519,6 +570,8 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
                           setPendingTokenData(null);
                           setContractAddress('');
                           setManualWebsiteUrl('');
+                          setShowAdvanced(false);
+                          setWhitepaperUrl('');
                         }}
                         className="flex-1 py-2 px-4 rounded-lg font-medium bg-gray-700 text-gray-300 hover:bg-gray-600"
                       >

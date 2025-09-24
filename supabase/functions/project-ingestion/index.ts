@@ -29,6 +29,7 @@ interface TokenIngestionRequest {
   symbol?: string;
   name?: string;
   pool_address?: string; // Added to support DexScreener price fetching
+  whitepaper_url?: string; // Optional whitepaper URL
 
   // Market data from discovery (will be overridden by fresh data)
   initial_liquidity_usd?: number;
@@ -805,7 +806,13 @@ serve(async (req) => {
       };
     }
 
-    // Apply social links with priority: CoinGecko (PRIMARY) > DexScreener (FALLBACK)
+    // Apply user-provided whitepaper URL first (HIGHEST PRIORITY)
+    if (body.whitepaper_url) {
+      projectData.whitepaper_url = body.whitepaper_url;
+      console.log(`🚀 Whitepaper from user submission: ${body.whitepaper_url}`);
+    }
+
+    // Apply social links with priority: User-provided > CoinGecko (PRIMARY) > DexScreener (FALLBACK)
     if (cgData) {
       // CoinGecko links (PRIMARY SOURCE)
       if (cgData.website_url && (body.website_url === 'pending' || !body.website_url)) {
@@ -824,7 +831,7 @@ serve(async (req) => {
         projectData.discord_url = cgData.discord_url;
         console.log(`✅ Discord from CoinGecko: ${cgData.discord_url}`);
       }
-      if (cgData.whitepaper_url) {
+      if (cgData.whitepaper_url && !projectData.whitepaper_url) {
         projectData.whitepaper_url = cgData.whitepaper_url;
         console.log(`✅ Whitepaper from CoinGecko: ${cgData.whitepaper_url}`);
       }

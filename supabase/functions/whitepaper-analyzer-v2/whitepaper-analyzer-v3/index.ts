@@ -1,65 +1,191 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { extractText, getDocumentProxy } from 'https://esm.sh/unpdf@0.11.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Removed fetching functions - content is now provided by whitepaper-fetcher
+function cleanPdfText(text: string): string {
+  // Remove null bytes and other control characters
+  let cleaned = text.replace(/\0/g, '');
 
-// Phase 2: Two-stage comparison using claim ceiling + evidence quality
-async function compareWithTwoStageBenchmarks(mainClaim: string, evidenceClaims: any[], claimBenchmarks: any[], evidenceBenchmarks: any[], symbol: string) {
-  const COMPARISON_PROMPT = `Evaluate this whitepaper using a TWO-STAGE process: claim ceiling check + evidence quality evaluation.
+  // Remove excessive whitespace
+  cleaned = cleaned.replace(/\s+/g, ' ');
 
-PROJECT MAIN CLAIM:
-${mainClaim}
+  // Remove page numbers and headers/footers patterns
+  cleaned = cleaned.replace(/Page \d+ of \d+/gi, '');
+  cleaned = cleaned.replace(/^\d+$/gm, '');
 
-PROJECT EVIDENCE CLAIMS:
+  // Trim
+  cleaned = cleaned.trim();
+
+  return cleaned;
+}
+
+function parseHtmlToText(html: string): string {
+  // Remove script and style elements
+  let text = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
+  text = text.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+
+  // Remove HTML comments
+  text = text.replace(/<!--[\s\S]*?-->/g, '');
+
+  // Remove HTML tags but keep content
+  text = text.replace(/<[^>]+>/g, ' ');
+
+  // Decode HTML entities
+  text = text.replace(/&nbsp;/g, ' ');
+  text = text.replace(/&amp;/g, '&');
+  text = text.replace(/&lt;/g, '<');
+  text = text.replace(/&gt;/g, '>');
+  text = text.replace(/&quot;/g, '"');
+  text = text.replace(/&#39;/g, "'");
+
+  // Remove extra whitespace
+  text = text.replace(/\s+/g, ' ');
+
+  // Trim
+  text = text.trim();
+
+  return text;
+}
+
+async function fetchAndParseWhitepaper(url: string): Promise<string> {
+  console.log(`Fetching whitepaper from: ${url}`);
+
+  // Handle PDF whitepapers
+  if (url.endsWith('.pdf')) {
+    console.log('PDF whitepaper detected - extracting text...');
+
+    try {
+      // Download PDF directly
+      console.log('Downloading PDF...');
+      const pdfResponse = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; WhitepaperAnalyzer/1.0)'
+        }
+      });
+
+      if (!pdfResponse.ok) {
+        throw new Error(`Failed to download PDF: ${pdfResponse.status}`);
+      }
+
+      const pdfBuffer = await pdfResponse.arrayBuffer();
+      console.log(`Downloaded PDF: ${pdfBuffer.byteLength / 1024}KB`);
+
+      // Extract text using unpdf
+      console.log('Extracting text from PDF...');
+      const pdf = await getDocumentProxy(new Uint8Array(pdfBuffer));
+      const extractResult = await extractText(pdf, { mergePages: true });
+      const text = extractResult.text;
+
+      console.log(`Extracted ${text.length} characters from PDF`);
+
+      const cleanedText = cleanPdfText(text);
+      if (cleanedText.length > 100) {
+        return cleanedText;
+      } else {
+        throw new Error('PDF extraction resulted in too little text');
+      }
+
+    } catch (error) {
+      console.error('PDF extraction failed:', error);
+
+      // Fallback to ScraperAPI if local extraction fails
+      const scraperApiKey = Deno.env.get('SCRAPER_API_KEY') || Deno.env.get('SCRAPERAPI_KEY');
+      if (scraperApiKey) {
+        console.log('Falling back to ScraperAPI...');
+        try {
+          const scraperUrl = `https://api.scraperapi.com?api_key=${scraperApiKey}&url=${encodeURIComponent(url)}`;
+          const response = await fetch(scraperUrl);
+
+          if (response.ok) {
+            const pdfData = await response.arrayBuffer();
+            const pdf = await getDocumentProxy(new Uint8Array(pdfData));
+            const extractResult = await extractText(pdf, { mergePages: true });
+            const text = extractResult.text;
+
+            const cleanedText = cleanPdfText(text);
+            if (cleanedText.length > 100) {
+              return cleanedText;
+            }
+          }
+        } catch (scraperError) {
+          console.error('ScraperAPI fallback failed:', scraperError);
+        }
+      }
+
+      throw new Error(`PDF extraction failed: ${error.message}`);
+    }
+  }
+
+  // Standard HTML fetch
+  try {
+    console.log('Using standard fetch for HTML whitepaper...');
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; WhitepaperAnalyzer/1.0)'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch whitepaper: ${response.status}`);
+    }
+
+    const rawContent = await response.text();
+    const cleanText = parseHtmlToText(rawContent);
+
+    console.log(`Extracted ${cleanText.length} characters of clean text`);
+    return cleanText;
+
+  } catch (error) {
+    console.error('Error fetching whitepaper:', error);
+    throw error;
+  }
+}
+
+// Phase 2: Bottom-up tier comparison using evidence claims (matches website-analyzer-v3 pattern)
+async function compareEvidenceWithBenchmarks(evidenceClaims: any[], benchmarks: any[], symbol: string) {
+  const COMPARISON_PROMPT = `Evaluate extracted evidence claims using BOTTOM-UP tier assignment.
+
+TIER BENCHMARKS:
+${JSON.stringify(benchmarks, null, 2)}
+
+EXTRACTED EVIDENCE CLAIMS:
 ${JSON.stringify(evidenceClaims, null, 2)}
 
-CLAIM BENCHMARKS (for ceiling check):
-${JSON.stringify(claimBenchmarks, null, 2)}
-
-EVIDENCE BENCHMARKS (for quality evaluation):
-${JSON.stringify(evidenceBenchmarks, null, 2)}
-
-TWO-STAGE EVALUATION PROCESS:
-
-STAGE 1 - CLAIM CEILING CHECK:
-Compare the project's main claim against claim benchmarks to determine the MAXIMUM possible tier.
-- Look for similar ambition levels, revolutionary scope, technical complexity
-- The claim ceiling sets the upper limit of what this project can achieve
-
-STAGE 2 - EVIDENCE QUALITY EVALUATION:
-Compare the project's evidence claims against evidence benchmarks to determine ACTUAL tier.
-- Evidence must support the main claim with concrete data, proofs, implementations
-- Use bottom-up comparison: start weak, progressively test if stronger than benchmark tiers
-- Final tier = MIN(claim_ceiling, evidence_quality_tier)
+EVALUATION PROCESS:
+1. Start by assuming all evidence claims are Tier 4 (weakest)
+2. For each evidence claim, progressively test if it's STRONGER than benchmarks:
+   - Stronger than ANY Tier 4 benchmark evidence? → Consider for Tier 3
+   - Stronger than ANY Tier 3 benchmark evidence? → Consider for Tier 2
+   - Stronger than ANY Tier 2 benchmark evidence? → Consider for Tier 1
+3. Project tier = highest tier achieved by ANY evidence claim
 
 COMPARISON CRITERIA:
-- Mathematical proofs and models
-- Working code and implementations
-- Real-world metrics (users, volume, performance)
-- Academic rigor and citations
-- Completeness vs gaps in reasoning
+Consider:
+1. Completeness of evidence for the stated claim
+2. Presence of mathematical proofs, code, or empirical data
+3. Real-world validation (users, volume, etc.)
+4. Gaps or missing elements
+5. Context and comparisons to similar systems
 
 Return JSON:
 {
-  "claim_ceiling": {
-    "tier": 1-4,
-    "tier_name": "ALPHA/SOLID/BASIC/TRASH",
-    "reasoning": "why this claim ambition deserves this ceiling"
-  },
-  "evidence_quality": {
-    "tier": 1-4,
-    "tier_name": "ALPHA/SOLID/BASIC/TRASH",
-    "reasoning": "how evidence quality compares to benchmarks"
-  },
   "final_tier": 1-4,
   "tier_name": "ALPHA/SOLID/BASIC/TRASH",
   "final_score": 0-100,
-  "explanation": "2-3 sentences explaining how claim ceiling and evidence quality determined final tier"
+  "strongest_evidence": "exact evidence claim that determined tier",
+  "evidence_evaluations": [
+    {
+      "evidence": "evidence claim text",
+      "assigned_tier": 1-4,
+      "reasoning": "why this tier"
+    }
+  ],
+  "explanation": "2-3 sentences on tier logic"
 }`;
 
   try {
@@ -78,9 +204,8 @@ Return JSON:
         model: 'kimi-k2-0905-preview',
         messages: [{ role: 'user', content: COMPARISON_PROMPT }],
         temperature: 0.3,
-        max_tokens: 10000
-      }),
-      signal: AbortSignal.timeout(180000) // 3 minute timeout
+        max_tokens: 2000
+      })
     });
 
     if (!response.ok) {
@@ -92,16 +217,14 @@ Return JSON:
     const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     const result = JSON.parse(cleanContent);
 
-    console.log(`Phase 2 two-stage comparison complete: Claim ceiling ${result.claim_ceiling?.tier_name}, Evidence ${result.evidence_quality?.tier_name}, Final: ${result.tier_name} (Score: ${result.final_score})`);
+    console.log(`Phase 2 comparison complete: Tier ${result.final_tier} (${result.tier_name}) - Score ${result.final_score}`);
 
     return result;
   } catch (error) {
-    console.error(`Phase 2 two-stage comparison error: ${error}`);
+    console.error(`Phase 2 comparison error: ${error}`);
     throw error;
   }
 }
-
-// Removed adaptive content evaluation - content validation handled by whitepaper-fetcher
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -114,7 +237,8 @@ serve(async (req) => {
       projectId: initialProjectId,
       symbol,
       whitepaperUrl: initialWhitepaperUrl,
-      whitepaperText
+      whitepaperText,
+      forceReanalysis = false
     } = await req.json();
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -152,42 +276,29 @@ serve(async (req) => {
         );
       }
 
-      // Load claim and evidence benchmarks from split tables
-      const [claimBenchmarksResult, evidenceBenchmarksResult] = await Promise.all([
-        supabase
-          .from('whitepaper_claim_benchmarks')
-          .select('*')
-          .eq('is_active', true)
-          .order('claim_rank', { ascending: true }),
-        supabase
-          .from('whitepaper_evidence_benchmarks')
-          .select('*')
-          .eq('is_active', true)
-          .order('evidence_rank', { ascending: true })
-      ]);
+      // Load benchmarks from database
+      const { data: benchmarks, error: benchmarksError } = await supabase
+        .from('whitepaper_tier_benchmarks')
+        .select('*')
+        .eq('is_active', true)
+        .order('tier', { ascending: true });
 
-      const claimBenchmarks = claimBenchmarksResult.data;
-      const evidenceBenchmarks = evidenceBenchmarksResult.data;
-      const benchmarksError = claimBenchmarksResult.error || evidenceBenchmarksResult.error;
-
-      if (benchmarksError || !claimBenchmarks || !evidenceBenchmarks || claimBenchmarks.length === 0 || evidenceBenchmarks.length === 0) {
+      if (benchmarksError || !benchmarks || benchmarks.length === 0) {
         return new Response(
           JSON.stringify({
             success: false,
-            error: `Failed to load benchmarks: ${benchmarksError?.message || 'Missing claim or evidence benchmarks'}`
+            error: `Failed to load benchmarks: ${benchmarksError?.message || 'No benchmarks found'}`
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
         );
       }
 
-      console.log(`Loaded ${claimBenchmarks.length} claim benchmarks, ${evidenceBenchmarks.length} evidence benchmarks, and ${project.whitepaper_evidence_claims?.length || 0} evidence claims`);
+      console.log(`Loaded ${benchmarks.length} benchmarks and ${project.whitepaper_evidence_claims?.length || 0} evidence claims`);
 
-      // Run Phase 2 two-stage comparison using AI
-      const comparison = await compareWithTwoStageBenchmarks(
-        project.whitepaper_main_claim || '',
+      // Run Phase 2 comparison using AI
+      const comparison = await compareEvidenceWithBenchmarks(
         project.whitepaper_evidence_claims || [],
-        claimBenchmarks,
-        evidenceBenchmarks,
+        benchmarks,
         symbol
       );
 
@@ -241,8 +352,7 @@ serve(async (req) => {
 
     // Get project data and check status
     let project = null;
-    let currentProjectId = initialProjectId;
-
+    let currentProjectId = initialProjectId; // Use mutable variable for projectId
     if (currentProjectId) {
       const { data, error } = await supabase
         .from('crypto_projects_rated')
@@ -264,31 +374,151 @@ serve(async (req) => {
       }
     }
 
-    if (!project || !currentProjectId) {
-      throw new Error('Project not found. Please ensure whitepaper content has been fetched first using whitepaper-fetcher.');
+    let whitepaperUrl = initialWhitepaperUrl;
+    if (!whitepaperUrl && project?.whitepaper_url) {
+      whitepaperUrl = project.whitepaper_url;
     }
 
-    // Removed caching logic - if function is called, analysis should run
+    if (!whitepaperUrl) {
+      throw new Error('No whitepaper URL found for this project');
+    }
 
-    // Validate that we have whitepaper content (should be provided by whitepaper-fetcher)
-    if (!project?.whitepaper_content) {
+    // Check if we already have analysis and not forcing reanalysis
+    if (project?.whitepaper_analysis && !forceReanalysis) {
+      console.log('Note: Metrics tracking not available for cached results');
+      // For cached results, we don't have metrics since we skip processing
+      console.log('✅ Using cached whitepaper analysis');
+
+      // Auto-trigger Phase 2
+      console.log(`🚀 Auto-triggering Phase 2 for project ${currentProjectId}`);
+
+      try {
+        const phase2Response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-v2`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            phase: 2,
+            projectId: currentProjectId,
+            symbol
+          })
+        });
+
+        if (!phase2Response.ok) {
+          const errorText = await phase2Response.text();
+          console.error(`Phase 2 trigger failed: ${errorText}`);
+        } else {
+          const phase2Result = await phase2Response.json();
+          console.log(`✅ Phase 2 triggered successfully: ${phase2Result.tier_name} (${phase2Result.final_score})`);
+        }
+      } catch (error) {
+        console.error(`Failed to trigger Phase 2: ${error}`);
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          phase: 1,
+          symbol,
+          cached: true,
+          analysis: project.whitepaper_analysis,
+          evidence_claims: project.whitepaper_evidence_claims,
+          message: 'Using cached analysis, Phase 2 triggered'
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Check if PDF extraction is in progress
+    if (project?.whitepaper_extraction_status === 'extracting') {
+      return new Response(
+        JSON.stringify({
+          message: 'PDF extraction in progress',
+          status: 'extracting',
+          retry_after: 30
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Initialize whitepaperText variable
+    let whitepaperTextContent = '';
+
+    // If we have extracted content, use it for analysis
+    if (project?.whitepaper_content && project?.whitepaper_extraction_status === 'extracted') {
+      console.log('Using previously extracted content for analysis');
+      whitepaperTextContent = project.whitepaper_content;
+    }
+
+    // Track analysis start time
+    const startTime = Date.now();
+
+    // Need to fetch and analyze whitepaper
+    let content = whitepaperTextContent || whitepaperText || '';
+
+    // Set extraction status to 'extracting' if we need to fetch
+    if (!content && whitepaperUrl && currentProjectId) {
+      await supabase
+        .from('crypto_projects_rated')
+        .update({ whitepaper_extraction_status: 'extracting' })
+        .eq('id', currentProjectId);
+
+      try {
+        console.log(`📄 Fetching whitepaper from: ${whitepaperUrl}`);
+        const fetchStart = Date.now();
+        try {
+          content = await fetchAndParseWhitepaper(whitepaperUrl);
+        } catch (fetchError: any) {
+          console.error(`❌ Error during fetch/parse: ${fetchError.message}`);
+          if (fetchError.message === 'Assignment to constant variable.') {
+            console.error('Const assignment error detected in fetchAndParseWhitepaper');
+          }
+          throw fetchError;
+        }
+        const fetchEnd = Date.now();
+        console.log(`✅ Fetched whitepaper: ${content.length} characters in ${fetchEnd - fetchStart}ms`);
+
+        // Update extraction status to 'extracted' and store content
+        await supabase
+          .from('crypto_projects_rated')
+          .update({
+            whitepaper_content: content.substring(0, 50000), // Store first 50k chars like v1
+            whitepaper_extraction_status: 'extracted'
+          })
+          .eq('id', currentProjectId);
+
+      } catch (error) {
+        console.error(`❌ Error fetching whitepaper: ${error}`);
+
+        // Set extraction status to 'failed'
+        if (currentProjectId) {
+          await supabase
+            .from('crypto_projects_rated')
+            .update({ whitepaper_extraction_status: 'failed' })
+            .eq('id', currentProjectId);
+        }
+
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: `Failed to fetch whitepaper: ${error.message}`
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
+    }
+
+    if (!content) {
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'No whitepaper content found. Please run whitepaper-fetcher first to extract content.',
-          extraction_status: project?.whitepaper_extraction_status || 'not_attempted'
+          error: 'No whitepaper content or URL provided'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
-
-    // Use stored content from whitepaper-fetcher
-    let content = project.whitepaper_content;
-    console.log(`📄 Using stored whitepaper content: ${content.length} characters`);
-    console.log(`📄 Extraction status: ${project.whitepaper_extraction_status}`);
-
-    // Track analysis start time
-    const startTime = Date.now();
 
     // Truncate content if too long (using v1's 30k limit for AI)
     const maxLength = 30000;
@@ -373,9 +603,8 @@ Output your analysis as structured JSON with main_claim, evidence_claims array (
           { role: 'user', content: userPrompt }
         ],
         temperature: 0.1,
-        max_tokens: 240000
-      }),
-      signal: AbortSignal.timeout(180000) // 3 minute timeout
+        max_tokens: 4000
+      })
     });
     const aiEndTime = Date.now();
     console.log(`⏱️ AI processing took ${aiEndTime - aiStartTime}ms`);
@@ -392,18 +621,12 @@ Output your analysis as structured JSON with main_claim, evidence_claims array (
       console.log(`📊 Token usage - Input: ${aiData.usage.prompt_tokens}, Output: ${aiData.usage.completion_tokens}`);
     }
 
-    // Log the raw AI response for debugging
-    console.log(`📝 AI Response length: ${aiContent.length} characters`);
-    console.log(`📝 First 1000 chars of AI response: ${aiContent.substring(0, 1000)}`);
-    console.log(`📝 Last 500 chars of AI response: ${aiContent.substring(Math.max(0, aiContent.length - 500))}`);
-
     let analysis;
     try {
       const cleanContent = aiContent.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       analysis = JSON.parse(cleanContent);
     } catch (e) {
       console.error('Failed to parse AI response:', e);
-      console.error('Cleaned content that failed to parse:', aiContent.substring(0, 2000));
       return new Response(
         JSON.stringify({
           success: false,
@@ -422,8 +645,10 @@ Output your analysis as structured JSON with main_claim, evidence_claims array (
     const totalDuration = Date.now() - startTime;
     console.log(`✅ Analysis completed in ${totalDuration}ms`);
 
-    // Store analysis results in database (content already stored by whitepaper-fetcher)
+    // Store results in database with new evidence fields + keep old fields for compatibility
     const updateData = {
+      whitepaper_url: whitepaperUrl,
+      whitepaper_content: content.substring(0, 50000), // Store first 50k chars like v1
       whitepaper_analysis: analysis,
       whitepaper_simple_description: analysis.simple_description,
       // New evidence-based fields
@@ -502,7 +727,6 @@ Output your analysis as structured JSON with main_claim, evidence_claims array (
               symbol,
               analysis,
               evidence_claims: analysis.evidence_claims,
-              content_length: content.length,
               phase2_triggered: true,
               phase2_result: {
                 tier: phase2Result.tier_name,
@@ -524,7 +748,6 @@ Output your analysis as structured JSON with main_claim, evidence_claims array (
         symbol,
         analysis,
         evidence_claims: analysis.evidence_claims,
-        content_length: content.length,
         phase2_triggered: false
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
