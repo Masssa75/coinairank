@@ -501,7 +501,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
                     disabled={isSubmitting}
                   />
                   <p className="mt-1 text-xs text-gray-500">
-                    Provide a direct link to the project's whitepaper for faster analysis
+                    Provide a direct link to the project&apos;s whitepaper for faster analysis
                   </p>
                 </div>
               </div>
