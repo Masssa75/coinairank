@@ -85,16 +85,15 @@ async function triggerFollowUpAnalyses(projectId: number, symbol: string, supaba
       console.log(`📄 Triggering whitepaper analysis for ${symbol}`);
 
       try {
-        const wpResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer`, {
+        const wpResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-fetcher`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            symbol,
-            whitepaper_url: project.whitepaper_url,
-            force_refresh: false
+            whitepaperUrl: project.whitepaper_url,
+            symbol: symbol
           })
         });
 
@@ -390,7 +389,10 @@ serve(async (req) => {
             signal_evaluations: comparison.signal_evaluations,
             explanation: comparison.explanation,
             completed_at: new Date().toISOString()
-          }
+          },
+          // Update comparison status fields that frontend progress tracker checks
+          comparison_status: 'completed',
+          comparison_completed_at: new Date().toISOString()
         })
         .eq('id', projectId);
       
