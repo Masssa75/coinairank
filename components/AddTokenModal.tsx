@@ -469,7 +469,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
               disabled={isSubmitting}
               required
             />
-              </div>
+          </div>
             </>
           )}
 
