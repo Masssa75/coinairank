@@ -417,7 +417,7 @@ export function WhitepaperTooltip({
                           {isPersistent && (
                             <button
                               onClick={(e) => handleSignalClick(signalKey, e)}
-                              className="text-[#00ff88] text-xs hover:underline"
+                              className="text-[#00ff88] text-xs hover:underline font-medium bg-[#1a2e1a] px-2 py-1 rounded border border-[#00ff88]/20 hover:bg-[#00ff88]/10 transition-colors"
                             >
                               {isExpanded ? 'Hide Evaluation' : 'Show Detailed Evaluation'}
                             </button>
