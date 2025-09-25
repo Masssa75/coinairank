@@ -138,16 +138,21 @@ export async function POST(request: NextRequest) {
     // Normalize network name
     const normalizedNetwork = normalizeNetwork(network);
     
-    // Validate contract address format
-    if (!isValidContractAddress(contractAddress, normalizedNetwork)) {
+    // Check if it's a native L1 token
+    const isNativeToken = contractAddress.startsWith('native:');
+
+    // Validate contract address format (skip for native tokens)
+    if (!isNativeToken && !isValidContractAddress(contractAddress, normalizedNetwork)) {
       return NextResponse.json(
         { error: 'Invalid contract address format for the selected network.' },
         { status: 400 }
       );
     }
 
-    // Normalize contract address
-    const normalizedAddress = normalizeContractAddress(contractAddress, normalizedNetwork);
+    // Normalize contract address (keep native: prefix as-is)
+    const normalizedAddress = isNativeToken
+      ? contractAddress
+      : normalizeContractAddress(contractAddress, normalizedNetwork);
 
     // Initialize Supabase client
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -182,23 +187,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch token data from DexScreener
-    console.log(`Fetching data for ${normalizedAddress} on ${normalizedNetwork}`);
-    const tokenData = await fetchTokenDataFromDexScreener(normalizedAddress, normalizedNetwork);
-    
-    if (!tokenData) {
-      return NextResponse.json(
-        { error: 'Token not found on DexScreener. Please ensure the token is listed on a DEX.' },
-        { status: 404 }
-      );
-    }
+    let tokenData: any = null;
 
-    // If liquidity is too low, reject
-    if (tokenData.liquidity < 100) {
-      return NextResponse.json(
-        { error: 'Token liquidity too low. Minimum $100 liquidity required.' },
-        { status: 400 }
-      );
+    if (isNativeToken) {
+      // For native tokens, we need at least a website URL
+      if (!websiteUrl && !body.websiteUrl) {
+        return NextResponse.json(
+          {
+            error: 'Website URL is required for Layer 1 tokens.',
+            needsWebsite: true
+          },
+          { status: 400 }
+        );
+      }
+
+      // Extract coingecko ID and use it for symbol (temporarily)
+      const coingeckoId = contractAddress.replace('native:', '');
+      tokenData = {
+        poolAddress: null,
+        symbol: coingeckoId.toUpperCase(), // Will be replaced by actual symbol from ingestion
+        name: coingeckoId, // Will be replaced by actual name
+        website: websiteUrl || body.websiteUrl,
+        liquidity: 1000000, // Native tokens don't need liquidity check
+        isNative: true
+      };
+    } else {
+      // Fetch token data from DexScreener for contract-based tokens
+      console.log(`Fetching data for ${normalizedAddress} on ${normalizedNetwork}`);
+      tokenData = await fetchTokenDataFromDexScreener(normalizedAddress, normalizedNetwork);
+
+      if (!tokenData) {
+        return NextResponse.json(
+          { error: 'Token not found on DexScreener. Please ensure the token is listed on a DEX.' },
+          { status: 404 }
+        );
+      }
+
+      // If liquidity is too low, reject
+      if (tokenData.liquidity < 100) {
+        return NextResponse.json(
+          { error: 'Token liquidity too low. Minimum $100 liquidity required.' },
+          { status: 400 }
+        );
+      }
     }
 
     // Check if we're providing a manual website URL
@@ -266,7 +297,7 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({
         contract_address: normalizedAddress,
-        network: normalizedNetwork,
+        network: isNativeToken ? 'other' : normalizedNetwork, // Native tokens use 'other' network
         symbol: tokenData.symbol,
         name: tokenData.name,
         pool_address: tokenData.poolAddress,
