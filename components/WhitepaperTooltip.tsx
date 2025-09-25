@@ -417,7 +417,7 @@ export function WhitepaperTooltip({
                           {isPersistent && (
                             <button
                               onClick={(e) => handleSignalClick(signalKey, e)}
-                              className="text-[#00ff88] text-xs hover:underline font-medium bg-[#1a2e1a] px-2 py-1 rounded border border-[#00ff88]/20 hover:bg-[#00ff88]/10 transition-colors"
+                              className="text-[#00ff88] text-xs hover:underline"
                             >
                               {isExpanded ? 'Hide Evaluation' : 'Show Detailed Evaluation'}
                             </button>
@@ -427,9 +427,9 @@ export function WhitepaperTooltip({
                     </div>
                     {/* Show detailed evaluation if expanded */}
                     {isPersistent && isExpanded && (
-                      <div className="mt-2 ml-6 p-3 bg-[#2a2d31] rounded text-[11px]">
-                        <div className="prose prose-invert prose-sm max-w-none">
-                          <div dangerouslySetInnerHTML={{ __html: evidenceClaim.evaluation.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>') }} />
+                      <div className="mt-2 ml-6 p-3 bg-[#1a1c1f] rounded border border-[#3a3d41] text-[11px]">
+                        <div className="text-[#e5e5e5] leading-relaxed">
+                          <div dangerouslySetInnerHTML={{ __html: evidenceClaim.evaluation.replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#ffffff] font-semibold">$1</strong>').replace(/\n/g, '<br/>') }} />
                         </div>
                       </div>
                     )}
