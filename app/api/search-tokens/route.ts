@@ -85,7 +85,13 @@ export async function POST(request: NextRequest) {
     };
 
     // Determine if it's a native L1 token
-    const isNativeToken = !platforms || Object.keys(platforms).length === 0;
+    // A token is native if:
+    // 1. It has no platforms at all
+    // 2. It only has its own chain as a platform (e.g., RON only on "ronin" chain)
+    const platformKeys = Object.keys(platforms);
+    const isNativeToken = !platforms ||
+                         platformKeys.length === 0 ||
+                         (platformKeys.length === 1 && platformKeys[0] === data.id);
 
     return NextResponse.json({
       id: data.id,
