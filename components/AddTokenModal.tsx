@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { NETWORKS, type NetworkKey } from '@/lib/validation';
 import { getProjectStatus, getProjectStages, type ProjectStatus, type ProjectStage } from '@/lib/projectStatus';
 
@@ -8,6 +8,31 @@ interface AddTokenModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+}
+
+interface CoinSearchResult {
+  id: string;
+  symbol: string;
+  name: string;
+  thumb: string;
+  marketCapRank?: number;
+}
+
+interface TokenDetails {
+  id: string;
+  symbol: string;
+  name: string;
+  platforms: Record<string, string>;
+  isNativeToken: boolean;
+  links: {
+    website: string | null;
+    whitepaper: string | null;
+    twitter: string | null;
+    telegram: string | null;
+  };
+  image?: string;
+  marketCapRank?: number;
+  categories?: string[];
 }
 
 interface TokenResponse {
@@ -32,6 +57,14 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
   const [showWebsiteInput, setShowWebsiteInput] = useState(false);
   const [manualWebsiteUrl, setManualWebsiteUrl] = useState('');
   const [pendingTokenData, setPendingTokenData] = useState<{address: string, network: string, symbol?: string} | null>(null);
+
+  // Token search states
+  const [searchMode, setSearchMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<CoinSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedToken, setSelectedToken] = useState<TokenDetails | null>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Advanced fields
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -144,8 +177,117 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
     // Reset advanced fields
     setShowAdvanced(false);
     setWhitepaperUrl('');
+    // Reset search mode fields
+    setSearchMode(false);
+    setSearchQuery('');
+    setSearchResults([]);
+    setSelectedToken(null);
     onClose();
   };
+
+  // Search for tokens on CoinGecko
+  const searchTokens = useCallback(async (query: string) => {
+    if (!query || query.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/search-tokens?q=${encodeURIComponent(query)}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSearchResults(data.coins || []);
+      }
+    } catch (error) {
+      console.error('Error searching tokens:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  // Handle search input change with debouncing
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Debounce search
+    searchTimeoutRef.current = setTimeout(() => {
+      searchTokens(query);
+    }, 300);
+  }, [searchTokens]);
+
+  // Fetch detailed token information
+  const fetchTokenDetails = useCallback(async (coinId: string) => {
+    setIsSubmitting(true);
+    try {
+      const response = await fetch('/api/search-tokens', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ coinId })
+      });
+
+      if (response.ok) {
+        const details: TokenDetails = await response.json();
+        setSelectedToken(details);
+
+        // If it's a native token, set the contract address to native:coingecko_id
+        if (details.isNativeToken) {
+          setContractAddress(`native:${details.id}`);
+          setNetwork('other' as NetworkKey); // Native tokens use 'other' network
+        } else {
+          // Find the first available network we support
+          const supportedNetworks = Object.keys(NETWORKS) as NetworkKey[];
+          let foundNetwork = false;
+
+          for (const net of supportedNetworks) {
+            const platformKey = net === 'ethereum' ? 'ethereum' :
+                              net === 'base' ? 'base' :
+                              net === 'solana' ? 'solana' : net;
+
+            if (details.platforms[platformKey]) {
+              setContractAddress(details.platforms[platformKey]);
+              setNetwork(net);
+              foundNetwork = true;
+              break;
+            }
+          }
+
+          if (!foundNetwork && Object.keys(details.platforms).length > 0) {
+            // Use the first available platform
+            const firstPlatform = Object.values(details.platforms)[0];
+            setContractAddress(firstPlatform);
+            setNetwork('ethereum' as NetworkKey); // Default to ethereum
+          }
+        }
+
+        // Pre-fill website and whitepaper if available
+        if (details.links.website) {
+          setManualWebsiteUrl(details.links.website);
+        }
+        if (details.links.whitepaper) {
+          setWhitepaperUrl(details.links.whitepaper);
+          setShowAdvanced(true); // Show advanced section if we have a whitepaper
+        }
+
+        // Close search mode
+        setSearchMode(false);
+        setSearchQuery('');
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.error('Error fetching token details:', error);
+      setError('Failed to fetch token details');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, []);
 
   if (!isOpen) return null;
 
@@ -157,7 +299,12 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
     setIsSubmitting(true);
 
     try {
-      const payload: any = {
+      const payload: {
+        contractAddress: string;
+        network: string;
+        websiteUrl?: string;
+        whitepaperUrl?: string;
+      } = {
         contractAddress: pendingTokenData?.address || contractAddress.trim(),
         network: pendingTokenData?.network || network
       };
@@ -434,7 +581,162 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
         ) : (
           // Original Form UI
           <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Network Selection */}
+          {/* Mode Toggle */}
+          <div className="flex gap-2 mb-4">
+            <button
+              type="button"
+              onClick={() => {
+                setSearchMode(false);
+                setSelectedToken(null);
+                setContractAddress('');
+              }}
+              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                !searchMode
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              Manual Entry
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchMode(true);
+                setContractAddress('');
+              }}
+              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                searchMode
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              Search Token
+            </button>
+          </div>
+
+          {searchMode ? (
+            // Token Search UI
+            <div className="space-y-4">
+              {/* Search Input */}
+              <div>
+                <label htmlFor="tokenSearch" className="block text-sm font-medium text-gray-300 mb-1">
+                  Search for Token
+                </label>
+                <div className="relative">
+                  <input
+                    id="tokenSearch"
+                    type="text"
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    placeholder="Search by name or symbol (e.g., Bitcoin, ETH, TAO)"
+                    className="w-full bg-[#1a1c1f] border border-[#2a2d31] rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                    disabled={isSubmitting}
+                  />
+                  {isSearching && (
+                    <div className="absolute right-3 top-2.5">
+                      <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500"></div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Search Results */}
+              {searchResults.length > 0 && (
+                <div className="bg-[#1a1c1f] border border-[#2a2d31] rounded-lg max-h-60 overflow-y-auto">
+                  {searchResults.map((coin) => (
+                    <button
+                      key={coin.id}
+                      type="button"
+                      onClick={() => fetchTokenDetails(coin.id)}
+                      className="w-full px-3 py-3 flex items-center gap-3 hover:bg-[#25272b] transition-colors border-b border-[#2a2d31] last:border-b-0"
+                      disabled={isSubmitting}
+                    >
+                      <img
+                        src={coin.thumb}
+                        alt={coin.name}
+                        className="w-8 h-8 rounded-full"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                      <div className="flex-1 text-left">
+                        <div className="text-white font-medium">{coin.name}</div>
+                        <div className="text-xs text-gray-400">
+                          {coin.symbol.toUpperCase()}
+                          {coin.marketCapRank && ` • Rank #${coin.marketCapRank}`}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Selected Token Display */}
+              {selectedToken && (
+                <div className="bg-[#15161a] border border-[#2a2d31] rounded-lg p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    {selectedToken.image && (
+                      <img
+                        src={selectedToken.image}
+                        alt={selectedToken.name}
+                        className="w-10 h-10 rounded-full"
+                      />
+                    )}
+                    <div>
+                      <div className="text-white font-semibold">{selectedToken.name}</div>
+                      <div className="text-sm text-gray-400">
+                        {selectedToken.symbol.toUpperCase()}
+                        {selectedToken.isNativeToken && (
+                          <span className="ml-2 text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded">
+                            L1 Token
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {selectedToken.isNativeToken ? (
+                    <div className="text-sm text-gray-400">
+                      <p className="mb-2">This is a Layer 1 blockchain token (no contract address).</p>
+                      <p>CoinGecko ID: <span className="text-white font-mono">{selectedToken.id}</span></p>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-400">
+                      <p className="mb-2">Contract: <span className="text-white font-mono text-xs">{contractAddress}</span></p>
+                      <p>Network: <span className="text-white">{network}</span></p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Website URL for selected token */}
+              {selectedToken && (
+                <div>
+                  <label htmlFor="websiteUrl" className="block text-sm font-medium text-gray-300 mb-1">
+                    Website URL {selectedToken.isNativeToken && <span className="text-red-400">*</span>}
+                  </label>
+                  <input
+                    id="websiteUrl"
+                    type="url"
+                    value={manualWebsiteUrl}
+                    onChange={(e) => setManualWebsiteUrl(e.target.value)}
+                    placeholder={selectedToken.links?.website || "https://example.com"}
+                    className="w-full bg-[#1a1c1f] border border-[#2a2d31] rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                    disabled={isSubmitting}
+                    required={selectedToken.isNativeToken}
+                  />
+                  {selectedToken.links?.website && !manualWebsiteUrl && (
+                    <p className="mt-1 text-xs text-gray-500">
+                      Found: {selectedToken.links.website}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            // Manual Entry UI (existing form fields)
+            <>
+              {/* Network Selection */}
           <div>
             <label htmlFor="network" className="block text-sm font-medium text-gray-300 mb-1">
               Network
