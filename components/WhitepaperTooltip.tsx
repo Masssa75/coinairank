@@ -427,9 +427,9 @@ export function WhitepaperTooltip({
                     </div>
                     {/* Show detailed evaluation if expanded */}
                     {isPersistent && isExpanded && (
-                      <div className="mt-2 ml-6 p-3 bg-[#1a1c1f] rounded border border-[#3a3d41] text-[11px]">
-                        <div className="text-[#e5e5e5] leading-relaxed">
-                          <div dangerouslySetInnerHTML={{ __html: evidenceClaim.evaluation.replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#ffffff] font-semibold">$1</strong>').replace(/\n/g, '<br/>') }} />
+                      <div className="mt-3 ml-0 p-4 bg-[#1a1c1f] rounded-lg border border-[#3a3d41] text-sm">
+                        <div className="text-[#e5e5e5] leading-relaxed space-y-3">
+                          <div dangerouslySetInnerHTML={{ __html: evidenceClaim.evaluation.replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#ffffff] font-semibold">$1</strong>').replace(/\n\n/g, '<br/><br/>').replace(/\n/g, '<br/>') }} />
                         </div>
                       </div>
                     )}
@@ -543,9 +543,9 @@ export function WhitepaperTooltip({
       {showTooltip && tooltipPosition && createPortal(
         <div
           ref={tooltipRef}
-          className="fixed z-[9999] bg-[#111214] border border-[#2a2d31] rounded-lg shadow-2xl max-w-[500px] w-[500px]"
+          className="fixed z-[9999] bg-[#111214] border border-[#2a2d31] rounded-lg shadow-2xl max-w-[650px] w-[650px]"
           style={{
-            left: tooltipPosition.x - 250, // Center the tooltip
+            left: tooltipPosition.x - 325, // Center the tooltip
             top: tooltipPosition.placement === 'below'
               ? tooltipPosition.y + 10
               : tooltipPosition.y - 400 - 10,
