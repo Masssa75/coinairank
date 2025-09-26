@@ -61,10 +61,57 @@ export async function GET(request: NextRequest) {
       });
     }
     
-    // Build query for general listing
+    // Build query for general listing - SELECT ONLY NEEDED FIELDS
+    // This dramatically reduces payload size from ~500KB to ~50KB
+    // Note: Large JSON fields (analysis, signals, etc.) are loaded separately via tooltips
+    const selectFields = `
+      id,
+      symbol,
+      name,
+      network,
+      contract_address,
+      website_url,
+      website_screenshot_url,
+      website_stage1_score,
+      website_stage1_tier,
+      website_stage1_analyzed_at,
+      current_liquidity_usd,
+      current_market_cap,
+      current_price_usd,
+      roi_percent,
+      initial_liquidity_usd,
+      initial_market_cap,
+      one_liner,
+      strongest_signal,
+      token_type,
+      is_imposter,
+      is_dead,
+      contract_verification,
+      twitter_url,
+      social_urls,
+      x_stage1_score,
+      x_stage1_tier,
+      x_analyzed_at,
+      whitepaper_url,
+      whitepaper_stage1_score,
+      whitepaper_stage1_tier,
+      whitepaper_analyzed_at,
+      project_age_years,
+      age_source,
+      launch_date,
+      created_at,
+      extraction_status,
+      comparison_status,
+      signal_feedback,
+      website_stage1_analysis,
+      benchmark_comparison,
+      x_analysis,
+      whitepaper_analysis
+    `.replace(/\s+/g, ' ').trim();
+
     let query = supabase
       .from('crypto_projects_rated')
-      .select('*', { count: 'exact' });
+      .select(selectFields, { count: 'exact' });
     
     // Only apply score filters if minScore > 0 (to include unanalyzed tokens with null scores)
     if (minScore > 0) {

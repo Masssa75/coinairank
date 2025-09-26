@@ -939,10 +939,18 @@ HTML: ${htmlForAnalysis}`;
       }
     }
 
+    // Extract Twitter URL from social_urls for the twitter_url column
+    let twitterUrl = null;
+    const twitterSocial = socialUrls.find(s => s.type === 'twitter');
+    if (twitterSocial) {
+      twitterUrl = twitterSocial.url;
+    }
+
     console.log(`📎 Categorized resources:`);
     console.log(`  Whitepaper: ${whitepaperUrl || 'Not found'}`);
     console.log(`  GitHub: ${githubUrl || 'Not found'}`);
     console.log(`  Docs: ${docsUrl || 'Not found'}`);
+    console.log(`  Twitter: ${twitterUrl || 'Not found'}`);
     console.log(`  Social: ${socialUrls.length} links`);
     console.log(`  Other: ${importantResources.length} links`);
 
@@ -971,6 +979,7 @@ HTML: ${htmlForAnalysis}`;
         whitepaper_url: whitepaperUrl,
         github_url: githubUrl,
         docs_url: docsUrl,
+        twitter_url: twitterUrl,  // Add twitter_url for X analyzer trigger
         social_urls: socialUrls.length > 0 ? socialUrls : null,
         important_resources: importantResources.length > 0 ? importantResources : null,
         // Continue with other fields

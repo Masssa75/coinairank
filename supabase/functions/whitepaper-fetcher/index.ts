@@ -45,22 +45,50 @@ async function fetchWhitepaperContent(url: string): Promise<{
 
     const contentType = response.headers.get('content-type') || '';
 
-    // Handle PDF
-    if (url.endsWith('.pdf') || contentType.includes('pdf')) {
-      console.log('PDF detected, extracting text...');
-      const pdfBuffer = await response.arrayBuffer();
-      const pdf = await getDocumentProxy(new Uint8Array(pdfBuffer));
-      const extractResult = await extractText(pdf, { mergePages: true });
+    // First, get the response as arrayBuffer to check for PDF magic bytes
+    const buffer = await response.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
 
-      return {
-        content: extractResult.text,
-        method: 'pdf',
-        originalLength: pdfBuffer.byteLength
-      };
+    // Check for PDF magic bytes (%PDF)
+    const isPDF = (
+      url.endsWith('.pdf') ||
+      contentType.includes('pdf') ||
+      (bytes.length > 4 &&
+       bytes[0] === 0x25 && bytes[1] === 0x50 &&
+       bytes[2] === 0x44 && bytes[3] === 0x46) // %PDF in hex
+    );
+
+    // Log detection result
+    console.log(`Content-Type: ${contentType}`);
+    console.log(`First 10 bytes: ${Array.from(bytes.slice(0, 10)).map(b => b.toString(16)).join(' ')}`);
+    console.log(`Is PDF: ${isPDF}`);
+
+    if (isPDF) {
+      console.log('PDF detected (URL/content-type/magic bytes), extracting text...');
+      try {
+        const pdf = await getDocumentProxy(bytes);
+        const extractResult = await extractText(pdf, { mergePages: true });
+
+        return {
+          content: extractResult.text,
+          method: 'pdf',
+          originalLength: buffer.byteLength
+        };
+      } catch (pdfError) {
+        console.error('PDF extraction failed:', pdfError);
+        // Fall back to treating as text if PDF parsing fails
+        const textContent = new TextDecoder().decode(bytes);
+        const parsedText = parseHtmlToText(textContent);
+        return {
+          content: parsedText,
+          method: 'html',
+          originalLength: buffer.byteLength
+        };
+      }
     }
 
-    // Handle HTML
-    const htmlContent = await response.text();
+    // Handle HTML/text content
+    const htmlContent = new TextDecoder().decode(bytes);
     const parsedText = parseHtmlToText(htmlContent);
 
     return {
