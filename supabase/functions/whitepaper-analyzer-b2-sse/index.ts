@@ -15,7 +15,7 @@ async function processWithSSE(
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   await sendEvent('starting', {
-    message: `Starting V4 transformative potential analysis for ${symbol}...`
+    message: `Starting B2 technical/fundamental distillation for ${symbol}...`
   });
 
   // Get project data
@@ -46,43 +46,42 @@ async function processWithSSE(
   }
 
   await sendEvent('ai_analyzing', {
-    message: 'V4: Analyzing transformative potential...'
+    message: 'B2: Distilling technical and fundamental aspects...'
   });
 
-  const systemPrompt = 'You are explaining crypto projects to regular people using simple analogies and everyday language. Focus on what this means for normal users in their daily lives.';
+  const systemPrompt = 'You are distilling the technical innovation and fundamental contribution of a whitepaper for comparative analysis.';
 
-  const userPrompt = `Explain this crypto project like you're talking to someone who's never used cryptocurrency before. Use simple, everyday analogies.
-
-Think of analogies like:
-- Internet vs dial-up modems
-- Highways vs country roads
-- Phone networks vs sending letters
-- App stores vs individual software
+  const userPrompt = `Distill this whitepaper to its technical and fundamental essence for benchmark comparison.
 
 Focus on:
-- What does this mean for regular users?
-- How would this change daily life if it worked?
-- Use simple comparisons to things people already know
-- Avoid technical jargon completely
-- What's the "so what?" for normal people?
+- The core technical innovation or mechanism
+- The fundamental problem being solved
+- The specific approach that makes this unique
+- The concrete implementation details that matter
 
-Example tone: "Imagine if all your different bank accounts could talk to each other instantly, like having one universal ATM card that works everywhere..."
+Be specific about:
+- Technical architecture and design choices
+- Economic mechanisms and incentives
+- Consensus or coordination mechanisms
+- Data structures or algorithms used
+
+Avoid:
+- Marketing language or hype
+- Generic blockchain benefits
+- Vague future promises
+- Non-technical aspects unless core to the innovation
 
 Extract:
-1. The main claim in one clear sentence (no technical terms)
-2. Explain the real-world impact in 2-3 paragraphs using:
-   - Simple analogies people can understand
-   - Focus on daily life benefits
-   - Plain English explanations
-   - "What this means for you" perspective
+1. Technical innovation: The specific technical contribution in 1-2 sentences
+2. Implementation essence: The concrete technical approach, mechanisms, and design choices in 3-4 paragraphs
 
 Whitepaper content:
 ${content}
 
 Output JSON:
 {
-  "main_claim": "one sentence description in simple terms anyone can understand",
-  "claim_evaluation": "2-3 paragraph explanation using everyday analogies and focusing on real-world user benefits"
+  "technical_innovation": "the specific technical contribution in 1-2 sentences",
+  "implementation_essence": "3-4 paragraphs describing the concrete technical approach and mechanisms"
 }`;
 
   const apiKey = Deno.env.get('MOONSHOT_API_KEY');
@@ -118,7 +117,7 @@ Output JSON:
   const aiContent = aiData.choices[0].message.content;
 
   await sendEvent('ai_complete', {
-    message: `V4 analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
+    message: `B2 distillation complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
     duration_ms: aiEndTime - aiStartTime
   });
 
@@ -136,33 +135,37 @@ Output JSON:
   }
 
   await sendEvent('saving', {
-    message: 'Saving V4 transformative potential analysis...'
+    message: 'Saving B2 technical/fundamental distillation...'
   });
 
-  // Save to a new column for V4 results
-  const { error: updateError } = await supabase
-    .from('crypto_projects_rated')
-    .update({
-      whitepaper_v4_analysis: {
-        main_claim: analysis.main_claim,
-        claim_evaluation: analysis.claim_evaluation,
-        analyzed_at: new Date().toISOString(),
-        version: 'v4-transformative-potential'
+  // Save to experiments table
+  const { error: saveError } = await supabase
+    .from('whitepaper_experiments')
+    .upsert({
+      symbol,
+      version: 'b2-technical-fundamental',
+      technical_innovation: analysis.technical_innovation || analysis.core_thesis || analysis.main_claim,
+      implementation_essence: analysis.implementation_essence || analysis.authentic_essence || analysis.claim_evaluation,
+      metadata: {
+        approach: 'Technical and fundamental distillation',
+        model: 'kimi-k2-0905-preview',
+        track: 'B'
       }
-    })
-    .eq('id', project.id);
+    }, {
+      onConflict: 'symbol,version'
+    });
 
-  if (updateError) {
-    console.error(`Failed to update V4 results: ${updateError.message}`);
-    throw updateError;
+  if (saveError) {
+    console.error(`Failed to save B2 results: ${saveError.message}`);
+    // Don't throw, just log the error
   }
 
   return {
     success: true,
-    version: 'v4-transformative-potential',
+    version: 'b2-technical-fundamental',
     symbol,
-    main_claim: analysis.main_claim,
-    claim_evaluation: analysis.claim_evaluation
+    technical_innovation: analysis.technical_innovation || analysis.core_thesis || analysis.main_claim,
+    implementation_essence: analysis.implementation_essence || analysis.authentic_essence || analysis.claim_evaluation
   };
 }
 
@@ -195,7 +198,7 @@ serve(async (req) => {
         try {
           const result = await processWithSSE(symbol, sendEvent);
           await sendEvent('complete', {
-            message: 'V4 transformative potential analysis complete',
+            message: 'B2 technical/fundamental distillation complete',
             result
           });
         } catch (error) {

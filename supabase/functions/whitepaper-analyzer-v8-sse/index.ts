@@ -15,7 +15,7 @@ async function processWithSSE(
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   await sendEvent('starting', {
-    message: `Starting V4 transformative potential analysis for ${symbol}...`
+    message: `Starting V6 feasibility vs ambition analysis for ${symbol}...`
   });
 
   // Get project data
@@ -46,43 +46,48 @@ async function processWithSSE(
   }
 
   await sendEvent('ai_analyzing', {
-    message: 'V4: Analyzing transformative potential...'
+    message: 'V8: Creating structured bullet-point analysis...'
   });
 
-  const systemPrompt = 'You are explaining crypto projects to regular people using simple analogies and everyday language. Focus on what this means for normal users in their daily lives.';
+  const systemPrompt = 'You are a tech journalist writing for mainstream media. Use bullet points and clear structure for maximum readability. Balance innovation excitement with healthy skepticism.';
 
-  const userPrompt = `Explain this crypto project like you're talking to someone who's never used cryptocurrency before. Use simple, everyday analogies.
+  const userPrompt = `Write a structured analysis using bullet points for clarity.
 
-Think of analogies like:
-- Internet vs dial-up modems
-- Highways vs country roads
-- Phone networks vs sending letters
-- App stores vs individual software
+Format requirements:
+- Use bullet points for key insights
+- Bold important concepts for scanning
+- Short, declarative sentences
+- Clear section breaks
 
-Focus on:
-- What does this mean for regular users?
-- How would this change daily life if it worked?
-- Use simple comparisons to things people already know
-- Avoid technical jargon completely
-- What's the "so what?" for normal people?
+Structure:
+PART 1: The Promise
+• 3-4 bullet points on why this could succeed
+• Focus on concrete benefits
+• Use specific comparisons
 
-Example tone: "Imagine if all your different bank accounts could talk to each other instantly, like having one universal ATM card that works everywhere..."
+PART 2: The Challenges
+• 3-4 bullet points on realistic concerns
+• Specific technical or market hurdles
+• What could go wrong
+
+PART 3: Bottom Line
+• 1-2 sentences on overall assessment
+• Is this worth watching? Why/why not?
 
 Extract:
-1. The main claim in one clear sentence (no technical terms)
-2. Explain the real-world impact in 2-3 paragraphs using:
-   - Simple analogies people can understand
-   - Focus on daily life benefits
-   - Plain English explanations
-   - "What this means for you" perspective
+1. Main claim as punchy headline
+2. Structured evaluation with:
+   - Bullet-pointed strengths
+   - Bullet-pointed challenges
+   - Clear bottom-line assessment
 
 Whitepaper content:
 ${content}
 
 Output JSON:
 {
-  "main_claim": "one sentence description in simple terms anyone can understand",
-  "claim_evaluation": "2-3 paragraph explanation using everyday analogies and focusing on real-world user benefits"
+  "main_claim": "one sentence news-style description of what this project claims to do",
+  "claim_evaluation": "2-3 paragraph balanced journalistic analysis presenting both opportunities and challenges"
 }`;
 
   const apiKey = Deno.env.get('MOONSHOT_API_KEY');
@@ -118,7 +123,7 @@ Output JSON:
   const aiContent = aiData.choices[0].message.content;
 
   await sendEvent('ai_complete', {
-    message: `V4 analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
+    message: `V6 analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
     duration_ms: aiEndTime - aiStartTime
   });
 
@@ -136,30 +141,33 @@ Output JSON:
   }
 
   await sendEvent('saving', {
-    message: 'Saving V4 transformative potential analysis...'
+    message: 'Saving V8 structured analysis...'
   });
 
-  // Save to a new column for V4 results
-  const { error: updateError } = await supabase
-    .from('crypto_projects_rated')
-    .update({
-      whitepaper_v4_analysis: {
-        main_claim: analysis.main_claim,
-        claim_evaluation: analysis.claim_evaluation,
-        analyzed_at: new Date().toISOString(),
-        version: 'v4-transformative-potential'
+  // Save to experiments table
+  const { error: saveError } = await supabase
+    .from('whitepaper_experiments')
+    .upsert({
+      symbol,
+      version: 'v8-structured',
+      main_claim: analysis.main_claim,
+      claim_evaluation: analysis.claim_evaluation,
+      metadata: {
+        approach: 'bullet-point structure',
+        model: 'kimi-k2-0905-preview'
       }
-    })
-    .eq('id', project.id);
+    }, {
+      onConflict: 'symbol,version'
+    });
 
-  if (updateError) {
-    console.error(`Failed to update V4 results: ${updateError.message}`);
-    throw updateError;
+  if (saveError) {
+    console.error(`Failed to save V8 results: ${saveError.message}`);
+    // Don't throw, just log the error
   }
 
   return {
     success: true,
-    version: 'v4-transformative-potential',
+    version: 'v6-feasibility-ambition',
     symbol,
     main_claim: analysis.main_claim,
     claim_evaluation: analysis.claim_evaluation
@@ -195,7 +203,7 @@ serve(async (req) => {
         try {
           const result = await processWithSSE(symbol, sendEvent);
           await sendEvent('complete', {
-            message: 'V4 transformative potential analysis complete',
+            message: 'V8 structured bullet-point analysis complete',
             result
           });
         } catch (error) {

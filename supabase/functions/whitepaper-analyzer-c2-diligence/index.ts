@@ -15,7 +15,7 @@ async function processWithSSE(
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   await sendEvent('starting', {
-    message: `Starting V4 transformative potential analysis for ${symbol}...`
+    message: `Starting C2 due diligence analysis for ${symbol}...`
   });
 
   // Get project data
@@ -46,44 +46,48 @@ async function processWithSSE(
   }
 
   await sendEvent('ai_analyzing', {
-    message: 'V4: Analyzing transformative potential...'
+    message: 'C2: Conducting due diligence analysis of whitepaper...'
   });
 
-  const systemPrompt = 'You are explaining crypto projects to regular people using simple analogies and everyday language. Focus on what this means for normal users in their daily lives.';
+  const systemPrompt = 'You are an experienced investor conducting due diligence on a crypto project. Analyze what this whitepaper reveals about execution readiness, team capabilities, and true motivations beyond the marketing claims.';
 
-  const userPrompt = `Explain this crypto project like you're talking to someone who's never used cryptocurrency before. Use simple, everyday analogies.
+  const userPrompt = `Analyze what this whitepaper reveals about the team's background, true motivations, and execution readiness. Include what success would require given these observations.
 
-Think of analogies like:
-- Internet vs dial-up modems
-- Highways vs country roads
-- Phone networks vs sending letters
-- App stores vs individual software
+Conduct due diligence analysis focusing on:
 
-Focus on:
-- What does this mean for regular users?
-- How would this change daily life if it worked?
-- Use simple comparisons to things people already know
-- Avoid technical jargon completely
-- What's the "so what?" for normal people?
+**Team Background & Capabilities:**
+- What does the writing style and technical depth reveal about their expertise?
+- What gaps in knowledge or experience are evident?
+- Do they demonstrate understanding of the challenges they'll face?
+- What evidence suggests they've built similar systems before?
 
-Example tone: "Imagine if all your different bank accounts could talk to each other instantly, like having one universal ATM card that works everywhere..."
+**True Motivations & Incentives:**
+- What are they really optimizing for beyond stated goals?
+- What does their approach to tokenomics/economics reveal about priorities?
+- Are they solving a problem they personally experience?
+- What suggests this is more than a quick cash grab?
 
-Extract:
-1. The main claim in one clear sentence (no technical terms)
-2. Explain the real-world impact in 2-3 paragraphs using:
-   - Simple analogies people can understand
-   - Focus on daily life benefits
-   - Plain English explanations
-   - "What this means for you" perspective
+**Execution Readiness:**
+- How realistic are their timelines and milestones?
+- What critical dependencies or risks do they acknowledge vs ignore?
+- Do they have concrete plans or just high-level concepts?
+- What suggests they understand the operational complexity?
+
+**Requirements for Success:**
+- What specific capabilities would the team need to develop?
+- What partnerships, resources, or market conditions are required?
+- What are the most likely failure modes given their approach?
+- What would need to change for this to actually work?
+
+**Investment Perspective:**
+- If you were considering funding this, what would concern you most?
+- What would you need to see before believing in their execution ability?
+- How does this compare to other projects in the space?
+
+Respond in unstructured text - write as if briefing a potential investor on what you've discovered through your analysis.
 
 Whitepaper content:
-${content}
-
-Output JSON:
-{
-  "main_claim": "one sentence description in simple terms anyone can understand",
-  "claim_evaluation": "2-3 paragraph explanation using everyday analogies and focusing on real-world user benefits"
-}`;
+${content}`;
 
   const apiKey = Deno.env.get('MOONSHOT_API_KEY');
   if (!apiKey) {
@@ -98,13 +102,13 @@ Output JSON:
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'kimi-k2-0905-preview',
+      model: 'moonshot-v1-128k',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      temperature: 0.1,
-      max_tokens: 12000
+      temperature: 0.2,
+      max_tokens: 4000
     }),
     signal: AbortSignal.timeout(300000)
   });
@@ -115,54 +119,44 @@ Output JSON:
   }
 
   const aiData = await aiResponse.json();
-  const aiContent = aiData.choices[0].message.content;
+  const analysisText = aiData.choices[0].message.content;
 
   await sendEvent('ai_complete', {
-    message: `V4 analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
+    message: `C2 due diligence analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
     duration_ms: aiEndTime - aiStartTime
   });
 
-  let analysis;
-  try {
-    const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      analysis = JSON.parse(jsonMatch[0]);
-    } else {
-      throw new Error('No valid JSON found in response');
-    }
-  } catch (parseError) {
-    console.error('Failed to parse AI response:', parseError);
-    throw new Error(`Failed to parse AI response: ${parseError.message}`);
-  }
-
   await sendEvent('saving', {
-    message: 'Saving V4 transformative potential analysis...'
+    message: 'Saving C2 due diligence analysis...'
   });
 
-  // Save to a new column for V4 results
-  const { error: updateError } = await supabase
-    .from('crypto_projects_rated')
-    .update({
-      whitepaper_v4_analysis: {
-        main_claim: analysis.main_claim,
-        claim_evaluation: analysis.claim_evaluation,
-        analyzed_at: new Date().toISOString(),
-        version: 'v4-transformative-potential'
+  // Save to experiments table with unstructured text
+  const { error: saveError } = await supabase
+    .from('whitepaper_experiments')
+    .upsert({
+      symbol,
+      version: 'c2-diligence',
+      analysis_text: analysisText,
+      metadata: {
+        approach: 'Due diligence - investor perspective analysis',
+        model: 'moonshot-v1-128k',
+        track: 'C',
+        description: 'Analyzes team capabilities, motivations, execution readiness from investor due diligence perspective'
       }
-    })
-    .eq('id', project.id);
+    }, {
+      onConflict: 'symbol,version'
+    });
 
-  if (updateError) {
-    console.error(`Failed to update V4 results: ${updateError.message}`);
-    throw updateError;
+  if (saveError) {
+    console.error(`Failed to save C2 results: ${saveError.message}`);
+    // Don't throw, just log the error
   }
 
   return {
     success: true,
-    version: 'v4-transformative-potential',
+    version: 'c2-diligence',
     symbol,
-    main_claim: analysis.main_claim,
-    claim_evaluation: analysis.claim_evaluation
+    analysis_text: analysisText
   };
 }
 
@@ -195,7 +189,7 @@ serve(async (req) => {
         try {
           const result = await processWithSSE(symbol, sendEvent);
           await sendEvent('complete', {
-            message: 'V4 transformative potential analysis complete',
+            message: 'C2 due diligence analysis complete',
             result
           });
         } catch (error) {

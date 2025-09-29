@@ -15,7 +15,7 @@ async function processWithSSE(
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   await sendEvent('starting', {
-    message: `Starting V4 transformative potential analysis for ${symbol}...`
+    message: `Starting V10 progressive disclosure analysis for ${symbol}...`
   });
 
   // Get project data
@@ -46,43 +46,49 @@ async function processWithSSE(
   }
 
   await sendEvent('ai_analyzing', {
-    message: 'V4: Analyzing transformative potential...'
+    message: 'V10: Creating progressive disclosure summary...'
   });
 
-  const systemPrompt = 'You are explaining crypto projects to regular people using simple analogies and everyday language. Focus on what this means for normal users in their daily lives.';
+  const systemPrompt = 'You write executive summaries with progressive detail. Start with the absolute essentials, then add layers of detail. Make every word count.';
 
-  const userPrompt = `Explain this crypto project like you're talking to someone who's never used cryptocurrency before. Use simple, everyday analogies.
+  const userPrompt = `Create a progressive disclosure summary: start simple, add detail.
 
-Think of analogies like:
-- Internet vs dial-up modems
-- Highways vs country roads
-- Phone networks vs sending letters
-- App stores vs individual software
+LEVEL 1 - The Tweet (1 sentence)
+What this project does in the simplest possible terms.
 
-Focus on:
-- What does this mean for regular users?
-- How would this change daily life if it worked?
-- Use simple comparisons to things people already know
-- Avoid technical jargon completely
-- What's the "so what?" for normal people?
+LEVEL 2 - The Elevator Pitch (3-4 sentences)
+• What problem it solves
+• How it's different
+• Why it might matter
 
-Example tone: "Imagine if all your different bank accounts could talk to each other instantly, like having one universal ATM card that works everywhere..."
+LEVEL 3 - The Deep Dive (2 paragraphs)
+Paragraph 1: The opportunity
+- Market context and timing
+- Technical approach and innovation
+- Potential impact if successful
+
+Paragraph 2: The reality check
+- Main challenges and risks
+- Competition and alternatives
+- What needs to go right
+
+Format: Start with the simplest explanation and progressively add nuance.
+Tone: Clear, balanced, no jargon in Level 1-2, minimal in Level 3.
 
 Extract:
-1. The main claim in one clear sentence (no technical terms)
-2. Explain the real-world impact in 2-3 paragraphs using:
-   - Simple analogies people can understand
-   - Focus on daily life benefits
-   - Plain English explanations
-   - "What this means for you" perspective
+1. One-sentence description (the tweet)
+2. Progressive evaluation:
+   - Tweet-length summary
+   - Elevator pitch expansion
+   - Deep dive with nuance
 
 Whitepaper content:
 ${content}
 
 Output JSON:
 {
-  "main_claim": "one sentence description in simple terms anyone can understand",
-  "claim_evaluation": "2-3 paragraph explanation using everyday analogies and focusing on real-world user benefits"
+  "main_claim": "one sentence news-style description of what this project claims to do",
+  "claim_evaluation": "2-3 paragraph balanced journalistic analysis presenting both opportunities and challenges"
 }`;
 
   const apiKey = Deno.env.get('MOONSHOT_API_KEY');
@@ -118,7 +124,7 @@ Output JSON:
   const aiContent = aiData.choices[0].message.content;
 
   await sendEvent('ai_complete', {
-    message: `V4 analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
+    message: `V6 analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
     duration_ms: aiEndTime - aiStartTime
   });
 
@@ -136,30 +142,33 @@ Output JSON:
   }
 
   await sendEvent('saving', {
-    message: 'Saving V4 transformative potential analysis...'
+    message: 'Saving V10 progressive summary...'
   });
 
-  // Save to a new column for V4 results
-  const { error: updateError } = await supabase
-    .from('crypto_projects_rated')
-    .update({
-      whitepaper_v4_analysis: {
-        main_claim: analysis.main_claim,
-        claim_evaluation: analysis.claim_evaluation,
-        analyzed_at: new Date().toISOString(),
-        version: 'v4-transformative-potential'
+  // Save to experiments table
+  const { error: saveError } = await supabase
+    .from('whitepaper_experiments')
+    .upsert({
+      symbol,
+      version: 'v10-progressive',
+      main_claim: analysis.main_claim,
+      claim_evaluation: analysis.claim_evaluation,
+      metadata: {
+        approach: 'progressive disclosure',
+        model: 'kimi-k2-0905-preview'
       }
-    })
-    .eq('id', project.id);
+    }, {
+      onConflict: 'symbol,version'
+    });
 
-  if (updateError) {
-    console.error(`Failed to update V4 results: ${updateError.message}`);
-    throw updateError;
+  if (saveError) {
+    console.error(`Failed to save V10 results: ${saveError.message}`);
+    // Don't throw, just log the error
   }
 
   return {
     success: true,
-    version: 'v4-transformative-potential',
+    version: 'v6-feasibility-ambition',
     symbol,
     main_claim: analysis.main_claim,
     claim_evaluation: analysis.claim_evaluation
@@ -195,7 +204,7 @@ serve(async (req) => {
         try {
           const result = await processWithSSE(symbol, sendEvent);
           await sendEvent('complete', {
-            message: 'V4 transformative potential analysis complete',
+            message: 'V10 progressive disclosure analysis complete',
             result
           });
         } catch (error) {

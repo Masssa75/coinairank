@@ -15,7 +15,7 @@ async function processWithSSE(
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   await sendEvent('starting', {
-    message: `Starting V4 transformative potential analysis for ${symbol}...`
+    message: `Starting B5 reality check analysis for ${symbol}...`
   });
 
   // Get project data
@@ -46,44 +46,65 @@ async function processWithSSE(
   }
 
   await sendEvent('ai_analyzing', {
-    message: 'V4: Analyzing transformative potential...'
+    message: 'B5: Performing reality check on claims and promises...'
   });
 
-  const systemPrompt = 'You are explaining crypto projects to regular people using simple analogies and everyday language. Focus on what this means for normal users in their daily lives.';
+  const systemPrompt = 'You are performing reality checks on crypto project whitepapers, analyzing required assumptions and checking claims against technical, market, economic, and regulatory reality.';
 
-  const userPrompt = `Explain this crypto project like you're talking to someone who's never used cryptocurrency before. Use simple, everyday analogies.
+  const userPrompt = `Analyze this whitepaper to perform reality checks on major claims and promises. For each significant promise or claim, identify what would need to be true for it to work and assess against reality.
 
-Think of analogies like:
-- Internet vs dial-up modems
-- Highways vs country roads
-- Phone networks vs sending letters
-- App stores vs individual software
+For each major promise/claim, analyze:
+1. The Promise: What exactly is being promised or claimed?
+2. Required Assumptions: What must be true for this to work as described?
+3. Reality Check Categories:
+   - Technical Reality: Is this technically feasible with current/near-future technology?
+   - Market Reality: Do market conditions support this (adoption, liquidity, demand)?
+   - Economic Reality: Do the economics make sense (incentives, sustainability, value flows)?
+   - Regulatory Reality: Are there regulatory constraints or risks?
+   - Timeline Reality: Is the proposed timeline realistic given complexity?
 
-Focus on:
-- What does this mean for regular users?
-- How would this change daily life if it worked?
-- Use simple comparisons to things people already know
-- Avoid technical jargon completely
-- What's the "so what?" for normal people?
+4. Reality Assessment:
+   - Solid: Assumptions are reasonable and well-supported
+   - Optimistic: Requires favorable conditions but possible
+   - Ambitious: Requires multiple things to go right, significant assumptions
+   - Questionable: Key assumptions may not hold up to scrutiny
+   - Unrealistic: Contradicts known limitations or market realities
 
-Example tone: "Imagine if all your different bank accounts could talk to each other instantly, like having one universal ATM card that works everywhere..."
+Focus on identifying gaps between promises and practical reality:
+- What are they not telling you about the challenges?
+- What assumptions are they making about user behavior, market conditions, technical capabilities?
+- What could go wrong that they're not addressing?
+- Are their timelines and milestones realistic?
 
-Extract:
-1. The main claim in one clear sentence (no technical terms)
-2. Explain the real-world impact in 2-3 paragraphs using:
-   - Simple analogies people can understand
-   - Focus on daily life benefits
-   - Plain English explanations
-   - "What this means for you" perspective
+Don't be negative - be analytical about what needs to align for their vision to work.
 
 Whitepaper content:
 ${content}
 
 Output JSON:
 {
-  "main_claim": "one sentence description in simple terms anyone can understand",
-  "claim_evaluation": "2-3 paragraph explanation using everyday analogies and focusing on real-world user benefits"
-}`;
+  "reality_checks": [
+    {
+      "promise": "specific promise or claim being made",
+      "required_assumptions": ["list of key assumptions that must be true"],
+      "technical_reality": "assessment of technical feasibility",
+      "market_reality": "assessment of market conditions and adoption requirements",
+      "economic_reality": "assessment of economic sustainability and incentives",
+      "regulatory_reality": "assessment of regulatory constraints or risks",
+      "timeline_reality": "assessment of proposed timeline feasibility",
+      "reality_assessment": "solid/optimistic/ambitious/questionable/unrealistic",
+      "key_risks": "main things that could prevent this promise from being fulfilled"
+    }
+  ],
+  "overall_reality_check": {
+    "realism_score": "conservative/optimistic/aggressive/unrealistic based on overall promises",
+    "critical_dependencies": ["list of critical factors the project depends on"],
+    "major_assumptions": ["biggest assumptions the project is making"],
+    "reality_gaps": ["areas where promises may not align with practical constraints"]
+  }
+}
+
+Extract 5-7 key promises that best represent the project's ambition level and reality alignment.`;
 
   const apiKey = Deno.env.get('MOONSHOT_API_KEY');
   if (!apiKey) {
@@ -118,7 +139,7 @@ Output JSON:
   const aiContent = aiData.choices[0].message.content;
 
   await sendEvent('ai_complete', {
-    message: `V4 analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
+    message: `B5 reality check complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
     duration_ms: aiEndTime - aiStartTime
   });
 
@@ -136,33 +157,37 @@ Output JSON:
   }
 
   await sendEvent('saving', {
-    message: 'Saving V4 transformative potential analysis...'
+    message: 'Saving B5 reality check analysis...'
   });
 
-  // Save to a new column for V4 results
-  const { error: updateError } = await supabase
-    .from('crypto_projects_rated')
-    .update({
-      whitepaper_v4_analysis: {
-        main_claim: analysis.main_claim,
-        claim_evaluation: analysis.claim_evaluation,
-        analyzed_at: new Date().toISOString(),
-        version: 'v4-transformative-potential'
+  // Save to experiments table
+  const { error: saveError } = await supabase
+    .from('whitepaper_experiments')
+    .upsert({
+      symbol,
+      version: 'b5-reality',
+      reality_checks: analysis.reality_checks || [],
+      overall_reality_check: analysis.overall_reality_check || {},
+      metadata: {
+        approach: 'Reality check analysis of whitepaper claims and promises',
+        model: 'kimi-k2-0905-preview',
+        track: 'B'
       }
-    })
-    .eq('id', project.id);
+    }, {
+      onConflict: 'symbol,version'
+    });
 
-  if (updateError) {
-    console.error(`Failed to update V4 results: ${updateError.message}`);
-    throw updateError;
+  if (saveError) {
+    console.error(`Failed to save B5 reality results: ${saveError.message}`);
+    // Don't throw, just log the error
   }
 
   return {
     success: true,
-    version: 'v4-transformative-potential',
+    version: 'b5-reality',
     symbol,
-    main_claim: analysis.main_claim,
-    claim_evaluation: analysis.claim_evaluation
+    reality_checks: analysis.reality_checks || [],
+    overall_reality_check: analysis.overall_reality_check || {}
   };
 }
 
@@ -195,7 +220,7 @@ serve(async (req) => {
         try {
           const result = await processWithSSE(symbol, sendEvent);
           await sendEvent('complete', {
-            message: 'V4 transformative potential analysis complete',
+            message: 'B5 reality check analysis complete',
             result
           });
         } catch (error) {

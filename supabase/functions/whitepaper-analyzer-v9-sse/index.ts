@@ -15,7 +15,7 @@ async function processWithSSE(
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   await sendEvent('starting', {
-    message: `Starting V4 transformative potential analysis for ${symbol}...`
+    message: `Starting V9 question-driven analysis for ${symbol}...`
   });
 
   // Get project data
@@ -46,43 +46,50 @@ async function processWithSSE(
   }
 
   await sendEvent('ai_analyzing', {
-    message: 'V4: Analyzing transformative potential...'
+    message: 'V9: Answering key reader questions...'
   });
 
-  const systemPrompt = 'You are explaining crypto projects to regular people using simple analogies and everyday language. Focus on what this means for normal users in their daily lives.';
+  const systemPrompt = 'You are answering reader questions about a new crypto project. Be direct, clear, and balanced. Address what readers really want to know.';
 
-  const userPrompt = `Explain this crypto project like you're talking to someone who's never used cryptocurrency before. Use simple, everyday analogies.
+  const userPrompt = `Answer the key questions readers have about this project.
 
-Think of analogies like:
-- Internet vs dial-up modems
-- Highways vs country roads
-- Phone networks vs sending letters
-- App stores vs individual software
+Answer these 4 questions:
 
-Focus on:
-- What does this mean for regular users?
-- How would this change daily life if it worked?
-- Use simple comparisons to things people already know
-- Avoid technical jargon completely
-- What's the "so what?" for normal people?
+Q1: What problem does this actually solve?
+- Give a clear, specific answer
+- Use a real-world comparison if helpful
+- 2-3 sentences max
 
-Example tone: "Imagine if all your different bank accounts could talk to each other instantly, like having one universal ATM card that works everywhere..."
+Q2: Why should I believe they can pull it off?
+- List 2-3 credible reasons
+- Be specific about what gives them credibility
+- Avoid hype, stick to facts
+
+Q3: What are the red flags?
+- List 2-3 genuine concerns
+- Be specific about risks
+- Don't sugarcoat problems
+
+Q4: Is this worth paying attention to?
+- Give a clear yes/no/maybe
+- Explain your reasoning in 1-2 sentences
+- Who specifically should care and why
 
 Extract:
-1. The main claim in one clear sentence (no technical terms)
-2. Explain the real-world impact in 2-3 paragraphs using:
-   - Simple analogies people can understand
-   - Focus on daily life benefits
-   - Plain English explanations
-   - "What this means for you" perspective
+1. Main claim as a question they're answering
+2. Q&A format evaluation addressing:
+   - Problem/solution fit
+   - Credibility factors
+   - Risk factors
+   - Investment of attention worthiness
 
 Whitepaper content:
 ${content}
 
 Output JSON:
 {
-  "main_claim": "one sentence description in simple terms anyone can understand",
-  "claim_evaluation": "2-3 paragraph explanation using everyday analogies and focusing on real-world user benefits"
+  "main_claim": "one sentence news-style description of what this project claims to do",
+  "claim_evaluation": "2-3 paragraph balanced journalistic analysis presenting both opportunities and challenges"
 }`;
 
   const apiKey = Deno.env.get('MOONSHOT_API_KEY');
@@ -118,7 +125,7 @@ Output JSON:
   const aiContent = aiData.choices[0].message.content;
 
   await sendEvent('ai_complete', {
-    message: `V4 analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
+    message: `V6 analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
     duration_ms: aiEndTime - aiStartTime
   });
 
@@ -136,30 +143,33 @@ Output JSON:
   }
 
   await sendEvent('saving', {
-    message: 'Saving V4 transformative potential analysis...'
+    message: 'Saving V9 Q&A analysis...'
   });
 
-  // Save to a new column for V4 results
-  const { error: updateError } = await supabase
-    .from('crypto_projects_rated')
-    .update({
-      whitepaper_v4_analysis: {
-        main_claim: analysis.main_claim,
-        claim_evaluation: analysis.claim_evaluation,
-        analyzed_at: new Date().toISOString(),
-        version: 'v4-transformative-potential'
+  // Save to experiments table
+  const { error: saveError } = await supabase
+    .from('whitepaper_experiments')
+    .upsert({
+      symbol,
+      version: 'v9-questions',
+      main_claim: analysis.main_claim,
+      claim_evaluation: analysis.claim_evaluation,
+      metadata: {
+        approach: 'question-driven format',
+        model: 'kimi-k2-0905-preview'
       }
-    })
-    .eq('id', project.id);
+    }, {
+      onConflict: 'symbol,version'
+    });
 
-  if (updateError) {
-    console.error(`Failed to update V4 results: ${updateError.message}`);
-    throw updateError;
+  if (saveError) {
+    console.error(`Failed to save V9 results: ${saveError.message}`);
+    // Don't throw, just log the error
   }
 
   return {
     success: true,
-    version: 'v4-transformative-potential',
+    version: 'v6-feasibility-ambition',
     symbol,
     main_claim: analysis.main_claim,
     claim_evaluation: analysis.claim_evaluation
@@ -195,7 +205,7 @@ serve(async (req) => {
         try {
           const result = await processWithSSE(symbol, sendEvent);
           await sendEvent('complete', {
-            message: 'V4 transformative potential analysis complete',
+            message: 'V9 question-driven analysis complete',
             result
           });
         } catch (error) {

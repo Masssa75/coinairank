@@ -15,7 +15,7 @@ async function processWithSSE(
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   await sendEvent('starting', {
-    message: `Starting V4 transformative potential analysis for ${symbol}...`
+    message: `Starting B1 authentic essence extraction for ${symbol}...`
   });
 
   // Get project data
@@ -46,43 +46,42 @@ async function processWithSSE(
   }
 
   await sendEvent('ai_analyzing', {
-    message: 'V4: Analyzing transformative potential...'
+    message: 'B1: Extracting authentic essence for benchmark comparison...'
   });
 
-  const systemPrompt = 'You are explaining crypto projects to regular people using simple analogies and everyday language. Focus on what this means for normal users in their daily lives.';
+  const systemPrompt = 'You are creating a faithful representation of a whitepaper that preserves its authentic character, focus, and priorities for benchmark comparison.';
 
-  const userPrompt = `Explain this crypto project like you're talking to someone who's never used cryptocurrency before. Use simple, everyday analogies.
+  const userPrompt = `Create a faithful representation of this whitepaper that captures its authentic essence for benchmark comparison.
 
-Think of analogies like:
-- Internet vs dial-up modems
-- Highways vs country roads
-- Phone networks vs sending letters
-- App stores vs individual software
+Your task:
+- Understand what this whitepaper is trying to communicate
+- Capture its character, priorities, and unique perspective
+- Preserve the language and framing the authors use
+- Distill the core vision and approach in the project's own terms
 
-Focus on:
-- What does this mean for regular users?
-- How would this change daily life if it worked?
-- Use simple comparisons to things people already know
-- Avoid technical jargon completely
-- What's the "so what?" for normal people?
+Do NOT:
+- Force it into predetermined categories
+- Score or rate anything
+- Add your own interpretation or judgment
+- Standardize the language
 
-Example tone: "Imagine if all your different bank accounts could talk to each other instantly, like having one universal ATM card that works everywhere..."
+Instead:
+- Let the whitepaper speak for itself
+- Preserve what makes this project unique
+- Capture what the authors think is important
+- Use their terminology and conceptual framework
 
 Extract:
-1. The main claim in one clear sentence (no technical terms)
-2. Explain the real-world impact in 2-3 paragraphs using:
-   - Simple analogies people can understand
-   - Focus on daily life benefits
-   - Plain English explanations
-   - "What this means for you" perspective
+1. Core thesis: What this project fundamentally believes and is trying to achieve (1-2 sentences)
+2. Authentic essence: The complete vision, approach, and priorities as the authors present them (3-4 paragraphs)
 
 Whitepaper content:
 ${content}
 
 Output JSON:
 {
-  "main_claim": "one sentence description in simple terms anyone can understand",
-  "claim_evaluation": "2-3 paragraph explanation using everyday analogies and focusing on real-world user benefits"
+  "core_thesis": "the fundamental belief and goal of this project in 1-2 sentences",
+  "authentic_essence": "3-4 paragraphs faithfully capturing what this project is about in its own terms, preserving its unique character and priorities"
 }`;
 
   const apiKey = Deno.env.get('MOONSHOT_API_KEY');
@@ -118,7 +117,7 @@ Output JSON:
   const aiContent = aiData.choices[0].message.content;
 
   await sendEvent('ai_complete', {
-    message: `V4 analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
+    message: `B1 extraction complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
     duration_ms: aiEndTime - aiStartTime
   });
 
@@ -136,33 +135,37 @@ Output JSON:
   }
 
   await sendEvent('saving', {
-    message: 'Saving V4 transformative potential analysis...'
+    message: 'Saving B1 authentic essence representation...'
   });
 
-  // Save to a new column for V4 results
-  const { error: updateError } = await supabase
-    .from('crypto_projects_rated')
-    .update({
-      whitepaper_v4_analysis: {
-        main_claim: analysis.main_claim,
-        claim_evaluation: analysis.claim_evaluation,
-        analyzed_at: new Date().toISOString(),
-        version: 'v4-transformative-potential'
+  // Save to experiments table
+  const { error: saveError } = await supabase
+    .from('whitepaper_experiments')
+    .upsert({
+      symbol,
+      version: 'b1-authentic-essence',
+      core_thesis: analysis.core_thesis || analysis.main_claim,
+      authentic_essence: analysis.authentic_essence || analysis.claim_evaluation,
+      metadata: {
+        approach: 'Authentic essence extraction for benchmarks',
+        model: 'kimi-k2-0905-preview',
+        track: 'B'
       }
-    })
-    .eq('id', project.id);
+    }, {
+      onConflict: 'symbol,version'
+    });
 
-  if (updateError) {
-    console.error(`Failed to update V4 results: ${updateError.message}`);
-    throw updateError;
+  if (saveError) {
+    console.error(`Failed to save B1 results: ${saveError.message}`);
+    // Don't throw, just log the error
   }
 
   return {
     success: true,
-    version: 'v4-transformative-potential',
+    version: 'b1-authentic-essence',
     symbol,
-    main_claim: analysis.main_claim,
-    claim_evaluation: analysis.claim_evaluation
+    core_thesis: analysis.core_thesis || analysis.main_claim,
+    authentic_essence: analysis.authentic_essence || analysis.claim_evaluation
   };
 }
 
@@ -195,7 +198,7 @@ serve(async (req) => {
         try {
           const result = await processWithSSE(symbol, sendEvent);
           await sendEvent('complete', {
-            message: 'V4 transformative potential analysis complete',
+            message: 'B1 authentic essence extraction complete',
             result
           });
         } catch (error) {

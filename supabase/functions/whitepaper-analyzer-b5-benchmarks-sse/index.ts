@@ -15,7 +15,7 @@ async function processWithSSE(
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   await sendEvent('starting', {
-    message: `Starting V4 transformative potential analysis for ${symbol}...`
+    message: `Starting B5 competitive benchmarking for ${symbol}...`
   });
 
   // Get project data
@@ -46,44 +46,57 @@ async function processWithSSE(
   }
 
   await sendEvent('ai_analyzing', {
-    message: 'V4: Analyzing transformative potential...'
+    message: 'B5: Analyzing competitive positioning and benchmarks...'
   });
 
-  const systemPrompt = 'You are explaining crypto projects to regular people using simple analogies and everyday language. Focus on what this means for normal users in their daily lives.';
+  const systemPrompt = 'You are analyzing crypto project whitepapers for direct competitive positioning analysis, identifying category leaders and differentiation strategies.';
 
-  const userPrompt = `Explain this crypto project like you're talking to someone who's never used cryptocurrency before. Use simple, everyday analogies.
+  const userPrompt = `Analyze this whitepaper for competitive positioning - for each major feature/claim, identify the competitive landscape and how this project differentiates.
 
-Think of analogies like:
-- Internet vs dial-up modems
-- Highways vs country roads
-- Phone networks vs sending letters
-- App stores vs individual software
+For each key feature/capability, determine:
+1. Category: What specific market/technology category does this feature compete in?
+2. Current Leaders: Who are the established/leading projects in this category?
+3. Differentiation: How does this project claim to be different/better?
+4. Differentiation Value: Assess the meaningfulness of their differentiation
+   - Breakthrough: Genuinely novel approach with significant advantages
+   - Incremental: Modest improvements on existing solutions
+   - Marketing: Rebranding existing concepts without technical differentiation
+   - Questionable: Claims advantages that may not hold up to scrutiny
 
-Focus on:
-- What does this mean for regular users?
-- How would this change daily life if it worked?
-- Use simple comparisons to things people already know
-- Avoid technical jargon completely
-- What's the "so what?" for normal people?
+Focus on direct competitive analysis:
+- Don't just identify what they do, but WHO they're competing against
+- Evaluate whether their differentiation is technical, economic, or marketing-based
+- Assess if their competitive advantages are defensible or easily copied
+- Consider market timing and competitive moats
 
-Example tone: "Imagine if all your different bank accounts could talk to each other instantly, like having one universal ATM card that works everywhere..."
-
-Extract:
-1. The main claim in one clear sentence (no technical terms)
-2. Explain the real-world impact in 2-3 paragraphs using:
-   - Simple analogies people can understand
-   - Focus on daily life benefits
-   - Plain English explanations
-   - "What this means for you" perspective
+Examples:
+- "Faster consensus" → Category: Layer 1 blockchains, Leaders: Ethereum, Solana, differentiation: specific mechanism, value: incremental/breakthrough?
+- "Cross-chain bridges" → Category: Interoperability, Leaders: Chainlink CCIP, Wormhole, differentiation: security model, value: incremental/questionable?
 
 Whitepaper content:
 ${content}
 
 Output JSON:
 {
-  "main_claim": "one sentence description in simple terms anyone can understand",
-  "claim_evaluation": "2-3 paragraph explanation using everyday analogies and focusing on real-world user benefits"
-}`;
+  "competitive_analysis": [
+    {
+      "feature": "specific feature or capability claimed",
+      "category": "market/tech category this feature competes in",
+      "current_leaders": ["list of 2-3 leading projects in this category"],
+      "differentiation": "how this project claims to be different/better",
+      "differentiation_value": "breakthrough/incremental/marketing/questionable",
+      "competitive_assessment": "analysis of competitive positioning strength"
+    }
+  ],
+  "competitive_summary": {
+    "primary_competition": ["main projects this directly competes with"],
+    "differentiation_strength": "strong/moderate/weak overall differentiation",
+    "competitive_moats": ["list of potential competitive advantages"],
+    "market_positioning": "summary of how they position against competition"
+  }
+}
+
+Extract 5-7 key features that best show the project's competitive positioning and differentiation strategy.`;
 
   const apiKey = Deno.env.get('MOONSHOT_API_KEY');
   if (!apiKey) {
@@ -118,7 +131,7 @@ Output JSON:
   const aiContent = aiData.choices[0].message.content;
 
   await sendEvent('ai_complete', {
-    message: `V4 analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
+    message: `B5 competitive analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
     duration_ms: aiEndTime - aiStartTime
   });
 
@@ -136,33 +149,37 @@ Output JSON:
   }
 
   await sendEvent('saving', {
-    message: 'Saving V4 transformative potential analysis...'
+    message: 'Saving B5 competitive analysis...'
   });
 
-  // Save to a new column for V4 results
-  const { error: updateError } = await supabase
-    .from('crypto_projects_rated')
-    .update({
-      whitepaper_v4_analysis: {
-        main_claim: analysis.main_claim,
-        claim_evaluation: analysis.claim_evaluation,
-        analyzed_at: new Date().toISOString(),
-        version: 'v4-transformative-potential'
+  // Save to experiments table
+  const { error: saveError } = await supabase
+    .from('whitepaper_experiments')
+    .upsert({
+      symbol,
+      version: 'b5-benchmarks',
+      competitive_analysis: analysis.competitive_analysis || [],
+      competitive_summary: analysis.competitive_summary || {},
+      metadata: {
+        approach: 'Competitive benchmarking and differentiation analysis',
+        model: 'kimi-k2-0905-preview',
+        track: 'B'
       }
-    })
-    .eq('id', project.id);
+    }, {
+      onConflict: 'symbol,version'
+    });
 
-  if (updateError) {
-    console.error(`Failed to update V4 results: ${updateError.message}`);
-    throw updateError;
+  if (saveError) {
+    console.error(`Failed to save B5 benchmark results: ${saveError.message}`);
+    // Don't throw, just log the error
   }
 
   return {
     success: true,
-    version: 'v4-transformative-potential',
+    version: 'b5-benchmarks',
     symbol,
-    main_claim: analysis.main_claim,
-    claim_evaluation: analysis.claim_evaluation
+    competitive_analysis: analysis.competitive_analysis || [],
+    competitive_summary: analysis.competitive_summary || {}
   };
 }
 
@@ -195,7 +212,7 @@ serve(async (req) => {
         try {
           const result = await processWithSSE(symbol, sendEvent);
           await sendEvent('complete', {
-            message: 'V4 transformative potential analysis complete',
+            message: 'B5 competitive analysis complete',
             result
           });
         } catch (error) {

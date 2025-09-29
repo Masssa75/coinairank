@@ -15,7 +15,7 @@ async function processWithSSE(
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   await sendEvent('starting', {
-    message: `Starting V4 transformative potential analysis for ${symbol}...`
+    message: `Starting C1 anthropologist analysis for ${symbol}...`
   });
 
   // Get project data
@@ -46,44 +46,39 @@ async function processWithSSE(
   }
 
   await sendEvent('ai_analyzing', {
-    message: 'V4: Analyzing transformative potential...'
+    message: 'C1: Conducting anthropological analysis of whitepaper...'
   });
 
-  const systemPrompt = 'You are explaining crypto projects to regular people using simple analogies and everyday language. Focus on what this means for normal users in their daily lives.';
+  const systemPrompt = 'You are an anthropologist analyzing a whitepaper as a cultural artifact. Focus on what the document reveals about its creators and their world rather than its technical claims.';
 
-  const userPrompt = `Explain this crypto project like you're talking to someone who's never used cryptocurrency before. Use simple, everyday analogies.
+  const userPrompt = `Read this whitepaper as an anthropologist would - what does it reveal about who wrote it, why they wrote it, and what they're actually trying to achieve? Then describe what they would need to bridge the gap between their current state and their stated goals.
 
-Think of analogies like:
-- Internet vs dial-up modems
-- Highways vs country roads
-- Phone networks vs sending letters
-- App stores vs individual software
+Analyze this whitepaper as a cultural document that reveals:
 
-Focus on:
-- What does this mean for regular users?
-- How would this change daily life if it worked?
-- Use simple comparisons to things people already know
-- Avoid technical jargon completely
-- What's the "so what?" for normal people?
+**Who wrote this?** (based on language, priorities, assumptions)
+- What background and worldview do the authors have?
+- What do they take for granted that others might not?
+- What do they emphasize or ignore that reveals their perspective?
 
-Example tone: "Imagine if all your different bank accounts could talk to each other instantly, like having one universal ATM card that works everywhere..."
+**Why did they write this?** (deeper motivations beyond stated goals)
+- What problem are they personally experiencing?
+- What world are they trying to create or preserve?
+- What relationships or power structures are they navigating?
 
-Extract:
-1. The main claim in one clear sentence (no technical terms)
-2. Explain the real-world impact in 2-3 paragraphs using:
-   - Simple analogies people can understand
-   - Focus on daily life benefits
-   - Plain English explanations
-   - "What this means for you" perspective
+**What are they actually trying to achieve?** (vs what they claim)
+- What would success look like from their perspective?
+- What unstated goals can you infer from their approach?
+- What are they optimizing for that they don't explicitly mention?
+
+**What would they need to bridge the gap?** (requirements for success)
+- What capabilities would they need to develop?
+- What relationships or resources would be required?
+- What changes in their environment would be necessary?
+
+Focus on what the document reveals through its style, focus, omissions, and assumptions rather than its explicit technical claims. Respond in unstructured text - let your analysis flow naturally.
 
 Whitepaper content:
-${content}
-
-Output JSON:
-{
-  "main_claim": "one sentence description in simple terms anyone can understand",
-  "claim_evaluation": "2-3 paragraph explanation using everyday analogies and focusing on real-world user benefits"
-}`;
+${content}`;
 
   const apiKey = Deno.env.get('MOONSHOT_API_KEY');
   if (!apiKey) {
@@ -98,13 +93,13 @@ Output JSON:
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'kimi-k2-0905-preview',
+      model: 'moonshot-v1-128k',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      temperature: 0.1,
-      max_tokens: 12000
+      temperature: 0.3,
+      max_tokens: 4000
     }),
     signal: AbortSignal.timeout(300000)
   });
@@ -115,54 +110,44 @@ Output JSON:
   }
 
   const aiData = await aiResponse.json();
-  const aiContent = aiData.choices[0].message.content;
+  const analysisText = aiData.choices[0].message.content;
 
   await sendEvent('ai_complete', {
-    message: `V4 analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
+    message: `C1 anthropological analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
     duration_ms: aiEndTime - aiStartTime
   });
 
-  let analysis;
-  try {
-    const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      analysis = JSON.parse(jsonMatch[0]);
-    } else {
-      throw new Error('No valid JSON found in response');
-    }
-  } catch (parseError) {
-    console.error('Failed to parse AI response:', parseError);
-    throw new Error(`Failed to parse AI response: ${parseError.message}`);
-  }
-
   await sendEvent('saving', {
-    message: 'Saving V4 transformative potential analysis...'
+    message: 'Saving C1 anthropological analysis...'
   });
 
-  // Save to a new column for V4 results
-  const { error: updateError } = await supabase
-    .from('crypto_projects_rated')
-    .update({
-      whitepaper_v4_analysis: {
-        main_claim: analysis.main_claim,
-        claim_evaluation: analysis.claim_evaluation,
-        analyzed_at: new Date().toISOString(),
-        version: 'v4-transformative-potential'
+  // Save to experiments table with unstructured text
+  const { error: saveError } = await supabase
+    .from('whitepaper_experiments')
+    .upsert({
+      symbol,
+      version: 'c1-observer',
+      analysis_text: analysisText,
+      metadata: {
+        approach: 'Anthropologist - cultural document analysis',
+        model: 'moonshot-v1-128k',
+        track: 'C',
+        description: 'Analyzes whitepaper as cultural artifact revealing authors, motivations, and success requirements'
       }
-    })
-    .eq('id', project.id);
+    }, {
+      onConflict: 'symbol,version'
+    });
 
-  if (updateError) {
-    console.error(`Failed to update V4 results: ${updateError.message}`);
-    throw updateError;
+  if (saveError) {
+    console.error(`Failed to save C1 results: ${saveError.message}`);
+    // Don't throw, just log the error
   }
 
   return {
     success: true,
-    version: 'v4-transformative-potential',
+    version: 'c1-observer',
     symbol,
-    main_claim: analysis.main_claim,
-    claim_evaluation: analysis.claim_evaluation
+    analysis_text: analysisText
   };
 }
 
@@ -195,7 +180,7 @@ serve(async (req) => {
         try {
           const result = await processWithSSE(symbol, sendEvent);
           await sendEvent('complete', {
-            message: 'V4 transformative potential analysis complete',
+            message: 'C1 anthropological analysis complete',
             result
           });
         } catch (error) {

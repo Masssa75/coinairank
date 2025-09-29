@@ -49,32 +49,41 @@ async function processWithSSE(
     message: 'V5: Analyzing comparative advantage and moats...'
   });
 
-  const systemPrompt = 'You are an expert crypto whitepaper analyst focused on evaluating comparative advantages and competitive moats. Consider how this project compares to existing solutions and what sustainable advantages it may have.';
+  const systemPrompt = 'You are a business analyst explaining crypto projects to executives and investors who understand traditional business concepts but are new to crypto. Use familiar business terminology and company comparisons.';
 
-  const userPrompt = `Analyze this whitepaper with a focus on COMPARATIVE ADVANTAGE and COMPETITIVE MOATS.
+  const userPrompt = `Analyze this crypto project from a business perspective for someone with finance/business background but limited crypto knowledge.
 
-Consider:
-- How does this claim compare to existing solutions in the space?
-- What specific advantages does this project have over competitors?
-- What are the defensive moats that could protect this advantage?
-- How sustainable are these advantages in a competitive crypto landscape?
-- What network effects, technical barriers, or first-mover advantages exist?
+Use familiar business concepts and comparisons:
+- Market share dynamics (like Netflix vs cable TV)
+- Platform businesses (like iOS vs Android, AWS vs competitors)
+- Network effects (like Facebook, PayPal, Visa)
+- Competitive moats (like Amazon's logistics, Google's data)
+- Business model disruption (like Uber vs taxis, Airbnb vs hotels)
+
+Focus on:
+- Why would this succeed as a business?
+- What's the competitive advantage vs existing solutions?
+- Compare to successful tech/finance companies people know
+- What are the revenue streams and business model?
+- Market size and adoption barriers
+
+Example tone: "Think of it like PayPal in the early 2000s, but for decentralized finance - creating a trusted payment layer where none existed..."
 
 Extract:
-1. The main claim in one clear sentence
-2. Evaluate the comparative advantage in 2-3 paragraphs focusing on:
-   - Direct comparison to existing solutions and competitors
-   - Unique advantages and differentiators
-   - Defensive moats and sustainability
-   - Competitive positioning and market dynamics
+1. The main claim in business terms (one clear sentence)
+2. Business case analysis in 2-3 paragraphs covering:
+   - Market opportunity and competitive landscape
+   - Business model and competitive advantages
+   - Comparison to successful traditional companies
+   - Revenue potential and scalability factors
 
 Whitepaper content:
 ${content}
 
 Output JSON:
 {
-  "main_claim": "one sentence description of the primary innovation",
-  "claim_evaluation": "2-3 paragraph evaluation focused on comparative advantage and competitive moats"
+  "main_claim": "one sentence business description using familiar company comparisons",
+  "claim_evaluation": "2-3 paragraph business case analysis using traditional business concepts and company comparisons"
 }`;
 
   const apiKey = Deno.env.get('MOONSHOT_API_KEY');

@@ -15,7 +15,7 @@ async function processWithSSE(
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   await sendEvent('starting', {
-    message: `Starting V4 transformative potential analysis for ${symbol}...`
+    message: `Starting C3 pattern recognition analysis for ${symbol}...`
   });
 
   // Get project data
@@ -46,44 +46,49 @@ async function processWithSSE(
   }
 
   await sendEvent('ai_analyzing', {
-    message: 'V4: Analyzing transformative potential...'
+    message: 'C3: Conducting pattern recognition analysis of whitepaper...'
   });
 
-  const systemPrompt = 'You are explaining crypto projects to regular people using simple analogies and everyday language. Focus on what this means for normal users in their daily lives.';
+  const systemPrompt = 'You are an expert at pattern recognition who can infer author characteristics and project viability from document patterns, structure, and linguistic choices rather than explicit content.';
 
-  const userPrompt = `Explain this crypto project like you're talking to someone who's never used cryptocurrency before. Use simple, everyday analogies.
+  const userPrompt = `Based solely on how this whitepaper is written and structured, describe what you can infer about the authors and their likelihood of achieving their stated goals. Include what would be necessary for success.
 
-Think of analogies like:
-- Internet vs dial-up modems
-- Highways vs country roads
-- Phone networks vs sending letters
-- App stores vs individual software
+Analyze patterns in:
 
-Focus on:
-- What does this mean for regular users?
-- How would this change daily life if it worked?
-- Use simple comparisons to things people already know
-- Avoid technical jargon completely
-- What's the "so what?" for normal people?
+**Writing & Communication Patterns:**
+- What does the prose style reveal about the authors' background?
+- How do they handle complexity - do they oversimplify or overcomplicate?
+- What does their use of jargon, analogies, and examples suggest?
+- How do they structure arguments - logical progression or scattered thoughts?
 
-Example tone: "Imagine if all your different bank accounts could talk to each other instantly, like having one universal ATM card that works everywhere..."
+**Document Organization & Focus:**
+- What gets the most attention and detail vs what's glossed over?
+- How do they prioritize different aspects (technical, economic, social)?
+- What's the ratio of vision to implementation details?
+- How much space is devoted to risks vs opportunities?
 
-Extract:
-1. The main claim in one clear sentence (no technical terms)
-2. Explain the real-world impact in 2-3 paragraphs using:
-   - Simple analogies people can understand
-   - Focus on daily life benefits
-   - Plain English explanations
-   - "What this means for you" perspective
+**Language Choice & Framing:**
+- What metaphors and mental models do they consistently use?
+- How do they position themselves relative to existing solutions?
+- What assumptions do they make about their readers?
+- How do they handle uncertainty - confident assertions vs acknowledging unknowns?
+
+**Success Likelihood Patterns:**
+- Based on these writing patterns, what type of execution would you expect?
+- What do successful projects with similar communication patterns tend to have?
+- What gaps between communication style and stated ambitions do you notice?
+- What would need to align for authors with this communication style to succeed?
+
+**Requirements for Success:**
+- Given these communication patterns, what capabilities would be essential?
+- What type of team structure and processes would they need?
+- What external factors would need to align with their approach?
+- What are the most likely failure modes based on these patterns?
+
+Focus on what you can infer from HOW they communicate rather than WHAT they claim. Respond in unstructured text - let your pattern recognition insights flow naturally.
 
 Whitepaper content:
-${content}
-
-Output JSON:
-{
-  "main_claim": "one sentence description in simple terms anyone can understand",
-  "claim_evaluation": "2-3 paragraph explanation using everyday analogies and focusing on real-world user benefits"
-}`;
+${content}`;
 
   const apiKey = Deno.env.get('MOONSHOT_API_KEY');
   if (!apiKey) {
@@ -98,13 +103,13 @@ Output JSON:
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'kimi-k2-0905-preview',
+      model: 'moonshot-v1-128k',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      temperature: 0.1,
-      max_tokens: 12000
+      temperature: 0.4,
+      max_tokens: 4000
     }),
     signal: AbortSignal.timeout(300000)
   });
@@ -115,54 +120,44 @@ Output JSON:
   }
 
   const aiData = await aiResponse.json();
-  const aiContent = aiData.choices[0].message.content;
+  const analysisText = aiData.choices[0].message.content;
 
   await sendEvent('ai_complete', {
-    message: `V4 analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
+    message: `C3 pattern recognition analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
     duration_ms: aiEndTime - aiStartTime
   });
 
-  let analysis;
-  try {
-    const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      analysis = JSON.parse(jsonMatch[0]);
-    } else {
-      throw new Error('No valid JSON found in response');
-    }
-  } catch (parseError) {
-    console.error('Failed to parse AI response:', parseError);
-    throw new Error(`Failed to parse AI response: ${parseError.message}`);
-  }
-
   await sendEvent('saving', {
-    message: 'Saving V4 transformative potential analysis...'
+    message: 'Saving C3 pattern recognition analysis...'
   });
 
-  // Save to a new column for V4 results
-  const { error: updateError } = await supabase
-    .from('crypto_projects_rated')
-    .update({
-      whitepaper_v4_analysis: {
-        main_claim: analysis.main_claim,
-        claim_evaluation: analysis.claim_evaluation,
-        analyzed_at: new Date().toISOString(),
-        version: 'v4-transformative-potential'
+  // Save to experiments table with unstructured text
+  const { error: saveError } = await supabase
+    .from('whitepaper_experiments')
+    .upsert({
+      symbol,
+      version: 'c3-patterns',
+      analysis_text: analysisText,
+      metadata: {
+        approach: 'Pattern recognition - communication style and structure analysis',
+        model: 'moonshot-v1-128k',
+        track: 'C',
+        description: 'Infers author characteristics and success likelihood from writing patterns and document structure'
       }
-    })
-    .eq('id', project.id);
+    }, {
+      onConflict: 'symbol,version'
+    });
 
-  if (updateError) {
-    console.error(`Failed to update V4 results: ${updateError.message}`);
-    throw updateError;
+  if (saveError) {
+    console.error(`Failed to save C3 results: ${saveError.message}`);
+    // Don't throw, just log the error
   }
 
   return {
     success: true,
-    version: 'v4-transformative-potential',
+    version: 'c3-patterns',
     symbol,
-    main_claim: analysis.main_claim,
-    claim_evaluation: analysis.claim_evaluation
+    analysis_text: analysisText
   };
 }
 
@@ -195,7 +190,7 @@ serve(async (req) => {
         try {
           const result = await processWithSSE(symbol, sendEvent);
           await sendEvent('complete', {
-            message: 'V4 transformative potential analysis complete',
+            message: 'C3 pattern recognition analysis complete',
             result
           });
         } catch (error) {

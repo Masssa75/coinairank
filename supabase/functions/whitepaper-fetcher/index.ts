@@ -216,7 +216,7 @@ serve(async (req) => {
   }
 
   try {
-    const { symbol, whitepaperUrl, projectId } = await req.json();
+    const { symbol, whitepaperUrl, projectId, skipAnalysis } = await req.json();
 
     if (!whitepaperUrl) {
       throw new Error('whitepaperUrl is required');
@@ -423,12 +423,12 @@ serve(async (req) => {
     }
 
     // Return results
-    // If content was successfully stored, trigger whitepaper-analyzer-v2
+    // If content was successfully stored, trigger whitepaper-analyzer-fundamental (unless skipAnalysis is true)
     let analysisTriggered = false;
-    if (projectId && fetchResult.content.length > 100) {
+    if (projectId && fetchResult.content.length > 100 && !skipAnalysis) {
       try {
-        console.log(`Triggering whitepaper-analyzer-v2 for ${symbol}`);
-        const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-v2`;
+        console.log(`Triggering whitepaper-analyzer-fundamental for ${symbol}`);
+        const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-fundamental`;
         const analysisResponse = await fetch(analyzerUrl, {
           method: 'POST',
           headers: {

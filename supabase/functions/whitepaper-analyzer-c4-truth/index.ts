@@ -15,7 +15,7 @@ async function processWithSSE(
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   await sendEvent('starting', {
-    message: `Starting V4 transformative potential analysis for ${symbol}...`
+    message: `Starting C4 simple truth analysis for ${symbol}...`
   });
 
   // Get project data
@@ -46,44 +46,42 @@ async function processWithSSE(
   }
 
   await sendEvent('ai_analyzing', {
-    message: 'V4: Analyzing transformative potential...'
+    message: 'C4: Conducting simple truth analysis of whitepaper...'
   });
 
-  const systemPrompt = 'You are explaining crypto projects to regular people using simple analogies and everyday language. Focus on what this means for normal users in their daily lives.';
+  const systemPrompt = 'You are direct and insightful, focused on cutting through marketing speak to reveal what this document actually tells us about the people behind it and their real chances of success.';
 
-  const userPrompt = `Explain this crypto project like you're talking to someone who's never used cryptocurrency before. Use simple, everyday analogies.
+  const userPrompt = `Tell me what this whitepaper reveals about: 1. Who wrote this and their background, 2. What problem they're actually solving (vs what they claim), 3. What would need to happen for this to succeed. Focus on what the document reveals through its style, focus, and omissions rather than its explicit claims.
 
-Think of analogies like:
-- Internet vs dial-up modems
-- Highways vs country roads
-- Phone networks vs sending letters
-- App stores vs individual software
+Cut through the marketing and tell me the simple truth about:
 
-Focus on:
-- What does this mean for regular users?
-- How would this change daily life if it worked?
-- Use simple comparisons to things people already know
-- Avoid technical jargon completely
-- What's the "so what?" for normal people?
+**Who wrote this and their background:**
+- What can you tell about these people from how they write and think?
+- What's their actual level of expertise in the areas they're tackling?
+- Are they technical people trying to do business, business people trying to do tech, or something else?
+- What do they seem to understand well vs what they're clearly winging?
 
-Example tone: "Imagine if all your different bank accounts could talk to each other instantly, like having one universal ATM card that works everywhere..."
+**What problem they're actually solving (vs what they claim):**
+- Strip away the grand vision - what are they really building?
+- What problem are they personally experiencing that led to this?
+- How much of their solution addresses real pain vs creates new complexity?
+- What are they actually good at vs what they think they need to be good at?
 
-Extract:
-1. The main claim in one clear sentence (no technical terms)
-2. Explain the real-world impact in 2-3 paragraphs using:
-   - Simple analogies people can understand
-   - Focus on daily life benefits
-   - Plain English explanations
-   - "What this means for you" perspective
+**What would need to happen for this to succeed:**
+- What would have to be true about the market, technology, and team for this to work?
+- What are the 2-3 most critical things that could make or break this?
+- What would success actually look like in practical terms?
+- What are they not talking about that they definitely should be?
+
+**The simple truth:**
+- If you had to bet your own money, what would you actually be betting on?
+- What's the most likely way this plays out in reality?
+- What do they need to prove first before anything else matters?
+
+Be direct and honest. Focus on what you can actually observe in the document rather than what they want you to believe. Respond in unstructured text - just tell me what you really think.
 
 Whitepaper content:
-${content}
-
-Output JSON:
-{
-  "main_claim": "one sentence description in simple terms anyone can understand",
-  "claim_evaluation": "2-3 paragraph explanation using everyday analogies and focusing on real-world user benefits"
-}`;
+${content}`;
 
   const apiKey = Deno.env.get('MOONSHOT_API_KEY');
   if (!apiKey) {
@@ -98,13 +96,13 @@ Output JSON:
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'kimi-k2-0905-preview',
+      model: 'moonshot-v1-128k',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ],
-      temperature: 0.1,
-      max_tokens: 12000
+      temperature: 0.5,
+      max_tokens: 4000
     }),
     signal: AbortSignal.timeout(300000)
   });
@@ -115,54 +113,44 @@ Output JSON:
   }
 
   const aiData = await aiResponse.json();
-  const aiContent = aiData.choices[0].message.content;
+  const analysisText = aiData.choices[0].message.content;
 
   await sendEvent('ai_complete', {
-    message: `V4 analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
+    message: `C4 simple truth analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
     duration_ms: aiEndTime - aiStartTime
   });
 
-  let analysis;
-  try {
-    const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      analysis = JSON.parse(jsonMatch[0]);
-    } else {
-      throw new Error('No valid JSON found in response');
-    }
-  } catch (parseError) {
-    console.error('Failed to parse AI response:', parseError);
-    throw new Error(`Failed to parse AI response: ${parseError.message}`);
-  }
-
   await sendEvent('saving', {
-    message: 'Saving V4 transformative potential analysis...'
+    message: 'Saving C4 simple truth analysis...'
   });
 
-  // Save to a new column for V4 results
-  const { error: updateError } = await supabase
-    .from('crypto_projects_rated')
-    .update({
-      whitepaper_v4_analysis: {
-        main_claim: analysis.main_claim,
-        claim_evaluation: analysis.claim_evaluation,
-        analyzed_at: new Date().toISOString(),
-        version: 'v4-transformative-potential'
+  // Save to experiments table with unstructured text
+  const { error: saveError } = await supabase
+    .from('whitepaper_experiments')
+    .upsert({
+      symbol,
+      version: 'c4-truth',
+      analysis_text: analysisText,
+      metadata: {
+        approach: 'Simple truth - direct analysis cutting through marketing speak',
+        model: 'moonshot-v1-128k',
+        track: 'C',
+        description: 'Direct, honest analysis of who the authors are, what they are actually building, and what success requires'
       }
-    })
-    .eq('id', project.id);
+    }, {
+      onConflict: 'symbol,version'
+    });
 
-  if (updateError) {
-    console.error(`Failed to update V4 results: ${updateError.message}`);
-    throw updateError;
+  if (saveError) {
+    console.error(`Failed to save C4 results: ${saveError.message}`);
+    // Don't throw, just log the error
   }
 
   return {
     success: true,
-    version: 'v4-transformative-potential',
+    version: 'c4-truth',
     symbol,
-    main_claim: analysis.main_claim,
-    claim_evaluation: analysis.claim_evaluation
+    analysis_text: analysisText
   };
 }
 
@@ -195,7 +183,7 @@ serve(async (req) => {
         try {
           const result = await processWithSSE(symbol, sendEvent);
           await sendEvent('complete', {
-            message: 'V4 transformative potential analysis complete',
+            message: 'C4 simple truth analysis complete',
             result
           });
         } catch (error) {

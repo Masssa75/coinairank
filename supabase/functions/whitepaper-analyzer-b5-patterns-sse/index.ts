@@ -15,7 +15,7 @@ async function processWithSSE(
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   await sendEvent('starting', {
-    message: `Starting V4 transformative potential analysis for ${symbol}...`
+    message: `Starting B5 pattern analysis for ${symbol}...`
   });
 
   // Get project data
@@ -46,44 +46,57 @@ async function processWithSSE(
   }
 
   await sendEvent('ai_analyzing', {
-    message: 'V4: Analyzing transformative potential...'
+    message: 'B5: Analyzing claim patterns and frequency...'
   });
 
-  const systemPrompt = 'You are explaining crypto projects to regular people using simple analogies and everyday language. Focus on what this means for normal users in their daily lives.';
+  const systemPrompt = 'You are analyzing crypto project whitepapers to identify and categorize claims into recognizable patterns with frequency analysis.';
 
-  const userPrompt = `Explain this crypto project like you're talking to someone who's never used cryptocurrency before. Use simple, everyday analogies.
+  const userPrompt = `Analyze this whitepaper to categorize claims into recognizable patterns and assess their frequency in the crypto space.
 
-Think of analogies like:
-- Internet vs dial-up modems
-- Highways vs country roads
-- Phone networks vs sending letters
-- App stores vs individual software
+For each major claim/feature, identify:
+1. Pattern Category: Which pattern does this claim fit into?
+   - Marketing patterns (revolutionary, game-changing, next-generation, etc.)
+   - Technical patterns (novel consensus, interoperability, scalability, etc.)
+   - Economic patterns (tokenomics, staking rewards, deflationary, etc.)
+   - Problem patterns (existing solutions inadequate, market gap, user pain point, etc.)
 
-Focus on:
-- What does this mean for regular users?
-- How would this change daily life if it worked?
-- Use simple comparisons to things people already know
-- Avoid technical jargon completely
-- What's the "so what?" for normal people?
+2. Frequency Classification:
+   - Universal (99%+ of projects): Basic blockchain functionality, token economics, community focus
+   - Common (50-90%): Scalability solutions, interoperability claims, DeFi integration
+   - Emerging (10-50%): AI integration, specific use cases, novel mechanisms
+   - Rare (1-10%): Truly novel approaches, first-of-kind features
+   - Novel (<1%): Genuinely unprecedented concepts or implementations
 
-Example tone: "Imagine if all your different bank accounts could talk to each other instantly, like having one universal ATM card that works everywhere..."
+3. Pattern Analysis: Why does this project use this pattern? What does it reveal about their positioning strategy?
 
-Extract:
-1. The main claim in one clear sentence (no technical terms)
-2. Explain the real-world impact in 2-3 paragraphs using:
-   - Simple analogies people can understand
-   - Focus on daily life benefits
-   - Plain English explanations
-   - "What this means for you" perspective
+Focus on identifying:
+- Which patterns this project gravitates toward most
+- Whether they're following safe/common patterns or taking risks with novel ones
+- How they combine different pattern types
+- What their pattern choices reveal about their market strategy
 
 Whitepaper content:
 ${content}
 
 Output JSON:
 {
-  "main_claim": "one sentence description in simple terms anyone can understand",
-  "claim_evaluation": "2-3 paragraph explanation using everyday analogies and focusing on real-world user benefits"
-}`;
+  "pattern_analysis": [
+    {
+      "claim": "specific claim or feature from whitepaper",
+      "pattern_category": "marketing/technical/economic/problem",
+      "frequency": "universal/common/emerging/rare/novel",
+      "pattern_description": "describe the specific pattern this claim follows",
+      "strategic_insight": "what this pattern choice reveals about project strategy"
+    }
+  ],
+  "pattern_summary": {
+    "primary_patterns": ["list of main patterns used"],
+    "risk_profile": "conservative/moderate/aggressive based on pattern frequency choices",
+    "positioning_strategy": "summary of how pattern choices position the project"
+  }
+}
+
+Extract 5-7 key claims that best show the project's pattern usage and strategic positioning.`;
 
   const apiKey = Deno.env.get('MOONSHOT_API_KEY');
   if (!apiKey) {
@@ -118,7 +131,7 @@ Output JSON:
   const aiContent = aiData.choices[0].message.content;
 
   await sendEvent('ai_complete', {
-    message: `V4 analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
+    message: `B5 pattern analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
     duration_ms: aiEndTime - aiStartTime
   });
 
@@ -136,33 +149,37 @@ Output JSON:
   }
 
   await sendEvent('saving', {
-    message: 'Saving V4 transformative potential analysis...'
+    message: 'Saving B5 pattern analysis...'
   });
 
-  // Save to a new column for V4 results
-  const { error: updateError } = await supabase
-    .from('crypto_projects_rated')
-    .update({
-      whitepaper_v4_analysis: {
-        main_claim: analysis.main_claim,
-        claim_evaluation: analysis.claim_evaluation,
-        analyzed_at: new Date().toISOString(),
-        version: 'v4-transformative-potential'
+  // Save to experiments table
+  const { error: saveError } = await supabase
+    .from('whitepaper_experiments')
+    .upsert({
+      symbol,
+      version: 'b5-patterns',
+      pattern_analysis: analysis.pattern_analysis || [],
+      pattern_summary: analysis.pattern_summary || {},
+      metadata: {
+        approach: 'Pattern recognition and frequency analysis of whitepaper claims',
+        model: 'kimi-k2-0905-preview',
+        track: 'B'
       }
-    })
-    .eq('id', project.id);
+    }, {
+      onConflict: 'symbol,version'
+    });
 
-  if (updateError) {
-    console.error(`Failed to update V4 results: ${updateError.message}`);
-    throw updateError;
+  if (saveError) {
+    console.error(`Failed to save B5 pattern results: ${saveError.message}`);
+    // Don't throw, just log the error
   }
 
   return {
     success: true,
-    version: 'v4-transformative-potential',
+    version: 'b5-patterns',
     symbol,
-    main_claim: analysis.main_claim,
-    claim_evaluation: analysis.claim_evaluation
+    pattern_analysis: analysis.pattern_analysis || [],
+    pattern_summary: analysis.pattern_summary || {}
   };
 }
 
@@ -195,7 +212,7 @@ serve(async (req) => {
         try {
           const result = await processWithSSE(symbol, sendEvent);
           await sendEvent('complete', {
-            message: 'V4 transformative potential analysis complete',
+            message: 'B5 pattern analysis complete',
             result
           });
         } catch (error) {

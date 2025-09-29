@@ -15,7 +15,7 @@ async function processWithSSE(
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   await sendEvent('starting', {
-    message: `Starting V4 transformative potential analysis for ${symbol}...`
+    message: `Starting B5 contextualized insight extraction for ${symbol}...`
   });
 
   // Get project data
@@ -46,44 +46,53 @@ async function processWithSSE(
   }
 
   await sendEvent('ai_analyzing', {
-    message: 'V4: Analyzing transformative potential...'
+    message: 'B5: Extracting contextualized insights from whitepaper...'
   });
 
-  const systemPrompt = 'You are explaining crypto projects to regular people using simple analogies and everyday language. Focus on what this means for normal users in their daily lives.';
+  const systemPrompt = 'You are extracting key insights from a whitepaper to understand what this project is really telling us, with context for comparison to the broader crypto landscape.';
 
-  const userPrompt = `Explain this crypto project like you're talking to someone who's never used cryptocurrency before. Use simple, everyday analogies.
+  const userPrompt = `Analyze this whitepaper to tell me what it REALLY reveals about this project, with context for comparison.
 
-Think of analogies like:
-- Internet vs dial-up modems
-- Highways vs country roads
-- Phone networks vs sending letters
-- App stores vs individual software
+For each key insight, answer:
+1. What is the claim/promise?
+2. How common or unique is this in crypto?
+3. Who else has tried this and what happened?
+4. What does this tell us about the project?
 
 Focus on:
-- What does this mean for regular users?
-- How would this change daily life if it worked?
-- Use simple comparisons to things people already know
-- Avoid technical jargon completely
-- What's the "so what?" for normal people?
+- Ambition level: Is this incremental or revolutionary?
+- Problem validity: Is this solving a real problem or inventing one?
+- Technical feasibility: Has this been done before? By whom?
+- Market reality: How many projects claim the same thing?
+- Historical context: What similar attempts succeeded/failed?
 
-Example tone: "Imagine if all your different bank accounts could talk to each other instantly, like having one universal ATM card that works everywhere..."
+For each insight:
+1. State what the project claims
+2. Put it in context (how common/unique/proven)
+3. Compare to known projects or attempts
+4. What this reveals about the project's nature
 
-Extract:
-1. The main claim in one clear sentence (no technical terms)
-2. Explain the real-world impact in 2-3 paragraphs using:
-   - Simple analogies people can understand
-   - Focus on daily life benefits
-   - Plain English explanations
-   - "What this means for you" perspective
+Don't evaluate if it's "good" or "bad" - just contextualize:
+- "Claims to solve interoperability" → "One of 50+ projects claiming this, similar to Polkadot/Cosmos but..."
+- "Novel consensus mechanism" → "Unique approach not seen before, closest is Avalanche but..."
+- "AI integration" → "Follows 2024 trend of AI+crypto, similar to Fetch.ai but..."
 
 Whitepaper content:
 ${content}
 
 Output JSON:
 {
-  "main_claim": "one sentence description in simple terms anyone can understand",
-  "claim_evaluation": "2-3 paragraph explanation using everyday analogies and focusing on real-world user benefits"
-}`;
+  "contextualized_insights": [
+    {
+      "claim": "what the project claims or promises",
+      "context": "how common/unique this is in the crypto space",
+      "comparison": "similar projects or attempts and their outcomes",
+      "reveals": "what this tells us about the project's ambition/approach/realism"
+    }
+  ]
+}
+
+Extract 5-7 key insights that best characterize what this whitepaper is really telling us.`;
 
   const apiKey = Deno.env.get('MOONSHOT_API_KEY');
   if (!apiKey) {
@@ -118,7 +127,7 @@ Output JSON:
   const aiContent = aiData.choices[0].message.content;
 
   await sendEvent('ai_complete', {
-    message: `V4 analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
+    message: `B5 insight extraction complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
     duration_ms: aiEndTime - aiStartTime
   });
 
@@ -136,33 +145,35 @@ Output JSON:
   }
 
   await sendEvent('saving', {
-    message: 'Saving V4 transformative potential analysis...'
+    message: 'Saving B5 contextualized insights...'
   });
 
-  // Save to a new column for V4 results
-  const { error: updateError } = await supabase
-    .from('crypto_projects_rated')
-    .update({
-      whitepaper_v4_analysis: {
-        main_claim: analysis.main_claim,
-        claim_evaluation: analysis.claim_evaluation,
-        analyzed_at: new Date().toISOString(),
-        version: 'v4-transformative-potential'
+  // Save to experiments table
+  const { error: saveError } = await supabase
+    .from('whitepaper_experiments')
+    .upsert({
+      symbol,
+      version: 'b5-contextualized-insights',
+      contextualized_insights: analysis.contextualized_insights || [],
+      metadata: {
+        approach: 'Contextualized insights for understanding what whitepaper really reveals',
+        model: 'kimi-k2-0905-preview',
+        track: 'B'
       }
-    })
-    .eq('id', project.id);
+    }, {
+      onConflict: 'symbol,version'
+    });
 
-  if (updateError) {
-    console.error(`Failed to update V4 results: ${updateError.message}`);
-    throw updateError;
+  if (saveError) {
+    console.error(`Failed to save B5 results: ${saveError.message}`);
+    // Don't throw, just log the error
   }
 
   return {
     success: true,
-    version: 'v4-transformative-potential',
+    version: 'b5-contextualized-insights',
     symbol,
-    main_claim: analysis.main_claim,
-    claim_evaluation: analysis.claim_evaluation
+    contextualized_insights: analysis.contextualized_insights || []
   };
 }
 
@@ -195,7 +206,7 @@ serve(async (req) => {
         try {
           const result = await processWithSSE(symbol, sendEvent);
           await sendEvent('complete', {
-            message: 'V4 transformative potential analysis complete',
+            message: 'B5 contextualized insight extraction complete',
             result
           });
         } catch (error) {

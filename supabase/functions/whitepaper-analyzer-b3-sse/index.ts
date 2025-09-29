@@ -15,7 +15,7 @@ async function processWithSSE(
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   await sendEvent('starting', {
-    message: `Starting V4 transformative potential analysis for ${symbol}...`
+    message: `Starting B3 comparative-ready extraction for ${symbol}...`
   });
 
   // Get project data
@@ -46,43 +46,45 @@ async function processWithSSE(
   }
 
   await sendEvent('ai_analyzing', {
-    message: 'V4: Analyzing transformative potential...'
+    message: 'B3: Creating comparative-ready representation...'
   });
 
-  const systemPrompt = 'You are explaining crypto projects to regular people using simple analogies and everyday language. Focus on what this means for normal users in their daily lives.';
+  const systemPrompt = 'You are creating a comprehensive yet comparable representation of a whitepaper that can be directly compared with other projects.';
 
-  const userPrompt = `Explain this crypto project like you're talking to someone who's never used cryptocurrency before. Use simple, everyday analogies.
+  const userPrompt = `Create a comprehensive representation of this whitepaper optimized for comparative ranking.
 
-Think of analogies like:
-- Internet vs dial-up modems
-- Highways vs country roads
-- Phone networks vs sending letters
-- App stores vs individual software
+Capture these comparable dimensions:
+- Problem scope and importance
+- Solution sophistication and novelty
+- Technical implementation depth
+- Market opportunity and fit
+- Team capability indicators
+- Token utility and economics
+- Competitive differentiation
 
-Focus on:
-- What does this mean for regular users?
-- How would this change daily life if it worked?
-- Use simple comparisons to things people already know
-- Avoid technical jargon completely
-- What's the "so what?" for normal people?
+For each dimension:
+- Be specific and factual
+- Include concrete details that enable comparison
+- Preserve unique aspects while maintaining comparability
+- Focus on what can be objectively compared
 
-Example tone: "Imagine if all your different bank accounts could talk to each other instantly, like having one universal ATM card that works everywhere..."
+The representation should:
+- Enable direct comparison with other projects
+- Capture both common and unique elements
+- Maintain factual accuracy
+- Include all information relevant for quality assessment
 
 Extract:
-1. The main claim in one clear sentence (no technical terms)
-2. Explain the real-world impact in 2-3 paragraphs using:
-   - Simple analogies people can understand
-   - Focus on daily life benefits
-   - Plain English explanations
-   - "What this means for you" perspective
+1. Comparable claim: The core value proposition in comparable terms (1-2 sentences)
+2. Comparative representation: A comprehensive yet structured representation covering all key dimensions (3-4 paragraphs)
 
 Whitepaper content:
 ${content}
 
 Output JSON:
 {
-  "main_claim": "one sentence description in simple terms anyone can understand",
-  "claim_evaluation": "2-3 paragraph explanation using everyday analogies and focusing on real-world user benefits"
+  "comparable_claim": "the core value proposition framed for comparison in 1-2 sentences",
+  "comparative_representation": "3-4 paragraphs covering all key comparable dimensions while preserving unique aspects"
 }`;
 
   const apiKey = Deno.env.get('MOONSHOT_API_KEY');
@@ -118,7 +120,7 @@ Output JSON:
   const aiContent = aiData.choices[0].message.content;
 
   await sendEvent('ai_complete', {
-    message: `V4 analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
+    message: `B3 extraction complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
     duration_ms: aiEndTime - aiStartTime
   });
 
@@ -126,43 +128,66 @@ Output JSON:
   try {
     const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      analysis = JSON.parse(jsonMatch[0]);
+      // Clean the JSON string of problematic control characters
+      let cleanedJson = jsonMatch[0]
+        .replace(/\\n/g, '\\\\n')  // Escape newlines
+        .replace(/\\t/g, '\\\\t')  // Escape tabs
+        .replace(/\\r/g, '\\\\r')  // Escape carriage returns
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, ''); // Remove other control chars
+
+      // First attempt with cleaned JSON
+      try {
+        analysis = JSON.parse(cleanedJson);
+      } catch (e) {
+        // If that fails, try a more aggressive cleaning
+        cleanedJson = jsonMatch[0]
+          .replace(/\n/g, ' ')  // Replace actual newlines with spaces
+          .replace(/\t/g, ' ')  // Replace tabs with spaces
+          .replace(/\r/g, '')   // Remove carriage returns
+          .replace(/[\x00-\x1F\x7F]/g, ''); // Remove all control characters
+        analysis = JSON.parse(cleanedJson);
+      }
     } else {
       throw new Error('No valid JSON found in response');
     }
   } catch (parseError) {
     console.error('Failed to parse AI response:', parseError);
+    console.error('Raw AI content:', aiContent.substring(0, 500));
     throw new Error(`Failed to parse AI response: ${parseError.message}`);
   }
 
   await sendEvent('saving', {
-    message: 'Saving V4 transformative potential analysis...'
+    message: 'Saving B3 comparative-ready representation...'
   });
 
-  // Save to a new column for V4 results
-  const { error: updateError } = await supabase
-    .from('crypto_projects_rated')
-    .update({
-      whitepaper_v4_analysis: {
-        main_claim: analysis.main_claim,
-        claim_evaluation: analysis.claim_evaluation,
-        analyzed_at: new Date().toISOString(),
-        version: 'v4-transformative-potential'
+  // Save to experiments table
+  const { error: saveError } = await supabase
+    .from('whitepaper_experiments')
+    .upsert({
+      symbol,
+      version: 'b3-comparative-ready',
+      comparable_claim: analysis.comparable_claim || analysis.core_thesis || analysis.main_claim,
+      comparative_representation: analysis.comparative_representation || analysis.authentic_essence || analysis.claim_evaluation,
+      metadata: {
+        approach: 'Comparative-ready representation',
+        model: 'kimi-k2-0905-preview',
+        track: 'B'
       }
-    })
-    .eq('id', project.id);
+    }, {
+      onConflict: 'symbol,version'
+    });
 
-  if (updateError) {
-    console.error(`Failed to update V4 results: ${updateError.message}`);
-    throw updateError;
+  if (saveError) {
+    console.error(`Failed to save B3 results: ${saveError.message}`);
+    // Don't throw, just log the error
   }
 
   return {
     success: true,
-    version: 'v4-transformative-potential',
+    version: 'b3-comparative-ready',
     symbol,
-    main_claim: analysis.main_claim,
-    claim_evaluation: analysis.claim_evaluation
+    comparable_claim: analysis.comparable_claim || analysis.core_thesis || analysis.main_claim,
+    comparative_representation: analysis.comparative_representation || analysis.authentic_essence || analysis.claim_evaluation
   };
 }
 
@@ -195,7 +220,7 @@ serve(async (req) => {
         try {
           const result = await processWithSSE(symbol, sendEvent);
           await sendEvent('complete', {
-            message: 'V4 transformative potential analysis complete',
+            message: 'B3 comparative-ready extraction complete',
             result
           });
         } catch (error) {
