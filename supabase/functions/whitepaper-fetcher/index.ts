@@ -400,21 +400,27 @@ serve(async (req) => {
       console.log(`💾 Storing ${contentToStore.length} characters to database...`);
       console.log(`🔍 Content preview being stored: ${contentToStore.substring(0, 200)}...`);
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('crypto_projects_rated')
         .update({
           whitepaper_content: contentToStore,
           whitepaper_extraction_status: validation.isComplete ? 'extracted' : 'partial',
           whitepaper_url: whitepaperUrl
         })
-        .eq('id', projectId);
+        .eq('id', projectId)
+        .select();
 
       if (error) {
         console.error('❌ Database storage FAILED:', error);
+        console.error('❌ Error details:', JSON.stringify(error, null, 2));
+      } else if (!data || data.length === 0) {
+        console.error('❌ Database storage FAILED: No rows updated (projectId may not exist)');
+        console.error(`❌ Attempted to update project ID: ${projectId}`);
       } else {
         console.log('✅ Database storage SUCCESSFUL');
         console.log(`📝 Status set to: ${validation.isComplete ? 'extracted' : 'partial'}`);
         console.log(`🔗 URL stored: ${whitepaperUrl}`);
+        console.log(`📊 Updated ${data.length} row(s)`);
       }
     } else if (!projectId) {
       console.log('⚠️ No project ID provided - skipping database storage');
