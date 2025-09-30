@@ -32,6 +32,7 @@ interface Project {
 export default function WhitepaperRanking() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [rankingMode, setRankingMode] = useState<'view' | 'rank'>('view');
 
