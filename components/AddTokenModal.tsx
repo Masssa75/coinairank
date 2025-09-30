@@ -69,6 +69,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
   // Advanced fields
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [whitepaperUrl, setWhitepaperUrl] = useState('');
+  const [whitepaperContent, setWhitepaperContent] = useState('');
   
   // Progress tracking states
   const [showProgressTracker, setShowProgressTracker] = useState(false);
@@ -177,6 +178,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
     // Reset advanced fields
     setShowAdvanced(false);
     setWhitepaperUrl('');
+    setWhitepaperContent('');
     // Reset search mode fields
     setSearchMode(false);
     setSearchQuery('');
@@ -304,6 +306,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
         network: string;
         websiteUrl?: string;
         whitepaperUrl?: string;
+        whitepaperContent?: string;
       } = {
         contractAddress: pendingTokenData?.address || contractAddress.trim(),
         network: pendingTokenData?.network || network
@@ -317,6 +320,11 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
       // Include whitepaper URL if provided
       if (whitepaperUrl.trim()) {
         payload.whitepaperUrl = whitepaperUrl.trim();
+      }
+
+      // Include whitepaper content if provided
+      if (whitepaperContent.trim()) {
+        payload.whitepaperContent = whitepaperContent.trim();
       }
 
       const response = await fetch('/api/add-token', {
@@ -400,6 +408,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
         setPendingTokenData(null);
         setShowAdvanced(false);
         setWhitepaperUrl('');
+        setWhitepaperContent('');
         
         setTimeout(() => {
           handleClose();
@@ -808,6 +817,39 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
                     Provide a direct link to the project&apos;s whitepaper for faster analysis
                   </p>
                 </div>
+
+                {/* Whitepaper Content */}
+                <div>
+                  <label htmlFor="whitepaperContent" className="block text-sm font-medium text-gray-300 mb-1">
+                    Whitepaper Content (optional)
+                  </label>
+                  <textarea
+                    id="whitepaperContent"
+                    value={whitepaperContent}
+                    onChange={(e) => setWhitepaperContent(e.target.value)}
+                    placeholder="Paste the full whitepaper text here if you have it..."
+                    rows={6}
+                    className="w-full bg-[#1a1c1f] border border-[#2a2d31] rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 font-mono text-sm resize-y"
+                    disabled={isSubmitting}
+                  />
+                  <div className="mt-1 flex justify-between items-center">
+                    <p className="text-xs text-gray-500">
+                      Paste whitepaper text directly to skip fetching
+                    </p>
+                    <p className={`text-xs ${
+                      whitepaperContent.length > 240000 ? 'text-red-400 font-semibold' :
+                      whitepaperContent.length > 200000 ? 'text-yellow-400' :
+                      'text-gray-500'
+                    }`}>
+                      {whitepaperContent.length.toLocaleString()} / 240,000 chars
+                    </p>
+                  </div>
+                  {whitepaperContent.length > 240000 && (
+                    <p className="mt-1 text-xs text-red-400">
+                      Content exceeds maximum length. It will be truncated to 240,000 characters.
+                    </p>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -876,6 +918,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
                           setManualWebsiteUrl('');
                           setShowAdvanced(false);
                           setWhitepaperUrl('');
+                          setWhitepaperContent('');
                         }}
                         className="flex-1 py-2 px-4 rounded-lg font-medium bg-gray-700 text-gray-300 hover:bg-gray-600"
                       >

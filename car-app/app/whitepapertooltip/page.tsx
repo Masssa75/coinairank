@@ -32,7 +32,6 @@ interface Project {
 export default function WhitepaperRanking() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [rankingMode, setRankingMode] = useState<'view' | 'rank'>('view');
 
@@ -52,7 +51,6 @@ export default function WhitepaperRanking() {
 
         if (error) throw error;
 
-        // Initialize with random ranking
         const projectsWithRank = (data || []).map((project, index) => ({
           ...project,
           rank: index + 1
@@ -82,7 +80,6 @@ export default function WhitepaperRanking() {
         [newProjects[currentIndex + 1], newProjects[currentIndex]];
       }
 
-      // Update ranks
       return newProjects.map((project, index) => ({
         ...project,
         rank: index + 1
@@ -101,20 +98,8 @@ export default function WhitepaperRanking() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-xl font-semibold mb-2 text-black">Error Loading Data</p>
-          <p className="text-gray-600">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
       <div className="border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-4 py-8">
           <div className="flex items-center justify-between">
@@ -145,7 +130,6 @@ export default function WhitepaperRanking() {
 
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="flex gap-8">
-          {/* Left: Project List */}
           <div className="w-1/2">
             <h2 className="text-lg font-semibold text-black mb-4">Project Rankings</h2>
             <div className="space-y-2">
@@ -162,7 +146,6 @@ export default function WhitepaperRanking() {
             </div>
           </div>
 
-          {/* Right: Analysis Detail */}
           <div className="w-1/2">
             {selectedProject ? (
               <StoryAnalysisDetail project={selectedProject} />
@@ -255,6 +238,7 @@ function StoryAnalysisDetail({ project }: { project: Project }) {
   }
 
   const sections = [
+    { key: 'simple_description', title: 'Simple Description', content: analysis.simple_description },
     { key: 'vision_story', title: 'Vision Story', content: analysis.vision_story },
     { key: 'innovation_story', title: 'Innovation Story', content: analysis.innovation_story },
     { key: 'market_story', title: 'Market Story', content: analysis.market_story },
@@ -263,14 +247,13 @@ function StoryAnalysisDetail({ project }: { project: Project }) {
     { key: 'critical_flaw', title: 'Critical Flaw', content: analysis.critical_flaw },
     { key: 'risk_story', title: 'Risk Story', content: analysis.risk_story },
     { key: 'likely_outcome', title: 'Likely Outcome', content: analysis.likely_outcome },
+    { key: 'content_breakdown', title: 'Content Breakdown', content: analysis.content_breakdown },
     { key: 'character_assessment', title: 'Character Assessment', content: analysis.character_assessment },
-    { key: 'red_flags', title: 'Red Flags', content: analysis.red_flags },
-    { key: 'simple_description', title: 'Simple Description', content: analysis.simple_description }
-  ].filter(section => section.content && section.content.trim().length > 0);
+    { key: 'red_flags', title: 'Red Flags', content: analysis.red_flags }
+  ].filter(section => section.content && typeof section.content === 'string' && section.content.trim().length > 0);
 
   return (
     <div className="border border-gray-200 rounded-lg">
-      {/* Header */}
       <div className="border-b border-gray-200 p-4">
         <div className="flex items-center justify-between">
           <div>
@@ -295,7 +278,6 @@ function StoryAnalysisDetail({ project }: { project: Project }) {
         </div>
       </div>
 
-      {/* Story Sections */}
       <div className="max-h-96 overflow-y-auto">
         <div className="p-4 space-y-4">
           {sections.map((section) => (

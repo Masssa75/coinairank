@@ -30,6 +30,7 @@ interface TokenIngestionRequest {
   name?: string;
   pool_address?: string; // Added to support DexScreener price fetching
   whitepaper_url?: string; // Optional whitepaper URL
+  whitepaper_content?: string; // Optional manually pasted whitepaper content
 
   // Market data from discovery (will be overridden by fresh data)
   initial_liquidity_usd?: number;
@@ -811,6 +812,13 @@ serve(async (req) => {
       console.log(`🚀 Whitepaper from user submission: ${body.whitepaper_url}`);
     }
 
+    // Apply user-provided whitepaper content if provided
+    if (body.whitepaper_content) {
+      projectData.whitepaper_content = body.whitepaper_content;
+      projectData.whitepaper_extraction_status = 'extracted';
+      console.log(`🚀 Whitepaper content manually provided: ${body.whitepaper_content.length} chars`);
+    }
+
     // Apply social links with priority: User-provided > CoinGecko (PRIMARY) > DexScreener (FALLBACK)
     if (cgData) {
       // CoinGecko links (PRIMARY SOURCE)
@@ -935,6 +943,33 @@ serve(async (req) => {
       ).catch(error => {
         console.error('Background website analysis failed:', error);
       });
+    }
+
+    // If whitepaper content was manually provided, trigger analyzer directly (skip fetcher)
+    if (body.whitepaper_content && body.whitepaper_content.trim()) {
+      console.log(`🚀 Triggering whitepaper analyzer directly for manually provided content`);
+      try {
+        const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-v4-sse`;
+        const analysisResponse = await fetch(analyzerUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            projectId: newProject.id,
+            symbol: newProject.symbol
+          })
+        });
+
+        if (analysisResponse.ok) {
+          console.log(`✅ Whitepaper analyzer triggered for ${newProject.symbol}`);
+        } else {
+          console.error(`❌ Failed to trigger whitepaper analyzer: ${analysisResponse.status}`);
+        }
+      } catch (error) {
+        console.error('Error triggering whitepaper analyzer:', error);
+      }
     }
 
     return new Response(

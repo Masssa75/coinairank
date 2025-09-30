@@ -218,32 +218,78 @@ serve(async (req) => {
   try {
     const { symbol, whitepaperUrl, projectId, skipAnalysis } = await req.json();
 
-    if (!whitepaperUrl) {
-      throw new Error('whitepaperUrl is required');
-    }
-
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Get whitepaper URL from database if not provided
+    let actualWhitepaperUrl = whitepaperUrl;
+    let actualSymbol = symbol;
+    let actualProjectId = projectId;
+
+    if (!actualWhitepaperUrl && projectId) {
+      console.log(`Fetching whitepaper URL for project ID: ${projectId}`);
+      const { data, error } = await supabase
+        .from('crypto_projects_rated')
+        .select('symbol, whitepaper_url, website_url')
+        .eq('id', actualProjectId)
+        .single();
+
+      if (error || !data || !data.whitepaper_url) {
+        throw new Error(`No whitepaper URL found for project ID ${projectId}`);
+      }
+
+      actualWhitepaperUrl = data.whitepaper_url;
+      actualSymbol = data.symbol;
+
+      // Handle relative URLs by combining with website URL
+      if ((actualWhitepaperUrl.startsWith('/') || actualWhitepaperUrl.startsWith('./')) && data.website_url) {
+        const baseUrl = data.website_url.replace(/\/$/, '');
+        const cleanPath = actualWhitepaperUrl.replace(/^\./, '');
+        actualWhitepaperUrl = baseUrl + cleanPath;
+        console.log(`Resolved relative URL using website: ${actualWhitepaperUrl}`);
+      }
+    }
+
+    if (!actualWhitepaperUrl) {
+      throw new Error('whitepaperUrl is required (either directly or via projectId)');
+    }
+
+    // If still relative and we have a projectId, try to get website URL
+    if ((actualWhitepaperUrl.startsWith('/') || actualWhitepaperUrl.startsWith('./')) && actualProjectId) {
+      const { data: websiteData } = await supabase
+        .from('crypto_projects_rated')
+        .select('website_url')
+        .eq('id', actualProjectId)
+        .single();
+
+      if (websiteData?.website_url) {
+        const baseUrl = websiteData.website_url.replace(/\/$/, '');
+        const cleanPath = actualWhitepaperUrl.replace(/^\./, '');
+        actualWhitepaperUrl = baseUrl + cleanPath;
+        console.log(`Resolved relative URL using website (second attempt): ${actualWhitepaperUrl}`);
+      }
+    }
+
     console.log(`\n=== Whitepaper Fetcher ===`);
-    console.log(`Symbol: ${symbol || 'N/A'}`);
-    console.log(`URL: ${whitepaperUrl}`);
+    console.log(`Symbol: ${actualSymbol || 'N/A'}`);
+    console.log(`Project ID: ${actualProjectId || 'N/A'}`);
+    console.log(`URL: ${actualWhitepaperUrl}`)
 
     // Step 1: Try to fetch content
     let fetchResult;
     let fetchError = null;
 
     try {
-      fetchResult = await fetchWhitepaperContent(whitepaperUrl);
+      fetchResult = await fetchWhitepaperContent(actualWhitepaperUrl);
       console.log(`Fetched ${fetchResult.content.length} chars via ${fetchResult.method}`);
     } catch (error) {
       console.error(`Initial fetch failed: ${error.message}`);
       fetchError = error.message;
       // Create a minimal result for AI to analyze
       fetchResult = {
-        content: `Failed to fetch from ${whitepaperUrl}: ${error.message}`,
+        content: `Failed to fetch from ${actualWhitepaperUrl}: ${error.message}`,
         method: 'html' as const,
         originalLength: 0
       };
@@ -254,7 +300,7 @@ serve(async (req) => {
     console.log(`📊 Content to validate: ${fetchResult.content.length} characters`);
     console.log(`🔍 Content preview (first 300 chars): ${fetchResult.content.substring(0, 300)}...`);
 
-    let validation = await validateWhitepaperContent(fetchResult.content, whitepaperUrl);
+    let validation = await validateWhitepaperContent(fetchResult.content, actualWhitepaperUrl);
 
     console.log(`🤖 AI Decision: ${validation.isComplete ? '✅ COMPLETE' : '❌ INCOMPLETE'}`);
     console.log(`📝 AI Reason: ${validation.reason}`);
@@ -290,7 +336,7 @@ serve(async (req) => {
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  url: suggestion.url || whitepaperUrl,
+                  url: suggestion.url || actualWhitepaperUrl,
                   waitForSelector: {
                     selector: suggestion.selector || 'body',
                     timeout: 30000
@@ -318,7 +364,7 @@ serve(async (req) => {
                 };
 
                 // Re-validate to see if we have enough now
-                validation = await validateWhitepaperContent(parsedContent, whitepaperUrl);
+                validation = await validateWhitepaperContent(parsedContent, actualWhitepaperUrl);
                 if (validation.isComplete) {
                   console.log('✅ Success! Browser rendering got complete whitepaper');
                   break;
@@ -359,7 +405,7 @@ serve(async (req) => {
             '/static/whitepaper.pdf'
           ];
 
-          const baseUrl = new URL(whitepaperUrl).origin;
+          const baseUrl = new URL(actualWhitepaperUrl).origin;
           for (const pattern of patterns) {
             const testUrl = baseUrl + pattern;
             console.log(`Trying pattern: ${testUrl}`);
@@ -393,9 +439,9 @@ serve(async (req) => {
     console.log(`📊 Final content length: ${fetchResult.content.length} characters`);
     console.log(`📊 Method used: ${fetchResult.method}`);
     console.log(`✅ Final status: ${validation.isComplete ? 'COMPLETE' : 'INCOMPLETE'}`);
-    console.log(`🆔 Project ID: ${projectId || 'NONE'}`);
+    console.log(`🆔 Project ID: ${actualProjectId || 'NONE'}`);
 
-    if (projectId && fetchResult.content.length > 100) {
+    if (actualProjectId && fetchResult.content.length > 100) {
       const contentToStore = fetchResult.content.substring(0, 240000);
       console.log(`💾 Storing ${contentToStore.length} characters to database...`);
       console.log(`🔍 Content preview being stored: ${contentToStore.substring(0, 200)}...`);
@@ -405,9 +451,9 @@ serve(async (req) => {
         .update({
           whitepaper_content: contentToStore,
           whitepaper_extraction_status: validation.isComplete ? 'extracted' : 'partial',
-          whitepaper_url: whitepaperUrl
+          whitepaper_url: actualWhitepaperUrl
         })
-        .eq('id', projectId)
+        .eq('id', actualProjectId)
         .select();
 
       if (error) {
@@ -415,26 +461,26 @@ serve(async (req) => {
         console.error('❌ Error details:', JSON.stringify(error, null, 2));
       } else if (!data || data.length === 0) {
         console.error('❌ Database storage FAILED: No rows updated (projectId may not exist)');
-        console.error(`❌ Attempted to update project ID: ${projectId}`);
+        console.error(`❌ Attempted to update project ID: ${actualProjectId}`);
       } else {
         console.log('✅ Database storage SUCCESSFUL');
         console.log(`📝 Status set to: ${validation.isComplete ? 'extracted' : 'partial'}`);
-        console.log(`🔗 URL stored: ${whitepaperUrl}`);
+        console.log(`🔗 URL stored: ${actualWhitepaperUrl}`);
         console.log(`📊 Updated ${data.length} row(s)`);
       }
-    } else if (!projectId) {
+    } else if (!actualProjectId) {
       console.log('⚠️ No project ID provided - skipping database storage');
     } else {
       console.log('⚠️ Content too short (<100 chars) - skipping database storage');
     }
 
     // Return results
-    // If content was successfully stored, trigger whitepaper-analyzer-fundamental (unless skipAnalysis is true)
+    // If content was successfully stored, trigger whitepaper-analyzer-v4-sse (updated from fundamental)
     let analysisTriggered = false;
-    if (projectId && fetchResult.content.length > 100 && !skipAnalysis) {
+    if (actualProjectId && fetchResult.content.length > 100 && !skipAnalysis) {
       try {
-        console.log(`Triggering whitepaper-analyzer-fundamental for ${symbol}`);
-        const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-fundamental`;
+        console.log(`Triggering whitepaper-analyzer-v4-sse for ${symbol}`);
+        const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-v4-sse`;
         const analysisResponse = await fetch(analyzerUrl, {
           method: 'POST',
           headers: {
@@ -442,13 +488,13 @@ serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            projectId: projectId,
-            symbol: symbol
+            projectId: actualProjectId,
+            symbol: actualSymbol
           })
         });
 
         if (analysisResponse.ok) {
-          console.log(`✅ Whitepaper analysis triggered successfully for ${symbol}`);
+          console.log(`✅ Whitepaper analysis v4-sse triggered successfully for ${symbol}`);
           analysisTriggered = true;
         } else {
           console.error(`❌ Failed to trigger whitepaper analysis: ${analysisResponse.status}`);
@@ -467,7 +513,7 @@ serve(async (req) => {
         isComplete: validation.isComplete,
         reason: validation.reason,
         suggestionsTried: validation.suggestions,
-        stored: !!projectId && fetchResult.content.length > 100,
+        stored: !!actualProjectId && fetchResult.content.length > 100,
         analysisTriggered: analysisTriggered,
         content: fetchResult.content.substring(0, 500) // Preview
       }),

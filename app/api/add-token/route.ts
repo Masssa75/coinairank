@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body = await request.json();
-    const { contractAddress, network, websiteUrl, whitepaperUrl } = body;
+    const { contractAddress, network, websiteUrl, whitepaperUrl, whitepaperContent } = body;
 
     // Validate required fields
     if (!contractAddress || !network) {
@@ -274,6 +274,19 @@ export async function POST(request: NextRequest) {
       console.log(`Whitepaper URL provided: ${normalizedWhitepaperUrl}`);
     }
 
+    // Process whitepaper content if provided (pasted manually)
+    let processedWhitepaperContent = null;
+    if (whitepaperContent && whitepaperContent.trim()) {
+      // Truncate to 240K chars if needed
+      processedWhitepaperContent = whitepaperContent.trim().substring(0, 240000);
+      console.log(`Whitepaper content provided: ${processedWhitepaperContent.length} chars`);
+
+      // If content is provided but no URL, set URL to indicate manual provision
+      if (!normalizedWhitepaperUrl) {
+        normalizedWhitepaperUrl = 'MANUALLY_PROVIDED';
+      }
+    }
+
     // If no website at all, return error with needsWebsite flag
     if (!tokenData.website) {
       return NextResponse.json(
@@ -303,6 +316,7 @@ export async function POST(request: NextRequest) {
         pool_address: tokenData.poolAddress,
         website_url: tokenData.website || 'pending',
         whitepaper_url: normalizedWhitepaperUrl,
+        whitepaper_content: processedWhitepaperContent,
         source: 'manual',
         trigger_analysis: !!tokenData.website // Only trigger if we have a website
       })

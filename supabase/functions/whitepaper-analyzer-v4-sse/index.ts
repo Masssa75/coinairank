@@ -184,9 +184,19 @@ ${content}`;
   // Parse the story sections from the AI response
   const storyAnalysis = parseStoryResponse(aiContent);
 
+  // Log parsing results for debugging
+  console.log('AI Response length:', aiContent.length);
+  console.log('Parsed sections with content:', Object.entries(storyAnalysis)
+    .filter(([_, value]) => value && value.length > 0)
+    .map(([key, value]) => `${key}: ${value.length} chars`)
+  );
+
   await sendEvent('story_saving', {
     message: 'Saving enhanced story analysis results...',
-    sections: Object.keys(storyAnalysis).length
+    sections: Object.keys(storyAnalysis).filter(k => storyAnalysis[k as keyof typeof storyAnalysis]).length,
+    populatedSections: Object.entries(storyAnalysis)
+      .filter(([_, value]) => value && value.length > 0)
+      .map(([key]) => key)
   });
 
   // Update project with story analysis
@@ -213,12 +223,82 @@ ${content}`;
     message: 'Story analysis complete!'
   });
 
-  return {
-    success: true,
-    symbol,
-    story_analysis: storyAnalysis,
-    project_id: currentProjectId
-  };
+  // Trigger Phase 2 comparison
+  await sendEvent('phase2_starting', {
+    message: 'Starting Phase 2 benchmark comparison...'
+  });
+
+  try {
+    const phase2Response = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-phase2-comparison`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        projectId: currentProjectId,
+        symbol: symbol
+      })
+    });
+
+    if (phase2Response.ok) {
+      const phase2Result = await phase2Response.json();
+
+      await sendEvent('phase2_complete', {
+        message: 'Phase 2 comparison complete!',
+        tier: phase2Result.tier_name,
+        score: phase2Result.quality_score,
+        predicted_rank: phase2Result.predicted_rank,
+        summary: phase2Result.summary
+      });
+
+      return {
+        success: true,
+        symbol,
+        story_analysis: storyAnalysis,
+        project_id: currentProjectId,
+        phase2_result: {
+          tier: phase2Result.tier_name,
+          score: phase2Result.quality_score,
+          predicted_rank: phase2Result.predicted_rank,
+          summary: phase2Result.summary
+        }
+      };
+    } else {
+      const errorText = await phase2Response.text();
+      console.error(`Phase 2 trigger failed: ${errorText}`);
+
+      await sendEvent('phase2_error', {
+        message: 'Phase 2 comparison failed',
+        error: errorText
+      });
+
+      // Still return success for story analysis even if Phase 2 failed
+      return {
+        success: true,
+        symbol,
+        story_analysis: storyAnalysis,
+        project_id: currentProjectId,
+        phase2_error: errorText
+      };
+    }
+  } catch (error) {
+    console.error(`Failed to trigger Phase 2: ${error}`);
+
+    await sendEvent('phase2_error', {
+      message: 'Phase 2 comparison failed',
+      error: error.message
+    });
+
+    // Still return success for story analysis even if Phase 2 failed
+    return {
+      success: true,
+      symbol,
+      story_analysis: storyAnalysis,
+      project_id: currentProjectId,
+      phase2_error: error.message
+    };
+  }
 }
 
 function parseStoryResponse(content: string) {
@@ -240,31 +320,21 @@ function parseStoryResponse(content: string) {
 
   // Try multiple patterns to be more flexible with AI responses
   const patterns = [
-    // Story sections - original patterns
-    { key: 'vision_story', pattern: /THE VISION STORY\s*(.*?)(?=THE INNOVATION STORY|Content Breakdown|Character Assessment|$)/s },
-    { key: 'innovation_story', pattern: /THE INNOVATION STORY\s*(.*?)(?=THE MARKET STORY|Content Breakdown|Character Assessment|$)/s },
-    { key: 'market_story', pattern: /THE MARKET STORY\s*(.*?)(?=THE TEAM STORY|Content Breakdown|Character Assessment|$)/s },
-    { key: 'team_story', pattern: /THE TEAM STORY\s*(.*?)(?=THE DECENTRALIZATION STORY|Content Breakdown|Character Assessment|$)/s },
-    { key: 'decentralization_story', pattern: /THE DECENTRALIZATION STORY\s*(.*?)(?=THE CRITICAL FLAW|Content Breakdown|Character Assessment|$)/s },
-    { key: 'critical_flaw', pattern: /THE CRITICAL FLAW\s*(.*?)(?=THE RISK STORY|Content Breakdown|Character Assessment|$)/s },
-    { key: 'risk_story', pattern: /THE RISK STORY\s*(.*?)(?=THE LIKELY OUTCOME|Content Breakdown|Character Assessment|$)/s },
-    { key: 'likely_outcome', pattern: /THE LIKELY OUTCOME\s*(.*?)(?=Content Breakdown|Character Assessment|$)/s },
+    // Story sections - case-insensitive patterns with multiple variations
+    { key: 'vision_story', pattern: /(?:The Vision Story|THE VISION STORY|Vision Story|VISION STORY):?\s*(.*?)(?=(?:The Innovation Story|THE INNOVATION STORY|Innovation Story|INNOVATION STORY|Content Breakdown|Character Assessment)|$)/is },
+    { key: 'innovation_story', pattern: /(?:The Innovation Story|THE INNOVATION STORY|Innovation Story|INNOVATION STORY):?\s*(.*?)(?=(?:The Market Story|THE MARKET STORY|Market Story|MARKET STORY|Content Breakdown|Character Assessment)|$)/is },
+    { key: 'market_story', pattern: /(?:The Market Story|THE MARKET STORY|Market Story|MARKET STORY):?\s*(.*?)(?=(?:The Team Story|THE TEAM STORY|Team Story|TEAM STORY|Content Breakdown|Character Assessment)|$)/is },
+    { key: 'team_story', pattern: /(?:The Team Story|THE TEAM STORY|Team Story|TEAM STORY):?\s*(.*?)(?=(?:The Decentralization Story|THE DECENTRALIZATION STORY|Decentralization Story|DECENTRALIZATION STORY|Content Breakdown|Character Assessment)|$)/is },
+    { key: 'decentralization_story', pattern: /(?:The Decentralization Story|THE DECENTRALIZATION STORY|Decentralization Story|DECENTRALIZATION STORY):?\s*(.*?)(?=(?:The Critical Flaw|THE CRITICAL FLAW|Critical Flaw|CRITICAL FLAW|Content Breakdown|Character Assessment)|$)/is },
+    { key: 'critical_flaw', pattern: /(?:The Critical Flaw|THE CRITICAL FLAW|Critical Flaw|CRITICAL FLAW):?\s*(.*?)(?=(?:The Risk Story|THE RISK STORY|Risk Story|RISK STORY|Content Breakdown|Character Assessment)|$)/is },
+    { key: 'risk_story', pattern: /(?:The Risk Story|THE RISK STORY|Risk Story|RISK STORY):?\s*(.*?)(?=(?:The Likely Outcome|THE LIKELY OUTCOME|Likely Outcome|LIKELY OUTCOME|Content Breakdown|Character Assessment)|$)/is },
+    { key: 'likely_outcome', pattern: /(?:The Likely Outcome|THE LIKELY OUTCOME|Likely Outcome|LIKELY OUTCOME):?\s*(.*?)(?=(?:Content Breakdown|Character Assessment)|$)/is },
 
-    // Story sections - alternative patterns without "THE"
-    { key: 'vision_story', pattern: /VISION STORY\s*(.*?)(?=INNOVATION STORY|Content Breakdown|Character Assessment|$)/s },
-    { key: 'innovation_story', pattern: /INNOVATION STORY\s*(.*?)(?=MARKET STORY|Content Breakdown|Character Assessment|$)/s },
-    { key: 'market_story', pattern: /MARKET STORY\s*(.*?)(?=TEAM STORY|Content Breakdown|Character Assessment|$)/s },
-    { key: 'team_story', pattern: /TEAM STORY\s*(.*?)(?=DECENTRALIZATION STORY|Content Breakdown|Character Assessment|$)/s },
-    { key: 'decentralization_story', pattern: /DECENTRALIZATION STORY\s*(.*?)(?=CRITICAL FLAW|Content Breakdown|Character Assessment|$)/s },
-    { key: 'critical_flaw', pattern: /CRITICAL FLAW\s*(.*?)(?=RISK STORY|Content Breakdown|Character Assessment|$)/s },
-    { key: 'risk_story', pattern: /RISK STORY\s*(.*?)(?=LIKELY OUTCOME|Content Breakdown|Character Assessment|$)/s },
-    { key: 'likely_outcome', pattern: /LIKELY OUTCOME\s*(.*?)(?=Content Breakdown|Character Assessment|$)/s },
-
-    // New V2 sections
-    { key: 'content_breakdown', pattern: /Content Breakdown\s*(.*?)(?=Character Assessment|Red Flags|Simple Description|$)/s },
-    { key: 'character_assessment', pattern: /Character Assessment\s*(.*?)(?=Red Flags|Simple Description|$)/s },
-    { key: 'red_flags', pattern: /Red Flags\s*(.*?)(?=Simple Description|$)/s },
-    { key: 'simple_description', pattern: /Simple Description\s*(.*?)$/s }
+    // New V2 sections - case-insensitive
+    { key: 'content_breakdown', pattern: /Content Breakdown:?\s*(.*?)(?=(?:Character Assessment|Red Flags|Simple Description)|$)/is },
+    { key: 'character_assessment', pattern: /Character Assessment:?\s*(.*?)(?=(?:Red Flags|Simple Description)|$)/is },
+    { key: 'red_flags', pattern: /Red Flags:?\s*(.*?)(?=(?:Simple Description)|$)/is },
+    { key: 'simple_description', pattern: /Simple Description:?\s*(.*?)$/is }
   ];
 
   for (const { key, pattern } of patterns) {
