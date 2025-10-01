@@ -215,20 +215,24 @@ export function WhitepaperTooltip({
       {showTooltip && tooltipPosition && mounted && createPortal(
         <div
           ref={tooltipRef}
-          className="fixed z-[9999] bg-white border border-gray-200 rounded-lg shadow-2xl w-[500px] max-w-[95vw] md:max-w-[500px]"
+          className={`fixed z-[999999] ${isPersistent ? 'pointer-events-auto' : 'pointer-events-none'}`}
           style={{
-            left: '50%',
-            transform: `translateX(calc(${tooltipPosition.x - window.innerWidth / 2}px - 50%))`,
-            top: tooltipPosition.placement === 'below'
-              ? tooltipPosition.y + 10
-              : tooltipPosition.y - 400 - 10,
-            maxHeight: '400px',
-            overflowY: 'auto'
+            left: `${tooltipPosition.x}px`,
+            top: tooltipPosition.placement === 'above'
+              ? `${tooltipPosition.y}px`
+              : `${tooltipPosition.y}px`,
+            transform: tooltipPosition.placement === 'above'
+              ? 'translate(-50%, -100%) translateY(-8px)'
+              : 'translate(-50%, 8px)',
           }}
           onMouseEnter={() => setShowTooltip(true)}
           onMouseLeave={handleMouseLeave}
         >
-          {getTooltipContent()}
+          <div className="bg-white rounded-lg shadow-2xl border border-gray-200 p-3 md:p-4
+            w-[calc(100vw-20px)] max-w-[500px] min-w-[300px] md:min-w-[400px]
+            max-h-[60vh] md:max-h-[80vh] overflow-y-auto scrollbar-hide">
+            {getTooltipContent()}
+          </div>
         </div>,
         document.body
       )}
