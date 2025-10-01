@@ -31,21 +31,30 @@ interface Project {
   whitepaper_story_analysis?: WhitepaperStoryAnalysis;
 }
 
-export default function ProjectDetailPage({ params }: { params: { symbol: string } }) {
+export default function ProjectDetailPage({ params }: { params: Promise<{ symbol: string }> }) {
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
+  const [symbol, setSymbol] = useState<string>('');
 
   useEffect(() => {
-    fetchProject();
-  }, [params.symbol]);
+    params.then(p => {
+      setSymbol(p.symbol);
+    });
+  }, [params]);
+
+  useEffect(() => {
+    if (symbol) {
+      fetchProject();
+    }
+  }, [symbol]);
 
   async function fetchProject() {
     try {
       const { data, error } = await supabase
         .from('crypto_projects_rated')
         .select('symbol, name, whitepaper_story_analysis')
-        .eq('symbol', params.symbol.toUpperCase())
+        .eq('symbol', symbol.toUpperCase())
         .single();
 
       if (error) throw error;
