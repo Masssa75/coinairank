@@ -298,7 +298,7 @@ async function calculateAge(
   if (cmcData?.date_added) {
     const added = new Date(cmcData.date_added);
     const ageDays = (Date.now() - added.getTime()) / (1000 * 60 * 60 * 24);
-    if (ageDays > 30) { // Only use if at least a month old
+    if (ageDays > 1) { // Use if at least 1 day old (avoid same-day noise)
       ageData.project_age_years = Math.round(ageDays / 365.25 * 10) / 10;
       ageData.launch_date = cmcData.date_added.split('T')[0];
       ageData.age_source = 'cmc_added';
@@ -311,7 +311,7 @@ async function calculateAge(
   if (dexData?.pairCreatedAt) {
     const created = new Date(dexData.pairCreatedAt);
     const ageDays = (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24);
-    if (ageDays > 7) { // Only use if at least a week old
+    if (ageDays > 0) { // Use any valid date (catching early is valuable!)
       ageData.project_age_years = Math.round(ageDays / 365.25 * 10) / 10;
       ageData.launch_date = created.toISOString().split('T')[0];
       ageData.age_source = 'dexscreener';
@@ -324,7 +324,7 @@ async function calculateAge(
   if (cgData?.atl_date) {
     const atl = new Date(cgData.atl_date);
     const ageDays = (Date.now() - atl.getTime()) / (1000 * 60 * 60 * 24);
-    if (ageDays > 30) { // Only use if at least a month old
+    if (ageDays > 0) { // Use any valid date - early ATL means we caught it on launch!
       ageData.project_age_years = Math.round(ageDays / 365.25 * 10) / 10;
       ageData.launch_date = cgData.atl_date.split('T')[0];
       ageData.age_source = 'atl_date';
