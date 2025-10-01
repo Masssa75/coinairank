@@ -1048,6 +1048,23 @@ serve(async (req) => {
       console.log(`⏭️ No whitepaper processing - no content or URL provided`);
     }
 
+    // 3. X/Twitter Analysis Trigger
+    if (body.trigger_analysis !== false && projectData.twitter_url) {
+      console.log(`🐦 Preparing X/Twitter analysis trigger for ${newProject.symbol}`);
+      parallelTriggers.push(
+        triggerXAnalysis(
+          newProject.id,
+          newProject.symbol,
+          projectData.twitter_url
+        ).catch(error => {
+          console.error('Background X analysis failed:', error);
+          return { success: false, type: 'x-analysis', error: error.message };
+        })
+      );
+    } else if (!projectData.twitter_url) {
+      console.log(`⏭️ No Twitter URL available for ${newProject.symbol} - skipping X analysis`);
+    }
+
     // Execute all triggers in parallel and wait for results
     if (parallelTriggers.length > 0) {
       console.log(`🚀 Executing ${parallelTriggers.length} analysis triggers in parallel...`);
