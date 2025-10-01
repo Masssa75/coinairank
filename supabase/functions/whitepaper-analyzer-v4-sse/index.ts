@@ -467,13 +467,28 @@ serve(async (req) => {
       });
     }
 
-    // Non-SSE path - return error encouraging SSE usage
+    // Non-SSE path - run analysis in background for server-to-server triggers
+    console.log(`🔄 Non-SSE request detected - running analysis in background for ${symbol}`);
+
+    // Start analysis in background (don't await)
+    processStoryAnalysisWithSSE(symbol, initialProjectId, async (event: string, data: any) => {
+      // Log events instead of streaming them
+      console.log(`[${event}] ${JSON.stringify(data)}`);
+    }).catch(error => {
+      console.error('Background analysis error:', error);
+    });
+
+    // Return immediate success response for server-to-server triggers
     return new Response(
       JSON.stringify({
-        error: 'Non-SSE mode not implemented. Please use SSE by setting Accept: text/event-stream header.'
+        success: true,
+        message: 'Whitepaper analysis started in background',
+        symbol,
+        projectId: initialProjectId,
+        mode: 'background'
       }),
       {
-        status: 400,
+        status: 202, // 202 Accepted - request accepted for processing
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );

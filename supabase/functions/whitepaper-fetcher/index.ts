@@ -249,23 +249,31 @@ serve(async (req) => {
 
           // Skip fetching but still trigger analysis if needed
           if (!skipAnalysis) {
-            // Fire-and-forget trigger (don't await - SSE responses are for clients, not server-to-server)
-            console.log(`🚀 Triggering whitepaper-analyzer-v4-sse for existing content (background)`);
-            const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-v4-sse`;
-            fetch(analyzerUrl, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-                'Content-Type': 'application/json',
-                'Accept': 'text/event-stream',
-              },
-              body: JSON.stringify({
-                projectId: projectId,
-                symbol: existingProject.symbol
-              })
-            }).catch(error => {
-              console.error('Error triggering analysis (fire-and-forget):', error);
-            });
+            try {
+              console.log(`🚀 Triggering whitepaper-analyzer-v4-sse for existing content (non-SSE mode)`);
+              const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-v4-sse`;
+              const analysisResponse = await fetch(analyzerUrl, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+                  'Content-Type': 'application/json',
+                  // No Accept header = non-SSE mode = background processing
+                },
+                body: JSON.stringify({
+                  projectId: projectId,
+                  symbol: existingProject.symbol
+                })
+              });
+
+              if (analysisResponse.ok) {
+                const result = await analysisResponse.json();
+                console.log(`✅ Analysis triggered: ${result.message}`);
+              } else {
+                console.error(`❌ Failed to trigger analysis: ${analysisResponse.status}`);
+              }
+            } catch (error) {
+              console.error('Error triggering analysis:', error);
+            }
           }
 
           return new Response(
@@ -543,24 +551,32 @@ serve(async (req) => {
     // If content was successfully stored, trigger whitepaper-analyzer-v4-sse (updated from fundamental)
     let analysisTriggered = false;
     if (actualProjectId && fetchResult.content.length > 100 && !skipAnalysis) {
-      // Fire-and-forget trigger (don't await - SSE responses are for clients, not server-to-server)
-      console.log(`🚀 Triggering whitepaper-analyzer-v4-sse for ${symbol} (background)`);
-      const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-v4-sse`;
-      fetch(analyzerUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-          'Content-Type': 'application/json',
-          'Accept': 'text/event-stream',
-        },
-        body: JSON.stringify({
-          projectId: actualProjectId,
-          symbol: actualSymbol
-        })
-      }).catch(error => {
-        console.error('Error triggering whitepaper analysis (fire-and-forget):', error);
-      });
-      analysisTriggered = true; // Mark as triggered (fire-and-forget)
+      try {
+        console.log(`🚀 Triggering whitepaper-analyzer-v4-sse for ${symbol} (non-SSE mode)`);
+        const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-v4-sse`;
+        const analysisResponse = await fetch(analyzerUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+            'Content-Type': 'application/json',
+            // No Accept header = non-SSE mode = background processing
+          },
+          body: JSON.stringify({
+            projectId: actualProjectId,
+            symbol: actualSymbol
+          })
+        });
+
+        if (analysisResponse.ok) {
+          const result = await analysisResponse.json();
+          console.log(`✅ Whitepaper analysis triggered: ${result.message}`);
+          analysisTriggered = true;
+        } else {
+          console.error(`❌ Failed to trigger whitepaper analysis: ${analysisResponse.status}`);
+        }
+      } catch (error) {
+        console.error('Error triggering whitepaper analysis:', error);
+      }
     }
 
     return new Response(

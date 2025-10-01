@@ -98,15 +98,9 @@ Return JSON:
   "final_tier": 1-4,
   "tier_name": "ALPHA/SOLID/BASIC/TRASH",
   "final_score": 0-100,
-  "strongest_signal": "exact aspect that determined tier",
-  "signal_evaluations": [
-    {
-      "signal": "specific aspect from whitepaper analysis",
-      "assigned_tier": 1-4,
-      "reasoning": "why this aspect beats/doesn't beat specific tier benchmarks"
-    }
-  ],
-  "explanation": "2-3 sentences on tier logic"
+  "determining_factor": "main reason for this tier assignment",
+  "tier_reasoning": "detailed explanation of which specific tier benchmarks the project beats and which it doesn't",
+  "explanation": "2-3 sentence summary"
 }`;
 
     // Step 5: Call AI for comparison
@@ -161,8 +155,8 @@ Return JSON:
           final_tier: comparisonResult.final_tier,
           tier_name: comparisonResult.tier_name,
           final_score: comparisonResult.final_score,
-          strongest_signal: comparisonResult.strongest_signal,
-          signal_evaluations: comparisonResult.signal_evaluations,
+          determining_factor: comparisonResult.determining_factor,
+          tier_reasoning: comparisonResult.tier_reasoning,
           explanation: comparisonResult.explanation,
           completed_at: new Date().toISOString()
         },
@@ -183,8 +177,8 @@ Return JSON:
         projectId,
         tier_name: comparisonResult.tier_name,
         quality_score: comparisonResult.final_score,
-        strongest_signal: comparisonResult.strongest_signal,
-        signal_evaluations: comparisonResult.signal_evaluations,
+        determining_factor: comparisonResult.determining_factor,
+        tier_reasoning: comparisonResult.tier_reasoning,
         explanation: comparisonResult.explanation
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
