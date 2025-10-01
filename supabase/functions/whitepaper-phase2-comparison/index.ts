@@ -76,8 +76,8 @@ serve(async (req) => {
       TRASH: benchmarks.filter(b => b.tier_name === 'TRASH')
     };
 
-    // Step 4: Prepare the simplified innovation-based comparison prompt
-    const COMPARISON_PROMPT = `Classify this whitepaper into one of four tiers based on innovation level:
+    // Step 4: Prepare the hierarchical bottom-up comparison prompt
+    const COMPARISON_PROMPT = `Classify this whitepaper using HIERARCHICAL BOTTOM-UP evaluation:
 
 TRASH - Copy-paste, no real innovation
 BASIC - Some innovation but unclear application (college student idea level)
@@ -87,35 +87,49 @@ ALPHA - Breakthrough innovation from world-class team
 Project: ${symbol}
 Whitepaper Analysis: ${JSON.stringify(project.whitepaper_story_analysis, null, 2)}
 
-## IMPORTANT NUDGES FOR CLASSIFICATION
+## CRITICAL EVALUATION PROCESS - FOLLOW EXACTLY:
 
-### Automatic ALPHA Indicators (Any ONE of these = ALPHA):
-- Team member(s) with world-class academic credentials
-- First working solution to known theoretical problem
-- Invented protocol that major blockchains adopted or cite
-- Solving mathematically "impossible" problems with working implementation
-- Created paradigm-defining projects or standards
+1. **Start by assuming this project is TRASH tier (weakest)**
+2. **For each signal below, test progressively if it BEATS the higher tier benchmarks**
+3. **Project tier = HIGHEST tier achieved by ANY signal**
+4. **Do NOT stop at first match - test ALL signals against ALL tiers**
 
-### Automatic SOLID Indicators:
-- PhD team with published papers but not groundbreaking
-- Ex-FAANG engineers without revolutionary innovation
+## TIER BEATING BENCHMARKS:
+
+### TRASH → BASIC (any ONE signal beats TRASH):
+- Some technical content beyond pure marketing
+- Attempts at innovation even if flawed
+- Basic team credentials mentioned
+- Not obvious copy-paste
+
+### BASIC → SOLID (any ONE signal beats BASIC):
+- PhD team with published papers
+- Ex-FAANG/major tech company engineers
 - Working implementation of known concepts
-- Professional team but incremental improvement
-- First professional implementation of proven model to ride a new wave or trend
+- Professional team with track record
+- Clear technical architecture
 
-### Automatic BASIC Indicators:
-- Anonymous team with vague claims
-- Buzzword-heavy without technical depth
-- "Revolutionary" claims without proof/implementation
-- College-level implementation of existing ideas
+### SOLID → ALPHA (any ONE signal beats SOLID):
+- Team member created paradigm-defining projects (OpenAI/GPT, Ethereum, Bitcoin, major AI/crypto breakthroughs)
+- World-class academic credentials (Stanford/MIT professors, Turing Award winners, notable researchers)
+- CEO/founder of major tech companies that defined new industries (like Sam Altman at OpenAI)
+- First working solution to theoretical "impossible" problems
+- Invented protocols that major blockchains adopted
+- Breakthrough mathematical/cryptographic innovations that became standards
 
-### Automatic TRASH Indicators:
-- Copy-paste whitepaper sections
-- Marketing speak without technical content
-- No actual innovation, just repackaging
-- Obvious cash grab on current trends
+## EVALUATION METHODOLOGY:
+For EACH signal you find, ask: "Does this signal beat the Tier X benchmark?"
+- If YES: Test against next higher tier
+- Continue until signal fails to beat a tier
+- Record HIGHEST tier achieved by ANY signal
 
-Which tier and why? Be specific about what in the whitepaper indicates this tier.
+## CRITICAL: Test these specific signals if found:
+- If Sam Altman mentioned → TEST: "CEO/founder of major tech companies" → Should beat SOLID → ALPHA
+- If "OpenAI" mentioned → TEST: "paradigm-defining projects" → Should beat SOLID → ALPHA
+- If "Ex-FAANG/SpaceX/Apple engineers" → TEST: beats BASIC → SOLID minimum
+- If "2M+ users" or massive scale → TEST: beats BASIC → SOLID minimum
+
+DO NOT ACCEPT "working implementation" as final tier if stronger signals exist.
 
 ## SCORING GUIDE
 - ALPHA (85-100): Breakthrough innovation, world-class team or innovation

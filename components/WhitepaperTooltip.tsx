@@ -15,33 +15,30 @@ import {
 interface WhitepaperTooltipProps {
   whitepaperUrl?: string;
   whitepaperTier?: string;
-  whitepaperScore?: number;
-  whitepaperSignals?: any;
-  whitepaperRedFlags?: any;
-  whitepaperGreenFlags?: any;
-  whitepaperAnalysis?: any;
+  whitepaperQualityScore?: number;
+  whitepaperStoryAnalysis?: {
+    simple_description?: string;
+    vision_story?: string;
+    innovation_story?: string;
+    team_story?: string;
+  };
+  whitepaperPhase2Comparison?: {
+    summary?: string;
+    reasoning?: string;
+    tier_name?: string;
+    quality_score?: number;
+  };
   whitepaperAnalyzedAt?: string;
-  whitepaperSimpleDescription?: string;
-  // V2 Evidence-based fields
-  whitepaperMainClaim?: string;
-  whitepaperEvidenceClaims?: any[];
-  whitepaperEvidenceEvaluations?: any;
   children: React.ReactNode;
 }
 
 export function WhitepaperTooltip({
   whitepaperUrl,
   whitepaperTier,
-  whitepaperScore,
-  whitepaperSignals,
-  whitepaperRedFlags,
-  whitepaperGreenFlags,
-  whitepaperAnalysis,
+  whitepaperQualityScore,
+  whitepaperStoryAnalysis,
+  whitepaperPhase2Comparison,
   whitepaperAnalyzedAt,
-  whitepaperSimpleDescription,
-  whitepaperMainClaim,
-  whitepaperEvidenceClaims,
-  whitepaperEvidenceEvaluations,
   children
 }: WhitepaperTooltipProps) {
   const [showTooltip, setShowTooltip] = React.useState(false);
@@ -75,7 +72,7 @@ export function WhitepaperTooltip({
   }, [isPersistent]);
 
   // Don't show tooltip if no whitepaper data
-  if (!whitepaperTier && !whitepaperUrl && !whitepaperSignals && !whitepaperAnalysis) {
+  if (!whitepaperTier && !whitepaperUrl && !whitepaperStoryAnalysis && !whitepaperPhase2Comparison) {
     return <>{children}</>;
   }
 
@@ -134,6 +131,20 @@ export function WhitepaperTooltip({
   };
 
   const getTooltipContent = () => {
+    // Check if we have analysis data
+    const hasAnalysis = whitepaperStoryAnalysis || whitepaperPhase2Comparison;
+
+    if (!hasAnalysis) {
+      return (
+        <div className="p-4 w-full">
+          <div className="flex items-center gap-2 text-[#999] text-sm">
+            <Info className="w-4 h-4" />
+            <span>No whitepaper analysis available</span>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="p-4 w-full relative">
         {isPersistent && (
@@ -148,17 +159,46 @@ export function WhitepaperTooltip({
           </button>
         )}
 
-        {/* Simple Description - Show at top if available */}
-        {(whitepaperSimpleDescription || whitepaperAnalysis?.simple_description) && (
-          <div className="mb-3 pb-3 border-b border-[#2a2d31]">
+        {/* Simple Description */}
+        {whitepaperStoryAnalysis?.simple_description && (
+          <div className="mb-4">
+            <h4 className="text-[#00ff88] text-sm font-semibold mb-2">What it does:</h4>
             <div className="text-sm text-[#ddd] leading-relaxed">
-              {whitepaperSimpleDescription || whitepaperAnalysis.simple_description}
+              {whitepaperStoryAnalysis.simple_description}
             </div>
           </div>
         )}
 
-        {/* Key Technical Innovations */}
-        {whitepaperSignals?.technical_innovations && whitepaperSignals.technical_innovations.length > 0 && (
+        {/* Phase 2 Summary */}
+        {whitepaperPhase2Comparison?.summary && (
+          <div>
+            <h4 className="text-[#00ff88] text-sm font-semibold mb-2">Quality Assessment:</h4>
+            <div className="text-sm text-[#ccc] leading-relaxed">
+              {whitepaperPhase2Comparison.summary}
+            </div>
+          </div>
+        )}
+
+        {/* Whitepaper URL Link */}
+        {whitepaperUrl && (
+          <div className="mt-4 pt-4 border-t border-[#2a2d31]">
+            <a
+              href={whitepaperUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-[#00ff88] hover:underline flex items-center gap-1"
+            >
+              <FileText className="w-3 h-3" />
+              View Whitepaper
+            </a>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Simplified - removed all the old complex rendering logic below
+  if (false && whitepaperSignals?.technical_innovations && whitepaperSignals.technical_innovations.length > 0 && (
           <div className="mb-3">
             <h4 className="text-[#00ff88] text-sm font-medium mb-2 flex items-center gap-1">
               <Radio className="w-3 h-3" />

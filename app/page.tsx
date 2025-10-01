@@ -83,18 +83,23 @@ interface CryptoProject {
 
   // Add whitepaper analysis fields
   whitepaper_url?: string;
-  whitepaper_stage1_score?: number;
-  whitepaper_stage1_tier?: string;
-  whitepaper_signals_found?: any;
-  whitepaper_red_flags?: any;
-  whitepaper_green_flags?: any;
-  whitepaper_analysis?: any;
+  whitepaper_tier?: string; // Phase 2 tier (ALPHA/SOLID/BASIC/TRASH)
+  whitepaper_quality_score?: number; // Phase 2 score (0-100)
+  whitepaper_story_analysis?: {
+    simple_description?: string;
+    vision_story?: string;
+    innovation_story?: string;
+    team_story?: string;
+    // ... other story fields
+  };
+  whitepaper_phase2_comparison?: {
+    summary?: string;
+    reasoning?: string;
+    tier_name?: string;
+    quality_score?: number;
+    // ... other phase2 fields
+  };
   whitepaper_analyzed_at?: string;
-  whitepaper_simple_description?: string;
-  // V2 Evidence-based fields
-  whitepaper_main_claim?: string;
-  whitepaper_evidence_claims?: any[];
-  whitepaper_evidence_evaluations?: any;
 }
 
 interface FilterState {
@@ -1247,23 +1252,17 @@ export default function ProjectsRatedPage() {
                       {/* WP TIER - col-span-2 */}
                       <div className="col-span-2 text-center">
                         {(() => {
-                          const wpTier = project.whitepaper_stage1_tier;
+                          const wpTier = project.whitepaper_tier;
                           const displayTier = wpTier || '—';
 
                           return (
                             <WhitepaperTooltip
                               whitepaperUrl={project.whitepaper_url}
-                              whitepaperTier={project.whitepaper_stage1_tier}
-                              whitepaperScore={project.whitepaper_stage1_score}
-                              whitepaperSignals={project.whitepaper_signals_found}
-                              whitepaperRedFlags={project.whitepaper_red_flags}
-                              whitepaperGreenFlags={project.whitepaper_green_flags}
-                              whitepaperAnalysis={project.whitepaper_analysis}
+                              whitepaperTier={project.whitepaper_tier}
+                              whitepaperQualityScore={project.whitepaper_quality_score}
+                              whitepaperStoryAnalysis={project.whitepaper_story_analysis}
+                              whitepaperPhase2Comparison={project.whitepaper_phase2_comparison}
                               whitepaperAnalyzedAt={project.whitepaper_analyzed_at}
-                              whitepaperSimpleDescription={project.whitepaper_simple_description}
-                              whitepaperMainClaim={(project as any).whitepaper_main_claim}
-                              whitepaperEvidenceClaims={(project as any).whitepaper_evidence_claims}
-                              whitepaperEvidenceEvaluations={(project as any).whitepaper_evidence_evaluations}
                             >
                               <span
                                 className="px-2 py-0.5 rounded text-xs font-semibold uppercase inline-block cursor-help"
