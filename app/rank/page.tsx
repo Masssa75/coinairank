@@ -211,7 +211,7 @@ export default function RankPage() {
               </div>
               <div className="text-sm text-gray-600 font-medium">{formatAge(project.project_age_years)}</div>
               <div className="text-sm text-gray-600 font-medium">{formatMcap(project.current_market_cap)}</div>
-              <div className="flex justify-center">
+              <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
                 {project.website_stage1_tier && (
                   <SignalBasedTooltip
                     projectSymbol={project.symbol}
@@ -221,7 +221,7 @@ export default function RankPage() {
                   </SignalBasedTooltip>
                 )}
               </div>
-              <div className="flex justify-center">
+              <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
                 {project.whitepaper_tier && (
                   <WhitepaperTooltip
                     projectSymbol={project.symbol}
