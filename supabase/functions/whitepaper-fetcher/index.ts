@@ -514,7 +514,7 @@ serve(async (req) => {
     console.log(`✅ Final status: ${validation.isComplete ? 'COMPLETE' : 'INCOMPLETE'}`);
     console.log(`🆔 Project ID: ${actualProjectId || 'NONE'}`);
 
-    if (actualProjectId && fetchResult.content.length > 100) {
+    if (actualProjectId && fetchResult.content.length > 2000) {
       const contentToStore = fetchResult.content.substring(0, 240000);
       console.log(`💾 Storing ${contentToStore.length} characters to database...`);
       console.log(`🔍 Content preview being stored: ${contentToStore.substring(0, 200)}...`);
@@ -544,13 +544,13 @@ serve(async (req) => {
     } else if (!actualProjectId) {
       console.log('⚠️ No project ID provided - skipping database storage');
     } else {
-      console.log('⚠️ Content too short (<100 chars) - skipping database storage');
+      console.log('⚠️ Content too short (<2000 chars) - skipping database storage');
     }
 
     // Return results
     // If content was successfully stored, trigger whitepaper-analyzer-v4-sse (updated from fundamental)
     let analysisTriggered = false;
-    if (actualProjectId && fetchResult.content.length > 100 && !skipAnalysis) {
+    if (actualProjectId && fetchResult.content.length > 2000 && !skipAnalysis) {
       try {
         console.log(`🚀 Triggering whitepaper-analyzer-v4-sse for ${symbol} (non-SSE mode)`);
         const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-v4-sse`;
@@ -588,7 +588,7 @@ serve(async (req) => {
         isComplete: validation.isComplete,
         reason: validation.reason,
         suggestionsTried: validation.suggestions,
-        stored: !!actualProjectId && fetchResult.content.length > 100,
+        stored: !!actualProjectId && fetchResult.content.length > 2000,
         analysisTriggered: analysisTriggered,
         content: fetchResult.content.substring(0, 500) // Preview
       }),

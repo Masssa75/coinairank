@@ -225,6 +225,7 @@ export default function RankPage() {
                 {project.whitepaper_tier && (
                   <WhitepaperTooltip
                     projectSymbol={project.symbol}
+                    whitepaperTier={project.whitepaper_tier}
                   >
                     <ProgressRing tier={project.whitepaper_tier} />
                   </WhitepaperTooltip>

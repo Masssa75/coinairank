@@ -200,8 +200,8 @@ export function SignalBasedTooltip({
     }
   };
 
-  // Don't show tooltip if no data at all
-  if (!tooltip && signals.length === 0 && redFlags.length === 0 && !benchmarkComparison && !websiteAnalysis) {
+  // Don't show tooltip if no data at all AND not using lazy loading
+  if (!projectSymbol && !tooltip && signals.length === 0 && redFlags.length === 0 && !benchmarkComparison && !websiteAnalysis) {
     return <>{children}</>;
   }
 
