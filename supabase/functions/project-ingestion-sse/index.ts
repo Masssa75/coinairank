@@ -51,7 +51,7 @@ async function processIngestion(
     website: body.website_url
   });
 
-  // Prepare project data
+  // Prepare project data (matching main ingestion schema)
   const projectData: any = {
     contract_address: body.contract_address.toLowerCase(),
     network: body.network,
@@ -63,13 +63,7 @@ async function processIngestion(
     twitter_url: body.twitter_url || null,
     telegram_url: body.telegram_url || null,
     discord_url: body.discord_url || null,
-    medium_url: body.medium_url || null,
-    youtube_url: body.youtube_url || null,
-    github_url: body.github_url || null,
-    reddit_url: body.reddit_url || null,
-    discovered_at: new Date().toISOString(),
-    website_stage1_analyzed_at: null,
-    website_stage1_analysis: null
+    // Note: discovered_at doesn't exist in the table, removed it
   };
 
   // Handle whitepaper content if provided
