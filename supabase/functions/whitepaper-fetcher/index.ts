@@ -544,7 +544,22 @@ serve(async (req) => {
     } else if (!actualProjectId) {
       console.log('⚠️ No project ID provided - skipping database storage');
     } else {
-      console.log('⚠️ Content too short (<2000 chars) - skipping database storage');
+      console.log('⚠️ Content too short (<2000 chars) - marking as fetch_failed');
+
+      // Mark as fetch_failed in database
+      const { error } = await supabase
+        .from('crypto_projects_rated')
+        .update({
+          whitepaper_extraction_status: 'fetch_failed',
+          whitepaper_url: actualWhitepaperUrl
+        })
+        .eq('id', actualProjectId);
+
+      if (error) {
+        console.error('❌ Failed to update fetch_failed status:', error);
+      } else {
+        console.log('✅ Marked as fetch_failed in database');
+      }
     }
 
     // Return results

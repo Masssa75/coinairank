@@ -118,9 +118,9 @@ export default function RankPage() {
     if (bValue === null || bValue === undefined) return -1;
 
     if (sortDirection === 'asc') {
-      return aValue > bValue ? 1 : -1;
+      return aValue < bValue ? -1 : 1;
     } else {
-      return aValue < bValue ? 1 : -1;
+      return aValue > bValue ? -1 : 1;
     }
   });
 
