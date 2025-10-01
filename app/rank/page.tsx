@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { Search, Zap, Filter, Menu } from 'lucide-react';
 import ProgressRing from '@/components/rank/ProgressRing';
+import { SignalBasedTooltip } from '@/components/SignalBasedTooltip';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,6 +17,7 @@ interface Project {
   project_age_years: number | null;
   current_market_cap: number | null;
   website_stage1_tier: 'ALPHA' | 'SOLID' | 'BASIC' | 'TRASH' | null;
+  website_stage1_analysis: any;
   whitepaper_tier: 'ALPHA' | 'SOLID' | 'BASIC' | 'TRASH' | null;
 }
 
@@ -39,7 +41,7 @@ export default function RankPage() {
     try {
       const { data, error } = await supabase
         .from('crypto_projects_rated')
-        .select('symbol, name, project_age_years, current_market_cap, website_stage1_tier, whitepaper_tier')
+        .select('symbol, name, project_age_years, current_market_cap, website_stage1_tier, website_stage1_analysis, whitepaper_tier')
         .eq('show_in_mcap_view', true)
         .order('current_market_cap', { ascending: false, nullsFirst: false });
 
@@ -207,7 +209,15 @@ export default function RankPage() {
               <div className="text-sm text-gray-600 font-medium">{formatAge(project.project_age_years)}</div>
               <div className="text-sm text-gray-600 font-medium">{formatMcap(project.current_market_cap)}</div>
               <div className="flex justify-center">
-                {project.website_stage1_tier && <ProgressRing tier={project.website_stage1_tier} />}
+                {project.website_stage1_tier && (
+                  <SignalBasedTooltip
+                    websiteAnalysis={project.website_stage1_analysis}
+                    benchmarkComparison={project.website_stage1_analysis}
+                    isAdmin={false}
+                  >
+                    <ProgressRing tier={project.website_stage1_tier} />
+                  </SignalBasedTooltip>
+                )}
               </div>
               <div className="flex justify-center">
                 {project.whitepaper_tier && <ProgressRing tier={project.whitepaper_tier} />}

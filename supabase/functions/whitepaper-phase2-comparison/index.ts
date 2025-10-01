@@ -86,23 +86,23 @@ WHITEPAPER ANALYSIS:
 ${JSON.stringify(project.whitepaper_story_analysis, null, 2)}
 
 EVALUATION PROCESS:
-1. Start at Tier 4 (TRASH) - pick the most relevant TRASH benchmark
-2. Compare project vs that specific benchmark:
+1. Start at Tier 4 (TRASH) - match against ANY TRASH benchmark that fits
+2. Compare project vs that benchmark:
    - If LOSES → Stop, assign TRASH
    - If EQUAL → Stop, assign TRASH (qualifies for this tier)
-   - If WINS → Move up, pick most relevant BASIC benchmark
-3. Compare project vs that specific BASIC benchmark:
+   - If WINS → Move up, match against ANY BASIC benchmark that fits
+3. Compare project vs that BASIC benchmark:
    - If LOSES → Stop, assign TRASH
    - If EQUAL → Stop, assign BASIC (qualifies for this tier)
-   - If WINS → Move up, pick most relevant SOLID benchmark
-4. Compare project vs that specific SOLID benchmark:
+   - If WINS → Move up, match against ANY SOLID benchmark that fits
+4. Compare project vs that SOLID benchmark:
    - If LOSES → Stop, assign BASIC
    - If EQUAL → Stop, assign SOLID (qualifies for this tier)
-   - If WINS → Move up, pick most relevant ALPHA benchmark
-5. Compare project vs that specific ALPHA benchmark:
-   - If LOSES → Stop, assign SOLID
-   - If EQUAL → Stop, assign ALPHA (qualifies for this tier)
-   - If WINS → Stays ALPHA (exceeds highest benchmark)
+   - If WINS → Move up, match against ANY ALPHA benchmark that fits
+5. Compare project vs ANY ALPHA benchmark:
+   - If project matches ANY ALPHA benchmark → Stop, assign ALPHA (qualifies for this tier)
+   - If LOSES to all ALPHA benchmarks → Stop, assign SOLID
+   - If WINS (exceeds all ALPHA benchmarks) → Stays ALPHA (perfect score)
 
 Return JSON:
 {
