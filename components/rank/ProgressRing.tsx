@@ -1,5 +1,5 @@
 interface ProgressRingProps {
-  tier: 'ALPHA' | 'SOLID' | 'BASIC' | 'TRASH';
+  tier: 'ALPHA' | 'SOLID' | 'BASIC' | 'TRASH' | null;
   size?: number;
 }
 
@@ -10,6 +10,11 @@ export default function ProgressRing({ tier, size = 36 }: ProgressRingProps) {
     BASIC: { letter: 'B', percentage: 45, color: '#ff6b35' },
     TRASH: { letter: 'T', percentage: 15, color: '#ff3b30' },
   };
+
+  // Return null if tier is not valid
+  if (!tier || !tierConfig[tier]) {
+    return null;
+  }
 
   const config = tierConfig[tier];
   const degrees = (config.percentage / 100) * 360;
