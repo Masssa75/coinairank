@@ -13,6 +13,10 @@ import {
 } from 'lucide-react';
 
 interface WhitepaperTooltipProps {
+  // New lazy-loading prop
+  projectSymbol?: string;
+
+  // Legacy props (for backwards compatibility)
   whitepaperUrl?: string;
   whitepaperTier?: string;
   whitepaperQualityScore?: number;
@@ -33,11 +37,12 @@ interface WhitepaperTooltipProps {
 }
 
 export function WhitepaperTooltip({
-  whitepaperUrl,
+  projectSymbol,
+  whitepaperUrl: initialWhitepaperUrl,
   whitepaperTier,
   whitepaperQualityScore,
-  whitepaperStoryAnalysis,
-  whitepaperPhase2Comparison,
+  whitepaperStoryAnalysis: initialStoryAnalysis,
+  whitepaperPhase2Comparison: initialPhase2Comparison,
   whitepaperAnalyzedAt,
   children
 }: WhitepaperTooltipProps) {
@@ -48,6 +53,42 @@ export function WhitepaperTooltip({
   const tooltipRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = React.useState(false);
+
+  // Lazy loading state
+  const [isLoadingData, setIsLoadingData] = React.useState(false);
+  const [whitepaperUrl, setWhitepaperUrl] = React.useState(initialWhitepaperUrl);
+  const [whitepaperStoryAnalysis, setWhitepaperStoryAnalysis] = React.useState(initialStoryAnalysis);
+  const [whitepaperPhase2Comparison, setWhitepaperPhase2Comparison] = React.useState(initialPhase2Comparison);
+
+  // Lazy load whitepaper data
+  const fetchWhitepaperData = React.useCallback(async () => {
+    if (!projectSymbol || whitepaperStoryAnalysis || isLoadingData) return;
+
+    setIsLoadingData(true);
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+
+      const { data, error } = await supabase
+        .from('crypto_projects_rated')
+        .select('whitepaper_url, whitepaper_story_analysis, whitepaper_phase2_comparison')
+        .eq('symbol', projectSymbol.toUpperCase())
+        .single();
+
+      if (!error && data) {
+        setWhitepaperUrl(data.whitepaper_url);
+        setWhitepaperStoryAnalysis(data.whitepaper_story_analysis);
+        setWhitepaperPhase2Comparison(data.whitepaper_phase2_comparison);
+      }
+    } catch (error) {
+      console.error('Error fetching whitepaper data:', error);
+    } finally {
+      setIsLoadingData(false);
+    }
+  }, [projectSymbol, whitepaperStoryAnalysis, isLoadingData]);
 
   React.useEffect(() => {
     setMounted(true);
@@ -114,6 +155,11 @@ export function WhitepaperTooltip({
 
     setTooltipPosition({ x, y, placement });
     setShowTooltip(true);
+
+    // Fetch data if using lazy loading
+    if (projectSymbol && !whitepaperStoryAnalysis) {
+      fetchWhitepaperData();
+    }
   };
 
   const handleMouseLeave = () => {
@@ -134,6 +180,17 @@ export function WhitepaperTooltip({
   };
 
   const getTooltipContent = () => {
+    // Show loading state
+    if (isLoadingData) {
+      return (
+        <div className="p-4 w-full">
+          <div className="flex items-center justify-center py-6 text-gray-400 text-sm">
+            Loading analysis...
+          </div>
+        </div>
+      );
+    }
+
     // Check if we have analysis data
     const hasAnalysis = whitepaperStoryAnalysis || whitepaperPhase2Comparison;
 

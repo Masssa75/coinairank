@@ -19,11 +19,7 @@ interface Project {
   project_age_years: number | null;
   current_market_cap: number | null;
   website_stage1_tier: 'ALPHA' | 'SOLID' | 'BASIC' | 'TRASH' | null;
-  website_stage1_analysis: any;
   whitepaper_tier: 'ALPHA' | 'SOLID' | 'BASIC' | 'TRASH' | null;
-  whitepaper_url?: string;
-  whitepaper_story_analysis?: any;
-  whitepaper_phase2_comparison?: any;
 }
 
 type SortColumn = 'name' | 'project_age_years' | 'current_market_cap' | 'website_stage1_tier' | 'whitepaper_tier';
@@ -47,7 +43,7 @@ export default function RankPage() {
     try {
       const { data, error } = await supabase
         .from('crypto_projects_rated')
-        .select('symbol, name, project_age_years, current_market_cap, website_stage1_tier, website_stage1_analysis, whitepaper_tier, whitepaper_url, whitepaper_story_analysis, whitepaper_phase2_comparison')
+        .select('symbol, name, project_age_years, current_market_cap, website_stage1_tier, whitepaper_tier')
         .eq('show_in_mcap_view', true)
         .order('current_market_cap', { ascending: false, nullsFirst: false });
 
@@ -218,8 +214,7 @@ export default function RankPage() {
               <div className="flex justify-center">
                 {project.website_stage1_tier && (
                   <SignalBasedTooltip
-                    websiteAnalysis={project.website_stage1_analysis}
-                    benchmarkComparison={project.website_stage1_analysis}
+                    projectSymbol={project.symbol}
                     isAdmin={false}
                   >
                     <ProgressRing tier={project.website_stage1_tier} />
@@ -229,10 +224,7 @@ export default function RankPage() {
               <div className="flex justify-center">
                 {project.whitepaper_tier && (
                   <WhitepaperTooltip
-                    whitepaperUrl={project.whitepaper_url}
-                    whitepaperStoryAnalysis={project.whitepaper_story_analysis}
-                    whitepaperPhase2Comparison={project.whitepaper_phase2_comparison}
-                    whitepaperTier={project.whitepaper_tier}
+                    projectSymbol={project.symbol}
                   >
                     <ProgressRing tier={project.whitepaper_tier} />
                   </WhitepaperTooltip>

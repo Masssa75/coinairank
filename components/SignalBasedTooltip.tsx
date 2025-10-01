@@ -56,6 +56,10 @@ interface BenchmarkComparison {
 }
 
 interface SignalBasedTooltipProps {
+  // New lazy-loading props
+  projectSymbol?: string;
+
+  // Legacy props (for backwards compatibility with admin page)
   projectDescription?: string;
   signals?: Signal[];
   redFlags?: RedFlag[];
@@ -68,34 +72,35 @@ interface SignalBasedTooltipProps {
   extractionStatus?: string;
   comparisonStatus?: string;
   websiteAnalysis?: any;
-  isAdmin?: boolean;  // Add admin flag
+  isAdmin?: boolean;
   tokenId?: string;
   signalFeedback?: Record<string, any>;
   onFeedbackUpdate?: (feedback: Record<string, any>) => void;
-  stage2Resources?: Record<string, any>;  // Stage 2 resources for link selection display
+  stage2Resources?: Record<string, any>;
   tooltip?: {
     one_liner: string;
     top_signals?: string[];
     main_concerns?: string[];
-    pros?: string[];  // Support old format
-    cons?: string[];  // Support old format
+    pros?: string[];
+    cons?: string[];
   } | null;
-  technicalAssessment?: string;  // Add technical assessment field
+  technicalAssessment?: string;
   hasLargeHtml?: boolean;
   needsProperScraping?: boolean;
   hasNoAnalysis?: boolean;
   children: React.ReactNode;
 }
 
-export function SignalBasedTooltip({ 
-  projectDescription, 
-  signals = [], 
-  redFlags = [], 
+export function SignalBasedTooltip({
+  projectSymbol,
+  projectDescription,
+  signals = [],
+  redFlags = [],
   strongestSignal,
-  benchmarkComparison,
+  benchmarkComparison: initialBenchmarkComparison,
   extractionStatus,
   comparisonStatus,
-  websiteAnalysis,
+  websiteAnalysis: initialWebsiteAnalysis,
   isAdmin = false,
   tokenId,
   signalFeedback,
@@ -106,11 +111,11 @@ export function SignalBasedTooltip({
   hasLargeHtml = false,
   needsProperScraping = false,
   hasNoAnalysis = false,
-  children 
+  children
 }: SignalBasedTooltipProps) {
   const [showTooltip, setShowTooltip] = React.useState(false);
-  const [isPersistent, setIsPersistent] = React.useState(false);  // Track if tooltip is clicked to persist
-  const [selectedSignalIdx, setSelectedSignalIdx] = React.useState<number | null>(null);  // Track which signal reasoning to show
+  const [isPersistent, setIsPersistent] = React.useState(false);
+  const [selectedSignalIdx, setSelectedSignalIdx] = React.useState<number | null>(null);
   const [tooltipPosition, setTooltipPosition] = React.useState<{ x: number; y: number; placement: 'above' | 'below' } | null>(null);
   const tooltipRef = React.useRef<HTMLDivElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -118,10 +123,44 @@ export function SignalBasedTooltip({
   const [showSignalDetails, setShowSignalDetails] = React.useState<string | null>(null);
   const [localFeedback, setLocalFeedback] = React.useState<Record<string, any>>(signalFeedback || {});
   const [editingFeedback, setEditingFeedback] = React.useState<Record<string, string>>({});
+
+  // Lazy loading state
+  const [isLoadingData, setIsLoadingData] = React.useState(false);
+  const [websiteAnalysis, setWebsiteAnalysis] = React.useState<any>(initialWebsiteAnalysis);
+  const [benchmarkComparison, setBenchmarkComparison] = React.useState<BenchmarkComparison | undefined>(initialBenchmarkComparison);
   const [saveSuccess, setSaveSuccess] = React.useState(false);
   const [isEditMode, setIsEditMode] = React.useState<Record<string, boolean>>({});
   const [showLinksSection, setShowLinksSection] = React.useState(false);
   const [showResourcesSection, setShowResourcesSection] = React.useState(false);
+
+  // Lazy load website analysis data
+  const fetchWebsiteAnalysis = React.useCallback(async () => {
+    if (!projectSymbol || websiteAnalysis || isLoadingData) return;
+
+    setIsLoadingData(true);
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+
+      const { data, error } = await supabase
+        .from('crypto_projects_rated')
+        .select('website_stage1_analysis')
+        .eq('symbol', projectSymbol.toUpperCase())
+        .single();
+
+      if (!error && data) {
+        setWebsiteAnalysis(data.website_stage1_analysis);
+        setBenchmarkComparison(data.website_stage1_analysis);
+      }
+    } catch (error) {
+      console.error('Error fetching website analysis:', error);
+    } finally {
+      setIsLoadingData(false);
+    }
+  }, [projectSymbol, websiteAnalysis, isLoadingData]);
 
   React.useEffect(() => {
     setMounted(true);
@@ -221,6 +260,11 @@ export function SignalBasedTooltip({
 
     setTooltipPosition({ x, y, placement });
     setShowTooltip(true);
+
+    // Fetch data if using lazy loading
+    if (projectSymbol && !websiteAnalysis) {
+      fetchWebsiteAnalysis();
+    }
   };
 
   const handleMouseLeave = () => {
@@ -585,8 +629,15 @@ export function SignalBasedTooltip({
               </div>
             )}
 
+            {/* Loading state */}
+            {isLoadingData && (
+              <div className="flex items-center justify-center py-6 text-gray-400 text-sm">
+                Loading analysis...
+              </div>
+            )}
+
             {/* Project Description - if available */}
-            {(tooltip?.one_liner || projectDescription) && (
+            {!isLoadingData && (tooltip?.one_liner || projectDescription) && (
               <div className="mb-3 pb-3 border-b border-gray-200">
                 <div className="text-sm text-gray-700 leading-relaxed">
                   {tooltip?.one_liner || projectDescription}
@@ -596,7 +647,7 @@ export function SignalBasedTooltip({
 
 
             {/* Key Signals - Use Phase 2 data if available, otherwise Phase 1 */}
-            {((benchmarkComparison?.signal_evaluations && benchmarkComparison.signal_evaluations.length > 0) || 
+            {!isLoadingData && ((benchmarkComparison?.signal_evaluations && benchmarkComparison.signal_evaluations.length > 0) ||
               (websiteAnalysis?.signal_evaluations && websiteAnalysis.signal_evaluations.length > 0)) ? (
               <div className="mb-3">
                 <div className="flex items-center gap-2 mb-2">
