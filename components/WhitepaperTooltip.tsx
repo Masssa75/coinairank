@@ -82,7 +82,9 @@ export function WhitepaperTooltip({
 
     const rect = containerRef.current.getBoundingClientRect();
     const tooltipHeight = 400;
-    const tooltipWidth = 500;
+    // Use responsive width: smaller on mobile, larger on desktop
+    const isMobile = window.innerWidth < 768;
+    const tooltipWidth = isMobile ? Math.min(window.innerWidth - 20, 500) : 650;
 
     // Calculate position
     let x = rect.left + rect.width / 2;
@@ -103,10 +105,11 @@ export function WhitepaperTooltip({
 
     // Adjust horizontal position to keep tooltip on screen
     const halfWidth = tooltipWidth / 2;
-    if (x - halfWidth < 10) {
-      x = halfWidth + 10;
-    } else if (x + halfWidth > window.innerWidth - 10) {
-      x = window.innerWidth - halfWidth - 10;
+    const padding = 10;
+    if (x - halfWidth < padding) {
+      x = halfWidth + padding;
+    } else if (x + halfWidth > window.innerWidth - padding) {
+      x = window.innerWidth - halfWidth - padding;
     }
 
     setTooltipPosition({ x, y, placement });
@@ -209,12 +212,13 @@ export function WhitepaperTooltip({
         {children}
       </div>
 
-      {showTooltip && tooltipPosition && createPortal(
+      {showTooltip && tooltipPosition && mounted && createPortal(
         <div
           ref={tooltipRef}
-          className="fixed z-[9999] bg-[#111214] border border-[#2a2d31] rounded-lg shadow-2xl max-w-[650px] w-[650px]"
+          className="fixed z-[9999] bg-[#111214] border border-[#2a2d31] rounded-lg shadow-2xl w-[650px] max-w-[95vw] md:max-w-[650px]"
           style={{
-            left: tooltipPosition.x - 325, // Center the tooltip
+            left: '50%',
+            transform: `translateX(calc(${tooltipPosition.x - window.innerWidth / 2}px - 50%))`,
             top: tooltipPosition.placement === 'below'
               ? tooltipPosition.y + 10
               : tooltipPosition.y - 400 - 10,

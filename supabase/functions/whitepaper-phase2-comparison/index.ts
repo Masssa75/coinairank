@@ -113,6 +113,7 @@ Whitepaper Analysis: ${JSON.stringify(project.whitepaper_story_analysis, null, 2
 - Team member created paradigm-defining projects (OpenAI/GPT, Ethereum, Bitcoin, major AI/crypto breakthroughs)
 - World-class academic credentials (Stanford/MIT professors, Turing Award winners, notable researchers)
 - CEO/founder of major tech companies that defined new industries (like Sam Altman at OpenAI)
+- FAANG-caliber engineering quality tackling massive-scale problems (global identity, millions of users)
 - First working solution to theoretical "impossible" problems
 - Invented protocols that major blockchains adopted
 - Breakthrough mathematical/cryptographic innovations that became standards
