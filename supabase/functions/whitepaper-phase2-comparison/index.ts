@@ -86,21 +86,53 @@ WHITEPAPER ANALYSIS:
 ${JSON.stringify(project.whitepaper_story_analysis, null, 2)}
 
 EVALUATION PROCESS:
-1. Start by assuming this project is Tier 4 (weakest)
-2. Progressively test if the project is STRONGER than benchmarks:
-   - Stronger than ANY Tier 4 benchmark? → Consider for Tier 3
-   - Stronger than ANY Tier 3 benchmark? → Consider for Tier 2
-   - Stronger than ANY Tier 2 benchmark? → Consider for Tier 1
-3. Project tier = highest tier achieved
+1. Start at Tier 4 (TRASH) - pick the most relevant TRASH benchmark
+2. Compare project vs that specific benchmark:
+   - If LOSES → Stop, assign TRASH
+   - If EQUAL → Stop, assign TRASH (qualifies for this tier)
+   - If WINS → Move up, pick most relevant BASIC benchmark
+3. Compare project vs that specific BASIC benchmark:
+   - If LOSES → Stop, assign TRASH
+   - If EQUAL → Stop, assign BASIC (qualifies for this tier)
+   - If WINS → Move up, pick most relevant SOLID benchmark
+4. Compare project vs that specific SOLID benchmark:
+   - If LOSES → Stop, assign BASIC
+   - If EQUAL → Stop, assign SOLID (qualifies for this tier)
+   - If WINS → Move up, pick most relevant ALPHA benchmark
+5. Compare project vs that specific ALPHA benchmark:
+   - If LOSES → Stop, assign SOLID
+   - If EQUAL → Stop, assign ALPHA (qualifies for this tier)
+   - If WINS → Stays ALPHA (exceeds highest benchmark)
 
 Return JSON:
 {
+  "benchmark_progression": {
+    "trash_comparison": {
+      "result": "stronger/equal/weaker",
+      "compared_to": "exact benchmark tier_reasoning text from TRASH tier that was most relevant",
+      "why": "explanation of comparison"
+    },
+    "basic_comparison": {
+      "result": "stronger/equal/weaker",
+      "compared_to": "exact benchmark tier_reasoning text from BASIC tier that was most relevant",
+      "why": "explanation of comparison"
+    },
+    "solid_comparison": {
+      "result": "stronger/equal/weaker",
+      "compared_to": "exact benchmark tier_reasoning text from SOLID tier that was most relevant",
+      "why": "explanation of comparison"
+    },
+    "alpha_comparison": {
+      "result": "stronger/equal/weaker",
+      "compared_to": "exact benchmark tier_reasoning text from ALPHA tier that was most relevant",
+      "why": "explanation of comparison"
+    }
+  },
   "final_tier": 1-4,
   "tier_name": "ALPHA/SOLID/BASIC/TRASH",
   "final_score": 0-100,
   "determining_factor": "main reason for this tier assignment",
-  "tier_reasoning": "detailed explanation of which specific tier benchmarks the project beats and which it doesn't",
-  "explanation": "2-3 sentence summary"
+  "explanation": "2-3 sentence summary of why project landed in this tier"
 }`;
 
     // Step 5: Call AI for comparison
@@ -156,7 +188,7 @@ Return JSON:
           tier_name: comparisonResult.tier_name,
           final_score: comparisonResult.final_score,
           determining_factor: comparisonResult.determining_factor,
-          tier_reasoning: comparisonResult.tier_reasoning,
+          benchmark_progression: comparisonResult.benchmark_progression,
           explanation: comparisonResult.explanation,
           completed_at: new Date().toISOString()
         },
@@ -178,7 +210,7 @@ Return JSON:
         tier_name: comparisonResult.tier_name,
         quality_score: comparisonResult.final_score,
         determining_factor: comparisonResult.determining_factor,
-        tier_reasoning: comparisonResult.tier_reasoning,
+        benchmark_progression: comparisonResult.benchmark_progression,
         explanation: comparisonResult.explanation
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

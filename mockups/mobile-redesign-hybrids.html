@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoinAiRank Mobile - Hybrid Options (List + Clarity)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #333;
+        }
+
+        .mockup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(375px, 1fr));
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 30px;
+            background: #000;
+            border-radius: 0 0 20px 20px;
+            z-index: 100;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            padding-top: 44px;
+        }
+
+        .mockup-label {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: 600;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        /* Hybrid A: Spacious List */
+        .hybridA {
+            background: #ffffff;
+            color: #1a1a1a;
+        }
+
+        .hybridA .header {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .hybridA .logo {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1a1a1a;
+        }
+
+        .hybridA .logo span {
+            color: #00c896;
+        }
+
+        .hybridA .sort-btn {
+            padding: 8px 14px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            border: none;
+        }
+
+        .hybridA .list-header {
+            display: grid;
+            grid-template-columns: 2fr 0.8fr 1fr 0.7fr 0.7fr;
+            gap: 8px;
+            padding: 14px 20px;
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 12px;
+            font-weight: 700;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .hybridA .project-row {
+            display: grid;
+            grid-template-columns: 2fr 0.8fr 1fr 0.7fr 0.7fr;
+            gap: 8px;
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            align-items: center;
+        }
+
+        .hybridA .project-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1a1a1a;
+            margin-bottom: 2px;
+        }
+
+        .hybridA .project-fullname {
+            font-size: 13px;
+            color: #999;
+            display: block;
+            margin-top: 3px;
+        }
+
+        .hybridA .age,
+        .hybridA .mcap {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .hybridA .tier-badge {
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .hybridA .tier-alpha {
+            background: #e6f9f3;
+            color: #00c896;
+        }
+
+        .hybridA .tier-solid {
+            background: #fff4e6;
+            color: #ff9500;
+        }
+
+        .hybridA .tier-basic {
+            background: #fff0e6;
+            color: #ff6b35;
+        }
+
+        .hybridA .tier-trash {
+            background: #ffe6e6;
+            color: #ff3b30;
+        }
+
+        /* Hybrid C: Clean with Bold Tiers */
+        .hybridC {
+            background: #ffffff;
+            color: #1a1a1a;
+        }
+
+        .hybridC .header {
+            background: white;
+            border-bottom: 2px solid #f0f0f0;
+            padding: 18px 20px;
+        }
+
+        .hybridC .logo {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1a1a1a;
+            text-align: center;
+        }
+
+        .hybridC .logo span {
+            color: #00c896;
+        }
+
+        .hybridC .list-header {
+            display: grid;
+            grid-template-columns: 2fr 0.7fr 0.9fr 0.8fr 0.8fr;
+            gap: 6px;
+            padding: 14px 20px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 11px;
+            font-weight: 700;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .hybridC .project-row {
+            display: grid;
+            grid-template-columns: 2fr 0.7fr 0.9fr 0.8fr 0.8fr;
+            gap: 6px;
+            padding: 18px 20px;
+            border-bottom: 1px solid #f5f5f5;
+            align-items: center;
+        }
+
+        .hybridC .project-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .hybridC .rank-number {
+            font-size: 14px;
+            font-weight: 700;
+            color: #ccc;
+            min-width: 30px;
+        }
+
+        .hybridC .project-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1a1a1a;
+        }
+
+        .hybridC .project-fullname {
+            font-size: 12px;
+            color: #aaa;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .hybridC .age,
+        .hybridC .mcap {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .hybridC .tier-badge {
+            padding: 7px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 800;
+            text-align: center;
+            text-transform: uppercase;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+
+        .hybridC .tier-alpha {
+            background: linear-gradient(135deg, #00c896 0%, #00a877 100%);
+            color: white;
+        }
+
+        .hybridC .tier-solid {
+            background: linear-gradient(135deg, #ff9500 0%, #ff7c00 100%);
+            color: white;
+        }
+
+        .hybridC .tier-basic {
+            background: linear-gradient(135deg, #ff6b35 0%, #ff5520 100%);
+            color: white;
+        }
+
+        .hybridC .tier-trash {
+            background: linear-gradient(135deg, #ff3b30 0%, #cc2f26 100%);
+            color: white;
+        }
+
+        /* Hybrid D: Airy & Minimal */
+        .hybridD {
+            background: #ffffff;
+            color: #1a1a1a;
+        }
+
+        .hybridD .header {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 20px;
+        }
+
+        .hybridD .logo {
+            font-size: 24px;
+            font-weight: 900;
+            color: #1a1a1a;
+            letter-spacing: -0.5px;
+        }
+
+        .hybridD .subtitle {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .hybridD .project-row {
+            padding: 24px 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .hybridD .row-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .hybridD .project-name {
+            font-weight: 800;
+            font-size: 18px;
+            color: #1a1a1a;
+        }
+
+        .hybridD .project-fullname {
+            font-size: 14px;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        .hybridD .tier-badges {
+            display: flex;
+            gap: 6px;
+        }
+
+        .hybridD .tier-badge {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .hybridD .tier-alpha {
+            background: #00c896;
+            color: white;
+        }
+
+        .hybridD .tier-solid {
+            background: #ff9500;
+            color: white;
+        }
+
+        .hybridD .tier-basic {
+            background: #ff6b35;
+            color: white;
+        }
+
+        .hybridD .row-bottom {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .hybridD .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .hybridD .meta-label {
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hybridD .meta-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* Scrollbar styling */
+        .phone-screen::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .phone-screen::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .phone-screen::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.2);
+            border-radius: 2px;
+        }
+
+        /* Progress Circle Variants */
+
+        /* Hybrid E: Simple Progress Circles */
+        .hybridE {
+            background: #ffffff;
+            color: #1a1a1a;
+        }
+
+        .hybridE .header {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .hybridE .logo {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1a1a1a;
+        }
+
+        .hybridE .logo span {
+            color: #00c896;
+        }
+
+        .hybridE .sort-btn {
+            padding: 8px 14px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            border: none;
+        }
+
+        .hybridE .list-header {
+            display: grid;
+            grid-template-columns: 2fr 0.8fr 1fr 0.7fr 0.7fr;
+            gap: 8px;
+            padding: 14px 20px;
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 12px;
+            font-weight: 700;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .hybridE .project-row {
+            display: grid;
+            grid-template-columns: 2fr 0.8fr 1fr 0.7fr 0.7fr;
+            gap: 8px;
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            align-items: center;
+        }
+
+        .hybridE .project-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1a1a1a;
+            margin-bottom: 2px;
+        }
+
+        .hybridE .project-fullname {
+            font-size: 13px;
+            color: #999;
+            display: block;
+            margin-top: 3px;
+        }
+
+        .hybridE .age,
+        .hybridE .mcap {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .hybridE .progress-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .hybridE .circle-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #f0f0f0;
+        }
+
+        .hybridE .circle-fill {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(#00c896 0deg, #00c896 var(--progress), #f0f0f0 var(--progress));
+        }
+
+        .hybridE .circle-inner {
+            position: relative;
+            width: 28px;
+            height: 28px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 800;
+            color: #666;
+            z-index: 1;
+        }
+
+        /* Hybrid F: Filled Circles with Letters */
+        .hybridF {
+            background: #ffffff;
+            color: #1a1a1a;
+        }
+
+        .hybridF .header {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .hybridF .logo {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1a1a1a;
+        }
+
+        .hybridF .logo span {
+            color: #00c896;
+        }
+
+        .hybridF .sort-btn {
+            padding: 8px 14px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            border: none;
+        }
+
+        .hybridF .list-header {
+            display: grid;
+            grid-template-columns: 2fr 0.8fr 1fr 0.7fr 0.7fr;
+            gap: 8px;
+            padding: 14px 20px;
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 12px;
+            font-weight: 700;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .hybridF .project-row {
+            display: grid;
+            grid-template-columns: 2fr 0.8fr 1fr 0.7fr 0.7fr;
+            gap: 8px;
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            align-items: center;
+        }
+
+        .hybridF .project-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1a1a1a;
+            margin-bottom: 2px;
+        }
+
+        .hybridF .project-fullname {
+            font-size: 13px;
+            color: #999;
+            display: block;
+            margin-top: 3px;
+        }
+
+        .hybridF .age,
+        .hybridF .mcap {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .hybridF .tier-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 800;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .hybridF .tier-circle::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            opacity: 0.2;
+        }
+
+        .hybridF .circle-alpha {
+            background: #00c896;
+            color: white;
+        }
+
+        .hybridF .circle-alpha::before {
+            background: #00c896;
+        }
+
+        .hybridF .circle-solid {
+            background: #ff9500;
+            color: white;
+        }
+
+        .hybridF .circle-solid::before {
+            background: #ff9500;
+        }
+
+        .hybridF .circle-basic {
+            background: #ff6b35;
+            color: white;
+        }
+
+        .hybridF .circle-basic::before {
+            background: #ff6b35;
+        }
+
+        .hybridF .circle-trash {
+            background: #ff3b30;
+            color: white;
+        }
+
+        /* Hybrid G: Ring Progress with Percentage */
+        .hybridG {
+            background: #ffffff;
+            color: #1a1a1a;
+        }
+
+        .hybridG .header {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .hybridG .logo {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1a1a1a;
+        }
+
+        .hybridG .logo span {
+            color: #00c896;
+        }
+
+        .hybridG .sort-btn {
+            padding: 8px 14px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            border: none;
+        }
+
+        .hybridG .list-header {
+            display: grid;
+            grid-template-columns: 2fr 0.8fr 1fr 0.7fr 0.7fr;
+            gap: 8px;
+            padding: 14px 20px;
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 12px;
+            font-weight: 700;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .hybridG .project-row {
+            display: grid;
+            grid-template-columns: 2fr 0.8fr 1fr 0.7fr 0.7fr;
+            gap: 8px;
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            align-items: center;
+        }
+
+        .hybridG .project-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1a1a1a;
+            margin-bottom: 2px;
+        }
+
+        .hybridG .project-fullname {
+            font-size: 13px;
+            color: #999;
+            display: block;
+            margin-top: 3px;
+        }
+
+        .hybridG .age,
+        .hybridG .mcap {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .hybridG .progress-ring {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .hybridG .ring-svg {
+            transform: rotate(-90deg);
+        }
+
+        .hybridG .ring-circle-bg {
+            fill: none;
+            stroke: #f0f0f0;
+            stroke-width: 4;
+        }
+
+        .hybridG .ring-circle-progress {
+            fill: none;
+            stroke-width: 4;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.3s ease;
+        }
+
+        .hybridG .ring-alpha {
+            stroke: #00c896;
+        }
+
+        .hybridG .ring-solid {
+            stroke: #ff9500;
+        }
+
+        .hybridG .ring-basic {
+            stroke: #ff6b35;
+        }
+
+        .hybridG .ring-trash {
+            stroke: #ff3b30;
+        }
+
+        .hybridG .ring-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 10px;
+            font-weight: 800;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CoinAiRank Mobile - Hybrid Options<br><small style="font-size: 16px; color: #999; font-weight: 400;">List Structure + Better Readability</small></h1>
+
+        <div class="mockup-grid">
+            <!-- Hybrid A: Spacious List -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen hybridA">
+                        <div class="header">
+                            <div class="logo">Coin<span>Ai</span>Rank</div>
+                            <button class="sort-btn">MCap ↓</button>
+                        </div>
+                        <div class="list-header">
+                            <div>Project</div>
+                            <div>Age</div>
+                            <div>MCap</div>
+                            <div>Web</div>
+                            <div>WP</div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">WLD</div>
+                                <span class="project-fullname">Worldcoin</span>
+                            </div>
+                            <div class="age">2.2y</div>
+                            <div class="mcap">$3.2B</div>
+                            <div><span class="tier-badge tier-alpha">α</span></div>
+                            <div><span class="tier-badge tier-solid">S</span></div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">ARB</div>
+                                <span class="project-fullname">Arbitrum</span>
+                            </div>
+                            <div class="age">2.5y</div>
+                            <div class="mcap">$2.7B</div>
+                            <div><span class="tier-badge tier-alpha">α</span></div>
+                            <div><span class="tier-badge tier-alpha">α</span></div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">PENDLE</div>
+                                <span class="project-fullname">Pendle</span>
+                            </div>
+                            <div class="age">4.4y</div>
+                            <div class="mcap">$852M</div>
+                            <div><span class="tier-badge tier-solid">S</span></div>
+                            <div><span class="tier-badge tier-basic">B</span></div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">KTA</div>
+                                <span class="project-fullname">Katana</span>
+                            </div>
+                            <div class="age">0.5y</div>
+                            <div class="mcap">$256M</div>
+                            <div><span class="tier-badge tier-alpha">α</span></div>
+                            <div><span class="tier-badge tier-trash">T</span></div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">GHIBLI</div>
+                                <span class="project-fullname">Ghibli</span>
+                            </div>
+                            <div class="age">—</div>
+                            <div class="mcap">$1.1M</div>
+                            <div><span class="tier-badge tier-basic">B</span></div>
+                            <div><span class="tier-badge tier-basic">B</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-label">Hybrid A: Spacious List<br>Same structure as Option 1 but bigger text,<br>more padding, easier to read</div>
+            </div>
+
+            <!-- Hybrid C: Clean with Bold Tiers -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen hybridC">
+                        <div class="header">
+                            <div class="logo">Coin<span>Ai</span>Rank</div>
+                        </div>
+                        <div class="list-header">
+                            <div>Project</div>
+                            <div>Age</div>
+                            <div>MCap</div>
+                            <div>Web</div>
+                            <div>WP</div>
+                        </div>
+                        <div class="project-row">
+                            <div class="project-info">
+                                <span class="rank-number">#1</span>
+                                <div>
+                                    <div class="project-name">WLD</div>
+                                    <span class="project-fullname">Worldcoin</span>
+                                </div>
+                            </div>
+                            <div class="age">2.2y</div>
+                            <div class="mcap">$3.2B</div>
+                            <div><span class="tier-badge tier-alpha">α</span></div>
+                            <div><span class="tier-badge tier-solid">S</span></div>
+                        </div>
+                        <div class="project-row">
+                            <div class="project-info">
+                                <span class="rank-number">#2</span>
+                                <div>
+                                    <div class="project-name">ARB</div>
+                                    <span class="project-fullname">Arbitrum</span>
+                                </div>
+                            </div>
+                            <div class="age">2.5y</div>
+                            <div class="mcap">$2.7B</div>
+                            <div><span class="tier-badge tier-alpha">α</span></div>
+                            <div><span class="tier-badge tier-alpha">α</span></div>
+                        </div>
+                        <div class="project-row">
+                            <div class="project-info">
+                                <span class="rank-number">#3</span>
+                                <div>
+                                    <div class="project-name">PENDLE</div>
+                                    <span class="project-fullname">Pendle</span>
+                                </div>
+                            </div>
+                            <div class="age">4.4y</div>
+                            <div class="mcap">$852M</div>
+                            <div><span class="tier-badge tier-solid">S</span></div>
+                            <div><span class="tier-badge tier-basic">B</span></div>
+                        </div>
+                        <div class="project-row">
+                            <div class="project-info">
+                                <span class="rank-number">#4</span>
+                                <div>
+                                    <div class="project-name">KTA</div>
+                                    <span class="project-fullname">Katana</span>
+                                </div>
+                            </div>
+                            <div class="age">0.5y</div>
+                            <div class="mcap">$256M</div>
+                            <div><span class="tier-badge tier-alpha">α</span></div>
+                            <div><span class="tier-badge tier-basic">B</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-label">Hybrid C: Bold Gradient Tiers<br>Adds rank numbers, gradient badges<br>with subtle shadows</div>
+            </div>
+
+            <!-- Hybrid D: Airy & Minimal -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen hybridD">
+                        <div class="header">
+                            <div class="logo">CoinAiRank</div>
+                            <div class="subtitle">AI-Ranked Top 1000 Crypto Projects</div>
+                        </div>
+                        <div class="project-row">
+                            <div class="row-top">
+                                <div>
+                                    <div class="project-name">WLD</div>
+                                    <div class="project-fullname">Worldcoin</div>
+                                </div>
+                                <div class="tier-badges">
+                                    <span class="tier-badge tier-alpha">α</span>
+                                    <span class="tier-badge tier-solid">S</span>
+                                </div>
+                            </div>
+                            <div class="row-bottom">
+                                <div class="meta-item">
+                                    <span class="meta-label">Age</span>
+                                    <span class="meta-value">2.2y</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Market Cap</span>
+                                    <span class="meta-value">$3.2B</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="project-row">
+                            <div class="row-top">
+                                <div>
+                                    <div class="project-name">ARB</div>
+                                    <div class="project-fullname">Arbitrum</div>
+                                </div>
+                                <div class="tier-badges">
+                                    <span class="tier-badge tier-alpha">α</span>
+                                    <span class="tier-badge tier-alpha">α</span>
+                                </div>
+                            </div>
+                            <div class="row-bottom">
+                                <div class="meta-item">
+                                    <span class="meta-label">Age</span>
+                                    <span class="meta-value">2.5y</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Market Cap</span>
+                                    <span class="meta-value">$2.7B</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="project-row">
+                            <div class="row-top">
+                                <div>
+                                    <div class="project-name">PENDLE</div>
+                                    <div class="project-fullname">Pendle</div>
+                                </div>
+                                <div class="tier-badges">
+                                    <span class="tier-badge tier-solid">S</span>
+                                    <span class="tier-badge tier-basic">B</span>
+                                </div>
+                            </div>
+                            <div class="row-bottom">
+                                <div class="meta-item">
+                                    <span class="meta-label">Age</span>
+                                    <span class="meta-value">4.4y</span>
+                                </div>
+                                <div class="meta-item">
+                                    <span class="meta-label">Market Cap</span>
+                                    <span class="meta-value">$852M</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-label">Hybrid D: Airy & Minimal<br>Two-row layout per project,<br>lots of breathing room</div>
+            </div>
+
+            <!-- Hybrid E: Progress Circles with Letters -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen hybridE">
+                        <div class="header">
+                            <div class="logo">Coin<span>Ai</span>Rank</div>
+                            <button class="sort-btn">MCap ↓</button>
+                        </div>
+                        <div class="list-header">
+                            <div>Project</div>
+                            <div>Age</div>
+                            <div>MCap</div>
+                            <div>Web</div>
+                            <div>WP</div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">WLD</div>
+                                <span class="project-fullname">Worldcoin</span>
+                            </div>
+                            <div class="age">2.2y</div>
+                            <div class="mcap">$3.2B</div>
+                            <div>
+                                <div class="progress-circle" style="--progress: 324deg;">
+                                    <div class="circle-fill"></div>
+                                    <div class="circle-inner">α</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-circle" style="--progress: 252deg;">
+                                    <div class="circle-fill" style="background: conic-gradient(#ff9500 0deg, #ff9500 var(--progress), #f0f0f0 var(--progress));"></div>
+                                    <div class="circle-inner">S</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">ARB</div>
+                                <span class="project-fullname">Arbitrum</span>
+                            </div>
+                            <div class="age">2.5y</div>
+                            <div class="mcap">$2.7B</div>
+                            <div>
+                                <div class="progress-circle" style="--progress: 324deg;">
+                                    <div class="circle-fill"></div>
+                                    <div class="circle-inner">α</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-circle" style="--progress: 324deg;">
+                                    <div class="circle-fill"></div>
+                                    <div class="circle-inner">α</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">PENDLE</div>
+                                <span class="project-fullname">Pendle</span>
+                            </div>
+                            <div class="age">4.4y</div>
+                            <div class="mcap">$852M</div>
+                            <div>
+                                <div class="progress-circle" style="--progress: 252deg;">
+                                    <div class="circle-fill" style="background: conic-gradient(#ff9500 0deg, #ff9500 var(--progress), #f0f0f0 var(--progress));"></div>
+                                    <div class="circle-inner">S</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-circle" style="--progress: 162deg;">
+                                    <div class="circle-fill" style="background: conic-gradient(#ff6b35 0deg, #ff6b35 var(--progress), #f0f0f0 var(--progress));"></div>
+                                    <div class="circle-inner">B</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">KTA</div>
+                                <span class="project-fullname">Katana</span>
+                            </div>
+                            <div class="age">0.5y</div>
+                            <div class="mcap">$256M</div>
+                            <div>
+                                <div class="progress-circle" style="--progress: 324deg;">
+                                    <div class="circle-fill"></div>
+                                    <div class="circle-inner">α</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-circle" style="--progress: 54deg;">
+                                    <div class="circle-fill" style="background: conic-gradient(#ff3b30 0deg, #ff3b30 var(--progress), #f0f0f0 var(--progress));"></div>
+                                    <div class="circle-inner">T</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-label">Hybrid E: Progress Rings<br>Ring shows tier quality visually<br>(ALPHA=90%, SOLID=70%, BASIC=45%, TRASH=15%)</div>
+            </div>
+
+            <!-- Hybrid F: Filled Circles with Letters -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen hybridF">
+                        <div class="header">
+                            <div class="logo">Coin<span>Ai</span>Rank</div>
+                            <button class="sort-btn">MCap ↓</button>
+                        </div>
+                        <div class="list-header">
+                            <div>Project</div>
+                            <div>Age</div>
+                            <div>MCap</div>
+                            <div>Web</div>
+                            <div>WP</div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">WLD</div>
+                                <span class="project-fullname">Worldcoin</span>
+                            </div>
+                            <div class="age">2.2y</div>
+                            <div class="mcap">$3.2B</div>
+                            <div><div class="tier-circle circle-alpha">α</div></div>
+                            <div><div class="tier-circle circle-solid">S</div></div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">ARB</div>
+                                <span class="project-fullname">Arbitrum</span>
+                            </div>
+                            <div class="age">2.5y</div>
+                            <div class="mcap">$2.7B</div>
+                            <div><div class="tier-circle circle-alpha">α</div></div>
+                            <div><div class="tier-circle circle-alpha">α</div></div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">PENDLE</div>
+                                <span class="project-fullname">Pendle</span>
+                            </div>
+                            <div class="age">4.4y</div>
+                            <div class="mcap">$852M</div>
+                            <div><div class="tier-circle circle-solid">S</div></div>
+                            <div><div class="tier-circle circle-basic">B</div></div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">KTA</div>
+                                <span class="project-fullname">Katana</span>
+                            </div>
+                            <div class="age">0.5y</div>
+                            <div class="mcap">$256M</div>
+                            <div><div class="tier-circle circle-alpha">α</div></div>
+                            <div><div class="tier-circle circle-trash">T</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-label">Hybrid F: Solid Circles<br>Fully colored circles<br>Clean and bold</div>
+            </div>
+
+            <!-- Hybrid G: SVG Ring Progress -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen hybridG">
+                        <div class="header">
+                            <div class="logo">Coin<span>Ai</span>Rank</div>
+                            <button class="sort-btn">MCap ↓</button>
+                        </div>
+                        <div class="list-header">
+                            <div>Project</div>
+                            <div>Age</div>
+                            <div>MCap</div>
+                            <div>Web</div>
+                            <div>WP</div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">WLD</div>
+                                <span class="project-fullname">Worldcoin</span>
+                            </div>
+                            <div class="age">2.2y</div>
+                            <div class="mcap">$3.2B</div>
+                            <div>
+                                <div class="progress-ring">
+                                    <svg class="ring-svg" width="40" height="40">
+                                        <circle class="ring-circle-bg" cx="20" cy="20" r="16"></circle>
+                                        <circle class="ring-circle-progress ring-alpha" cx="20" cy="20" r="16"
+                                                stroke-dasharray="100.53" stroke-dashoffset="10"></circle>
+                                    </svg>
+                                    <div class="ring-label">α</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-ring">
+                                    <svg class="ring-svg" width="40" height="40">
+                                        <circle class="ring-circle-bg" cx="20" cy="20" r="16"></circle>
+                                        <circle class="ring-circle-progress ring-solid" cx="20" cy="20" r="16"
+                                                stroke-dasharray="100.53" stroke-dashoffset="30"></circle>
+                                    </svg>
+                                    <div class="ring-label">S</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">ARB</div>
+                                <span class="project-fullname">Arbitrum</span>
+                            </div>
+                            <div class="age">2.5y</div>
+                            <div class="mcap">$2.7B</div>
+                            <div>
+                                <div class="progress-ring">
+                                    <svg class="ring-svg" width="40" height="40">
+                                        <circle class="ring-circle-bg" cx="20" cy="20" r="16"></circle>
+                                        <circle class="ring-circle-progress ring-alpha" cx="20" cy="20" r="16"
+                                                stroke-dasharray="100.53" stroke-dashoffset="10"></circle>
+                                    </svg>
+                                    <div class="ring-label">α</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-ring">
+                                    <svg class="ring-svg" width="40" height="40">
+                                        <circle class="ring-circle-bg" cx="20" cy="20" r="16"></circle>
+                                        <circle class="ring-circle-progress ring-alpha" cx="20" cy="20" r="16"
+                                                stroke-dasharray="100.53" stroke-dashoffset="10"></circle>
+                                    </svg>
+                                    <div class="ring-label">α</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">PENDLE</div>
+                                <span class="project-fullname">Pendle</span>
+                            </div>
+                            <div class="age">4.4y</div>
+                            <div class="mcap">$852M</div>
+                            <div>
+                                <div class="progress-ring">
+                                    <svg class="ring-svg" width="40" height="40">
+                                        <circle class="ring-circle-bg" cx="20" cy="20" r="16"></circle>
+                                        <circle class="ring-circle-progress ring-solid" cx="20" cy="20" r="16"
+                                                stroke-dasharray="100.53" stroke-dashoffset="30"></circle>
+                                    </svg>
+                                    <div class="ring-label">S</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-ring">
+                                    <svg class="ring-svg" width="40" height="40">
+                                        <circle class="ring-circle-bg" cx="20" cy="20" r="16"></circle>
+                                        <circle class="ring-circle-progress ring-basic" cx="20" cy="20" r="16"
+                                                stroke-dasharray="100.53" stroke-dashoffset="55"></circle>
+                                    </svg>
+                                    <div class="ring-label">B</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">KTA</div>
+                                <span class="project-fullname">Katana</span>
+                            </div>
+                            <div class="age">0.5y</div>
+                            <div class="mcap">$256M</div>
+                            <div>
+                                <div class="progress-ring">
+                                    <svg class="ring-svg" width="40" height="40">
+                                        <circle class="ring-circle-bg" cx="20" cy="20" r="16"></circle>
+                                        <circle class="ring-circle-progress ring-alpha" cx="20" cy="20" r="16"
+                                                stroke-dasharray="100.53" stroke-dashoffset="10"></circle>
+                                    </svg>
+                                    <div class="ring-label">α</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-ring">
+                                    <svg class="ring-svg" width="40" height="40">
+                                        <circle class="ring-circle-bg" cx="20" cy="20" r="16"></circle>
+                                        <circle class="ring-circle-progress ring-trash" cx="20" cy="20" r="16"
+                                                stroke-dasharray="100.53" stroke-dashoffset="85"></circle>
+                                    </svg>
+                                    <div class="ring-label">T</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-label">Hybrid G: SVG Progress Rings<br>Smooth animated rings<br>Professional look</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

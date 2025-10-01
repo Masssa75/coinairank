@@ -1,0 +1,1724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoinAiRank Mobile Redesign - 10 Options</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #333;
+        }
+
+        .mockup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(375px, 1fr));
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 30px;
+            background: #000;
+            border-radius: 0 0 20px 20px;
+            z-index: 100;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            padding-top: 44px;
+        }
+
+        .mockup-label {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        /* Option 1: Clean Light Minimal */
+        .option1 {
+            background: #ffffff;
+            color: #1a1a1a;
+        }
+
+        .option1 .header {
+            background: white;
+            border-bottom: 1px solid #e5e5e5;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .option1 .logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .option1 .logo span {
+            color: #00c896;
+        }
+
+        .option1 .sort-btn {
+            padding: 6px 12px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #666;
+            border: none;
+        }
+
+        .option1 .list-header {
+            display: grid;
+            grid-template-columns: 2fr 0.8fr 1fr 0.7fr 0.7fr;
+            gap: 8px;
+            padding: 12px 16px;
+            background: #fafafa;
+            border-bottom: 1px solid #e5e5e5;
+            font-size: 11px;
+            font-weight: 600;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .option1 .project-row {
+            display: grid;
+            grid-template-columns: 2fr 0.8fr 1fr 0.7fr 0.7fr;
+            gap: 8px;
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .option1 .project-name {
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .option1 .project-fullname {
+            font-size: 12px;
+            color: #999;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .option1 .age {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .option1 .mcap {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .option1 .tier-badge {
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .option1 .tier-alpha {
+            background: #e6f9f3;
+            color: #00c896;
+        }
+
+        .option1 .tier-solid {
+            background: #fff4e6;
+            color: #ff9500;
+        }
+
+        .option1 .tier-basic {
+            background: #fff0e6;
+            color: #ff6b35;
+        }
+
+        .option1 .tier-trash {
+            background: #ffe6e6;
+            color: #ff3b30;
+        }
+
+        /* Option 2: Dark Compact with Icons */
+        .option2 {
+            background: #0a0a0a;
+            color: #ffffff;
+        }
+
+        .option2 .header {
+            background: #111;
+            border-bottom: 1px solid #222;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .option2 .logo {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .option2 .filter-icon {
+            width: 20px;
+            height: 20px;
+            color: #888;
+        }
+
+        .option2 .project-card {
+            padding: 12px 16px;
+            border-bottom: 1px solid #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .option2 .project-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .option2 .project-main {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .option2 .symbol {
+            font-weight: 700;
+            font-size: 15px;
+            color: #fff;
+        }
+
+        .option2 .metrics {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .option2 .metric-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .option2 .tier-icons {
+            display: flex;
+            gap: 6px;
+        }
+
+        .option2 .tier-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .option2 .tier-alpha {
+            background: #00c896;
+            color: #000;
+        }
+
+        .option2 .tier-solid {
+            background: #ff9500;
+            color: #000;
+        }
+
+        .option2 .tier-basic {
+            background: #ff6b35;
+            color: #fff;
+        }
+
+        .option2 .tier-pending {
+            background: #222;
+            color: #666;
+        }
+
+        /* Option 3: Light with Progress Bars */
+        .option3 {
+            background: #fafafa;
+            color: #1a1a1a;
+        }
+
+        .option3 .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 16px;
+            color: white;
+        }
+
+        .option3 .logo {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .option3 .search-bar {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 14px;
+        }
+
+        .option3 .search-bar::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .option3 .project-card {
+            background: white;
+            margin: 12px 16px;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .option3 .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .option3 .symbol {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .option3 .age-badge {
+            background: #f0f0f0;
+            color: #666;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .option3 .stats-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .option3 .progress-section {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .option3 .progress-label {
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .option3 .progress-items {
+            display: flex;
+            gap: 8px;
+        }
+
+        .option3 .progress-item {
+            flex: 1;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option3 .progress-item.complete {
+            background: #00c896;
+        }
+
+        .option3 .progress-item.partial {
+            background: linear-gradient(90deg, #ff9500 50%, #e0e0e0 50%);
+        }
+
+        /* Option 4: Colorful & Playful */
+        .option4 {
+            background: #f8f9fa;
+            color: #1a1a1a;
+        }
+
+        .option4 .header {
+            background: white;
+            padding: 16px;
+            border-bottom: 3px solid #f0f0f0;
+        }
+
+        .option4 .logo {
+            font-size: 22px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+        }
+
+        .option4 .filter-chips {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            overflow-x: auto;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .option4 .chip {
+            padding: 6px 12px;
+            background: #f0f0f0;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            white-space: nowrap;
+            border: 2px solid transparent;
+        }
+
+        .option4 .chip.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .option4 .project-card {
+            margin: 12px 16px;
+            padding: 16px;
+            background: white;
+            border-radius: 16px;
+            border: 2px solid #e0e0e0;
+            position: relative;
+        }
+
+        .option4 .tier-corner {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 60px;
+            height: 60px;
+            overflow: hidden;
+        }
+
+        .option4 .tier-corner-inner {
+            position: absolute;
+            top: 12px;
+            right: -20px;
+            width: 80px;
+            text-align: center;
+            transform: rotate(45deg);
+            padding: 4px 0;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .option4 .corner-alpha {
+            background: #00c896;
+            color: white;
+        }
+
+        .option4 .corner-solid {
+            background: #ff9500;
+            color: white;
+        }
+
+        .option4 .symbol {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .option4 .details-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .option4 .detail-box {
+            text-align: center;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .option4 .detail-label {
+            font-size: 10px;
+            color: #999;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .option4 .detail-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        /* Option 5: Ultra Minimal Light */
+        .option5 {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .option5 .header {
+            padding: 20px 16px;
+            border-bottom: 1px solid #000;
+        }
+
+        .option5 .logo {
+            font-size: 24px;
+            font-weight: 900;
+            color: #000;
+            letter-spacing: -1px;
+        }
+
+        .option5 .project-row {
+            padding: 20px 16px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .option5 .left-section {
+            flex: 1;
+        }
+
+        .option5 .symbol {
+            font-size: 18px;
+            font-weight: 800;
+            color: #000;
+            margin-bottom: 6px;
+        }
+
+        .option5 .meta {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .option5 .tier-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: flex-end;
+        }
+
+        .option5 .tier-mini {
+            width: 50px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 800;
+            border-radius: 4px;
+        }
+
+        .option5 .tier-alpha {
+            background: #000;
+            color: #fff;
+        }
+
+        .option5 .tier-solid {
+            background: #666;
+            color: #fff;
+        }
+
+        /* Option 6: Data Dense Dark */
+        .option6 {
+            background: #121212;
+            color: #e0e0e0;
+            font-size: 12px;
+        }
+
+        .option6 .header {
+            background: #1a1a1a;
+            padding: 10px 12px;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .option6 .logo {
+            font-size: 14px;
+            font-weight: 700;
+            color: #00ff88;
+        }
+
+        .option6 .view-toggle {
+            display: flex;
+            gap: 4px;
+        }
+
+        .option6 .toggle-btn {
+            padding: 4px 8px;
+            background: #2a2a2a;
+            border-radius: 4px;
+            font-size: 10px;
+            color: #888;
+        }
+
+        .option6 .toggle-btn.active {
+            background: #00ff88;
+            color: #000;
+        }
+
+        .option6 .table-container {
+            padding: 8px;
+        }
+
+        .option6 .table-header {
+            display: grid;
+            grid-template-columns: 1.5fr 0.6fr 0.8fr 0.5fr 0.5fr 0.5fr;
+            gap: 4px;
+            padding: 8px 4px;
+            font-size: 9px;
+            font-weight: 700;
+            color: #666;
+            text-transform: uppercase;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .option6 .table-row {
+            display: grid;
+            grid-template-columns: 1.5fr 0.6fr 0.8fr 0.5fr 0.5fr 0.5fr;
+            gap: 4px;
+            padding: 10px 4px;
+            border-bottom: 1px solid #1a1a1a;
+            align-items: center;
+        }
+
+        .option6 .symbol {
+            font-weight: 700;
+            font-size: 13px;
+            color: #fff;
+        }
+
+        .option6 .tier-dot {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 800;
+            margin: 0 auto;
+        }
+
+        .option6 .dot-alpha { background: #00ff88; color: #000; }
+        .option6 .dot-solid { background: #ffaa00; color: #000; }
+        .option6 .dot-basic { background: #ff6b35; color: #fff; }
+
+        /* Option 7: Card-Based Light */
+        .option7 {
+            background: #f5f7fa;
+            color: #1a1a1a;
+        }
+
+        .option7 .header {
+            background: white;
+            padding: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .option7 .logo {
+            font-size: 20px;
+            font-weight: 800;
+            color: #2563eb;
+            text-align: center;
+        }
+
+        .option7 .subtitle {
+            text-align: center;
+            font-size: 11px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .option7 .project-card {
+            background: white;
+            margin: 16px;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        }
+
+        .option7 .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 16px;
+        }
+
+        .option7 .symbol {
+            font-size: 22px;
+            font-weight: 800;
+            color: #1a1a1a;
+        }
+
+        .option7 .rank-badge {
+            background: #f0f0f0;
+            color: #666;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .option7 .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .option7 .metric-box {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 12px;
+        }
+
+        .option7 .metric-label {
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 4px;
+        }
+
+        .option7 .metric-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .option7 .analysis-status {
+            display: flex;
+            gap: 8px;
+        }
+
+        .option7 .status-pill {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .option7 .status-complete {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .option7 .status-pending {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Option 8: Gradient Dark */
+        .option8 {
+            background: linear-gradient(180deg, #1a1a2e 0%, #0f0f1e 100%);
+            color: #e0e0e0;
+        }
+
+        .option8 .header {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            padding: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .option8 .logo {
+            font-size: 18px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00f5a0 0%, #00d9f5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+
+        .option8 .project-row {
+            margin: 12px 16px;
+            padding: 16px;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .option8 .row-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .option8 .symbol {
+            font-size: 18px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .option8 .glow-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .option8 .glow-alpha {
+            background: rgba(0, 245, 160, 0.2);
+            color: #00f5a0;
+            box-shadow: 0 0 20px rgba(0, 245, 160, 0.3);
+        }
+
+        .option8 .glow-solid {
+            background: rgba(255, 170, 0, 0.2);
+            color: #ffaa00;
+            box-shadow: 0 0 20px rgba(255, 170, 0, 0.3);
+        }
+
+        .option8 .info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #999;
+        }
+
+        /* Option 9: Swiss Design Minimal */
+        .option9 {
+            background: #fff;
+            color: #000;
+        }
+
+        .option9 .header {
+            padding: 24px 20px;
+            border-bottom: 2px solid #000;
+        }
+
+        .option9 .logo {
+            font-size: 28px;
+            font-weight: 900;
+            color: #000;
+            letter-spacing: -2px;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+
+        .option9 .sort-bar {
+            padding: 12px 20px;
+            background: #000;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .option9 .project-item {
+            padding: 24px 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .option9 .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+
+        .option9 .symbol {
+            font-size: 24px;
+            font-weight: 900;
+            color: #000;
+            letter-spacing: -1px;
+        }
+
+        .option9 .tier-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px;
+        }
+
+        .option9 .tier-cell {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 900;
+            border: 2px solid #000;
+        }
+
+        .option9 .tier-alpha {
+            background: #000;
+            color: #fff;
+        }
+
+        .option9 .tier-solid {
+            background: #fff;
+            color: #000;
+        }
+
+        .option9 .item-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* Option 10: Modern Light with Shadows */
+        .option10 {
+            background: linear-gradient(180deg, #fafafa 0%, #f0f0f0 100%);
+            color: #1a1a1a;
+        }
+
+        .option10 .header {
+            background: white;
+            padding: 20px 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 44px;
+        }
+
+        .option10 .logo {
+            font-size: 22px;
+            font-weight: 900;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+        }
+
+        .option10 .tabs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .option10 .tab {
+            padding: 8px 16px;
+            background: #f5f5f5;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .option10 .tab.active {
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        .option10 .project-list {
+            padding: 16px;
+        }
+
+        .option10 .project-item {
+            background: white;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #e0e0e0;
+        }
+
+        .option10 .item-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .option10 .symbol {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1a1a1a;
+        }
+
+        .option10 .tier-badges {
+            display: flex;
+            gap: 6px;
+        }
+
+        .option10 .tier-round {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+
+        .option10 .round-alpha {
+            background: linear-gradient(135deg, #00c896 0%, #00a877 100%);
+            color: white;
+        }
+
+        .option10 .round-solid {
+            background: linear-gradient(135deg, #ff9500 0%, #ff7c00 100%);
+            color: white;
+        }
+
+        .option10 .item-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .option10 .detail-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Scrollbar styling */
+        .phone-screen::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .phone-screen::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .phone-screen::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.2);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CoinAiRank Mobile Redesign - 10 Options</h1>
+
+        <div class="mockup-grid">
+            <!-- Option 1: Clean Light Minimal -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen option1">
+                        <div class="header">
+                            <div class="logo">Coin<span>Ai</span>Rank</div>
+                            <button class="sort-btn">MCap ↓</button>
+                        </div>
+                        <div class="list-header">
+                            <div>Project</div>
+                            <div>Age</div>
+                            <div>MCap</div>
+                            <div>Web</div>
+                            <div>WP</div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">WLD</div>
+                                <span class="project-fullname">Worldcoin</span>
+                            </div>
+                            <div class="age">2.2y</div>
+                            <div class="mcap">$3.2B</div>
+                            <div><span class="tier-badge tier-alpha">α</span></div>
+                            <div><span class="tier-badge tier-solid">S</span></div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">ARB</div>
+                                <span class="project-fullname">Arbitrum</span>
+                            </div>
+                            <div class="age">2.5y</div>
+                            <div class="mcap">$2.7B</div>
+                            <div><span class="tier-badge tier-alpha">α</span></div>
+                            <div><span class="tier-badge tier-alpha">α</span></div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">PENDLE</div>
+                                <span class="project-fullname">Pendle</span>
+                            </div>
+                            <div class="age">4.4y</div>
+                            <div class="mcap">$852M</div>
+                            <div><span class="tier-badge tier-solid">S</span></div>
+                            <div><span class="tier-badge tier-basic">B</span></div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">KTA</div>
+                                <span class="project-fullname">Katana</span>
+                            </div>
+                            <div class="age">0.5y</div>
+                            <div class="mcap">$256M</div>
+                            <div><span class="tier-badge tier-alpha">α</span></div>
+                            <div><span class="tier-badge tier-trash">T</span></div>
+                        </div>
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">GHIBLI</div>
+                                <span class="project-fullname">Ghibli</span>
+                            </div>
+                            <div class="age">—</div>
+                            <div class="mcap">$1.1M</div>
+                            <div><span class="tier-badge tier-basic">B</span></div>
+                            <div><span class="tier-badge tier-basic">B</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-label">Option 1: Clean Light Minimal<br>Single letter tiers (α/S/B/T)</div>
+            </div>
+
+            <!-- Option 2: Dark Compact with Icons -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen option2">
+                        <div class="header">
+                            <div class="logo">CoinAiRank</div>
+                            <svg class="filter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="4" y1="6" x2="20" y2="6"></line>
+                                <line x1="4" y1="12" x2="20" y2="12"></line>
+                                <line x1="4" y1="18" x2="20" y2="18"></line>
+                            </svg>
+                        </div>
+                        <div class="project-card">
+                            <div class="project-info">
+                                <div class="project-main">
+                                    <span class="symbol">WLD</span>
+                                </div>
+                                <div class="metrics">
+                                    <div class="metric-item">2.2y</div>
+                                    <div class="metric-item">$3.2B</div>
+                                </div>
+                            </div>
+                            <div class="tier-icons">
+                                <div class="tier-icon tier-alpha">A</div>
+                                <div class="tier-icon tier-solid">S</div>
+                            </div>
+                        </div>
+                        <div class="project-card">
+                            <div class="project-info">
+                                <div class="project-main">
+                                    <span class="symbol">ARB</span>
+                                </div>
+                                <div class="metrics">
+                                    <div class="metric-item">2.5y</div>
+                                    <div class="metric-item">$2.7B</div>
+                                </div>
+                            </div>
+                            <div class="tier-icons">
+                                <div class="tier-icon tier-alpha">A</div>
+                                <div class="tier-icon tier-alpha">A</div>
+                            </div>
+                        </div>
+                        <div class="project-card">
+                            <div class="project-info">
+                                <div class="project-main">
+                                    <span class="symbol">PENDLE</span>
+                                </div>
+                                <div class="metrics">
+                                    <div class="metric-item">4.4y</div>
+                                    <div class="metric-item">$852M</div>
+                                </div>
+                            </div>
+                            <div class="tier-icons">
+                                <div class="tier-icon tier-solid">S</div>
+                                <div class="tier-icon tier-basic">B</div>
+                            </div>
+                        </div>
+                        <div class="project-card">
+                            <div class="project-info">
+                                <div class="project-main">
+                                    <span class="symbol">GHIBLI</span>
+                                </div>
+                                <div class="metrics">
+                                    <div class="metric-item">—</div>
+                                    <div class="metric-item">$1.1M</div>
+                                </div>
+                            </div>
+                            <div class="tier-icons">
+                                <div class="tier-icon tier-basic">B</div>
+                                <div class="tier-icon tier-pending">—</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-label">Option 2: Dark Compact<br>Icon-based tiers (A/S/B)</div>
+            </div>
+
+            <!-- Option 3: Light with Progress Bars -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen option3">
+                        <div class="header">
+                            <div class="logo">CoinAiRank</div>
+                            <input type="text" class="search-bar" placeholder="Search projects...">
+                        </div>
+                        <div class="project-card">
+                            <div class="card-header">
+                                <div class="symbol">WLD</div>
+                                <div class="age-badge">2.2y</div>
+                            </div>
+                            <div class="stats-row">
+                                <div>MCap: <strong>$3.2B</strong></div>
+                            </div>
+                            <div class="progress-section">
+                                <div class="progress-label">Analysis Complete</div>
+                                <div class="progress-items">
+                                    <div class="progress-item complete"></div>
+                                    <div class="progress-item complete"></div>
+                                    <div class="progress-item"></div>
+                                    <div class="progress-item"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="project-card">
+                            <div class="card-header">
+                                <div class="symbol">ARB</div>
+                                <div class="age-badge">2.5y</div>
+                            </div>
+                            <div class="stats-row">
+                                <div>MCap: <strong>$2.7B</strong></div>
+                            </div>
+                            <div class="progress-section">
+                                <div class="progress-label">Analysis Complete</div>
+                                <div class="progress-items">
+                                    <div class="progress-item complete"></div>
+                                    <div class="progress-item complete"></div>
+                                    <div class="progress-item"></div>
+                                    <div class="progress-item"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="project-card">
+                            <div class="card-header">
+                                <div class="symbol">PENDLE</div>
+                                <div class="age-badge">4.4y</div>
+                            </div>
+                            <div class="stats-row">
+                                <div>MCap: <strong>$852M</strong></div>
+                            </div>
+                            <div class="progress-section">
+                                <div class="progress-label">Analysis Complete</div>
+                                <div class="progress-items">
+                                    <div class="progress-item complete"></div>
+                                    <div class="progress-item partial"></div>
+                                    <div class="progress-item"></div>
+                                    <div class="progress-item"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-label">Option 3: Progress Bars<br>Shows analysis completion (Web/WP/Docs/SC)</div>
+            </div>
+
+            <!-- Option 4: Colorful & Playful -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen option4">
+                        <div class="header">
+                            <div class="logo">CoinAiRank</div>
+                        </div>
+                        <div class="filter-chips">
+                            <div class="chip active">All</div>
+                            <div class="chip">ALPHA</div>
+                            <div class="chip">SOLID</div>
+                            <div class="chip">BASIC</div>
+                        </div>
+                        <div class="project-card">
+                            <div class="tier-corner">
+                                <div class="tier-corner-inner corner-alpha">ALPHA</div>
+                            </div>
+                            <div class="symbol">WLD</div>
+                            <div class="details-grid">
+                                <div class="detail-box">
+                                    <div class="detail-label">Age</div>
+                                    <div class="detail-value">2.2y</div>
+                                </div>
+                                <div class="detail-box">
+                                    <div class="detail-label">MCap</div>
+                                    <div class="detail-value">$3.2B</div>
+                                </div>
+                                <div class="detail-box">
+                                    <div class="detail-label">WP</div>
+                                    <div class="detail-value">SOLID</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="project-card">
+                            <div class="tier-corner">
+                                <div class="tier-corner-inner corner-alpha">ALPHA</div>
+                            </div>
+                            <div class="symbol">ARB</div>
+                            <div class="details-grid">
+                                <div class="detail-box">
+                                    <div class="detail-label">Age</div>
+                                    <div class="detail-value">2.5y</div>
+                                </div>
+                                <div class="detail-box">
+                                    <div class="detail-label">MCap</div>
+                                    <div class="detail-value">$2.7B</div>
+                                </div>
+                                <div class="detail-box">
+                                    <div class="detail-label">WP</div>
+                                    <div class="detail-value">ALPHA</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="project-card">
+                            <div class="tier-corner">
+                                <div class="tier-corner-inner corner-solid">SOLID</div>
+                            </div>
+                            <div class="symbol">PENDLE</div>
+                            <div class="details-grid">
+                                <div class="detail-box">
+                                    <div class="detail-label">Age</div>
+                                    <div class="detail-value">4.4y</div>
+                                </div>
+                                <div class="detail-box">
+                                    <div class="detail-label">MCap</div>
+                                    <div class="detail-value">$852M</div>
+                                </div>
+                                <div class="detail-box">
+                                    <div class="detail-label">WP</div>
+                                    <div class="detail-value">BASIC</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-label">Option 4: Colorful Cards<br>Corner badges, filterable chips</div>
+            </div>
+
+            <!-- Option 5: Ultra Minimal Light -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen option5">
+                        <div class="header">
+                            <div class="logo">COINAIRANK</div>
+                        </div>
+                        <div class="project-row">
+                            <div class="left-section">
+                                <div class="symbol">WLD</div>
+                                <div class="meta">2.2y • $3.2B</div>
+                            </div>
+                            <div class="tier-stack">
+                                <div class="tier-mini tier-alpha">A</div>
+                                <div class="tier-mini tier-solid">S</div>
+                            </div>
+                        </div>
+                        <div class="project-row">
+                            <div class="left-section">
+                                <div class="symbol">ARB</div>
+                                <div class="meta">2.5y • $2.7B</div>
+                            </div>
+                            <div class="tier-stack">
+                                <div class="tier-mini tier-alpha">A</div>
+                                <div class="tier-mini tier-alpha">A</div>
+                            </div>
+                        </div>
+                        <div class="project-row">
+                            <div class="left-section">
+                                <div class="symbol">PENDLE</div>
+                                <div class="meta">4.4y • $852M</div>
+                            </div>
+                            <div class="tier-stack">
+                                <div class="tier-mini tier-solid">S</div>
+                                <div class="tier-mini tier-solid">S</div>
+                            </div>
+                        </div>
+                        <div class="project-row">
+                            <div class="left-section">
+                                <div class="symbol">KTA</div>
+                                <div class="meta">0.5y • $256M</div>
+                            </div>
+                            <div class="tier-stack">
+                                <div class="tier-mini tier-alpha">A</div>
+                                <div class="tier-mini tier-solid">S</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-label">Option 5: Ultra Minimal<br>Black & white, stacked tiers</div>
+            </div>
+
+            <!-- Option 6: Data Dense Dark -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen option6">
+                        <div class="header">
+                            <div class="logo">CoinAiRank</div>
+                            <div class="view-toggle">
+                                <div class="toggle-btn active">List</div>
+                                <div class="toggle-btn">Grid</div>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <div class="table-header">
+                                <div>Project</div>
+                                <div>Age</div>
+                                <div>MCap</div>
+                                <div>Web</div>
+                                <div>WP</div>
+                                <div>X</div>
+                            </div>
+                            <div class="table-row">
+                                <div class="symbol">WLD</div>
+                                <div>2.2y</div>
+                                <div>$3.2B</div>
+                                <div><span class="tier-dot dot-alpha">A</span></div>
+                                <div><span class="tier-dot dot-solid">S</span></div>
+                                <div><span class="tier-dot tier-pending">—</span></div>
+                            </div>
+                            <div class="table-row">
+                                <div class="symbol">ARB</div>
+                                <div>2.5y</div>
+                                <div>$2.7B</div>
+                                <div><span class="tier-dot dot-alpha">A</span></div>
+                                <div><span class="tier-dot dot-alpha">A</span></div>
+                                <div><span class="tier-dot tier-pending">—</span></div>
+                            </div>
+                            <div class="table-row">
+                                <div class="symbol">PENDLE</div>
+                                <div>4.4y</div>
+                                <div>$852M</div>
+                                <div><span class="tier-dot dot-solid">S</span></div>
+                                <div><span class="tier-dot dot-basic">B</span></div>
+                                <div><span class="tier-dot tier-pending">—</span></div>
+                            </div>
+                            <div class="table-row">
+                                <div class="symbol">KTA</div>
+                                <div>0.5y</div>
+                                <div>$256M</div>
+                                <div><span class="tier-dot dot-alpha">A</span></div>
+                                <div><span class="tier-dot tier-pending">—</span></div>
+                                <div><span class="tier-dot tier-pending">—</span></div>
+                            </div>
+                            <div class="table-row">
+                                <div class="symbol">GHIBLI</div>
+                                <div>—</div>
+                                <div>$1.1M</div>
+                                <div><span class="tier-dot dot-basic">B</span></div>
+                                <div><span class="tier-dot tier-pending">—</span></div>
+                                <div><span class="tier-dot tier-pending">—</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-label">Option 6: Dense Table<br>Includes X tier, circular badges</div>
+            </div>
+
+            <!-- Option 7: Card-Based Light -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen option7">
+                        <div class="header">
+                            <div class="logo">CoinAiRank</div>
+                            <div class="subtitle">AI-Powered Crypto Analysis</div>
+                        </div>
+                        <div class="project-card">
+                            <div class="card-top">
+                                <div class="symbol">WLD</div>
+                                <div class="rank-badge">#247</div>
+                            </div>
+                            <div class="metrics-grid">
+                                <div class="metric-box">
+                                    <div class="metric-label">Age</div>
+                                    <div class="metric-value">2.2y</div>
+                                </div>
+                                <div class="metric-box">
+                                    <div class="metric-label">Market Cap</div>
+                                    <div class="metric-value">$3.2B</div>
+                                </div>
+                            </div>
+                            <div class="analysis-status">
+                                <div class="status-pill status-complete">Web ✓</div>
+                                <div class="status-pill status-complete">WP ✓</div>
+                                <div class="status-pill status-pending">Docs</div>
+                                <div class="status-pill status-pending">SC</div>
+                            </div>
+                        </div>
+                        <div class="project-card">
+                            <div class="card-top">
+                                <div class="symbol">ARB</div>
+                                <div class="rank-badge">#32</div>
+                            </div>
+                            <div class="metrics-grid">
+                                <div class="metric-box">
+                                    <div class="metric-label">Age</div>
+                                    <div class="metric-value">2.5y</div>
+                                </div>
+                                <div class="metric-box">
+                                    <div class="metric-label">Market Cap</div>
+                                    <div class="metric-value">$2.7B</div>
+                                </div>
+                            </div>
+                            <div class="analysis-status">
+                                <div class="status-pill status-complete">Web ✓</div>
+                                <div class="status-pill status-complete">WP ✓</div>
+                                <div class="status-pill status-pending">Docs</div>
+                                <div class="status-pill status-pending">SC</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-label">Option 7: Status Pills<br>Shows completion (Web/WP/Docs/SC)</div>
+            </div>
+
+            <!-- Option 8: Gradient Dark -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen option8">
+                        <div class="header">
+                            <div class="logo">CoinAiRank</div>
+                        </div>
+                        <div class="project-row">
+                            <div class="row-header">
+                                <div class="symbol">WLD</div>
+                                <div class="glow-badge glow-alpha">ALPHA</div>
+                            </div>
+                            <div class="info-row">
+                                <span>2.2y old</span>
+                                <span>$3.2B MCap</span>
+                                <span>WP: SOLID</span>
+                            </div>
+                        </div>
+                        <div class="project-row">
+                            <div class="row-header">
+                                <div class="symbol">ARB</div>
+                                <div class="glow-badge glow-alpha">ALPHA</div>
+                            </div>
+                            <div class="info-row">
+                                <span>2.5y old</span>
+                                <span>$2.7B MCap</span>
+                                <span>WP: ALPHA</span>
+                            </div>
+                        </div>
+                        <div class="project-row">
+                            <div class="row-header">
+                                <div class="symbol">PENDLE</div>
+                                <div class="glow-badge glow-solid">SOLID</div>
+                            </div>
+                            <div class="info-row">
+                                <span>4.4y old</span>
+                                <span>$852M MCap</span>
+                                <span>WP: BASIC</span>
+                            </div>
+                        </div>
+                        <div class="project-row">
+                            <div class="row-header">
+                                <div class="symbol">KTA</div>
+                                <div class="glow-badge glow-alpha">ALPHA</div>
+                            </div>
+                            <div class="info-row">
+                                <span>0.5y old</span>
+                                <span>$256M MCap</span>
+                                <span>WP: —</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-label">Option 8: Glassmorphism<br>Glowing badges, gradient background</div>
+            </div>
+
+            <!-- Option 9: Swiss Design Minimal -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen option9">
+                        <div class="header">
+                            <div class="logo">COINAIRANK</div>
+                        </div>
+                        <div class="sort-bar">SORTED BY MARKET CAP</div>
+                        <div class="project-item">
+                            <div class="item-header">
+                                <div class="symbol">WLD</div>
+                                <div class="tier-grid">
+                                    <div class="tier-cell tier-alpha">A</div>
+                                    <div class="tier-cell tier-solid">S</div>
+                                </div>
+                            </div>
+                            <div class="item-stats">
+                                <span>2.2y</span>
+                                <span>$3.2B</span>
+                            </div>
+                        </div>
+                        <div class="project-item">
+                            <div class="item-header">
+                                <div class="symbol">ARB</div>
+                                <div class="tier-grid">
+                                    <div class="tier-cell tier-alpha">A</div>
+                                    <div class="tier-cell tier-alpha">A</div>
+                                </div>
+                            </div>
+                            <div class="item-stats">
+                                <span>2.5y</span>
+                                <span>$2.7B</span>
+                            </div>
+                        </div>
+                        <div class="project-item">
+                            <div class="item-header">
+                                <div class="symbol">PENDLE</div>
+                                <div class="tier-grid">
+                                    <div class="tier-cell tier-solid">S</div>
+                                    <div class="tier-cell tier-solid">S</div>
+                                </div>
+                            </div>
+                            <div class="item-stats">
+                                <span>4.4y</span>
+                                <span>$852M</span>
+                            </div>
+                        </div>
+                        <div class="project-item">
+                            <div class="item-header">
+                                <div class="symbol">KTA</div>
+                                <div class="tier-grid">
+                                    <div class="tier-cell tier-alpha">A</div>
+                                    <div class="tier-cell tier-solid">S</div>
+                                </div>
+                            </div>
+                            <div class="item-stats">
+                                <span>0.5y</span>
+                                <span>$256M</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-label">Option 9: Swiss/Brutalist<br>Bold typography, grid tiers</div>
+            </div>
+
+            <!-- Option 10: Modern Light with Shadows -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen option10">
+                        <div class="header">
+                            <div class="logo">CoinAiRank</div>
+                            <div class="tabs">
+                                <div class="tab active">Top 1000</div>
+                                <div class="tab">ALPHA</div>
+                                <div class="tab">SOLID</div>
+                            </div>
+                        </div>
+                        <div class="project-list">
+                            <div class="project-item">
+                                <div class="item-main">
+                                    <div class="symbol">WLD</div>
+                                    <div class="tier-badges">
+                                        <div class="tier-round round-alpha">A</div>
+                                        <div class="tier-round round-solid">S</div>
+                                    </div>
+                                </div>
+                                <div class="item-details">
+                                    <div class="detail-group">
+                                        <span>2.2y</span>
+                                        <span>$3.2B</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="project-item">
+                                <div class="item-main">
+                                    <div class="symbol">ARB</div>
+                                    <div class="tier-badges">
+                                        <div class="tier-round round-alpha">A</div>
+                                        <div class="tier-round round-alpha">A</div>
+                                    </div>
+                                </div>
+                                <div class="item-details">
+                                    <div class="detail-group">
+                                        <span>2.5y</span>
+                                        <span>$2.7B</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="project-item">
+                                <div class="item-main">
+                                    <div class="symbol">PENDLE</div>
+                                    <div class="tier-badges">
+                                        <div class="tier-round round-solid">S</div>
+                                        <div class="tier-round round-solid">S</div>
+                                    </div>
+                                </div>
+                                <div class="item-details">
+                                    <div class="detail-group">
+                                        <span>4.4y</span>
+                                        <span>$852M</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-label">Option 10: Modern Cards<br>Rounded badges, filter tabs, shadows</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

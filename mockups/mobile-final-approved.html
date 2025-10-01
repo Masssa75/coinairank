@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoinAiRank - Final Approved Design</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 40px;
+            color: #333;
+        }
+
+        .mockup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(375px, 1fr));
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 30px;
+            background: #000;
+            border-radius: 0 0 20px 20px;
+            z-index: 100;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            padding-top: 44px;
+            background: #ffffff;
+            color: #1a1a1a;
+        }
+
+        .mockup-label {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: 600;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1a1a1a;
+        }
+
+        .logo span {
+            color: #00c896;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f5;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .icon-btn:hover {
+            background: #e8e8e8;
+        }
+
+        .icon-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: #666;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        /* Search Expanded State */
+        .search-expanded {
+            padding: 12px 20px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            position: sticky;
+            top: 56px;
+            z-index: 19;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .search-bar {
+            flex: 1;
+            padding: 10px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: border-color 0.2s;
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: #00c896;
+        }
+
+        .search-bar::placeholder {
+            color: #999;
+        }
+
+        .close-search {
+            font-size: 14px;
+            color: #666;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        /* Search Result - Not Found */
+        .search-result {
+            padding: 12px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-result-text {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .search-result-text strong {
+            color: #1a1a1a;
+            font-weight: 700;
+        }
+
+        .analyze-btn {
+            padding: 8px 16px;
+            background: #00c896;
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .analyze-btn:hover {
+            background: #00b386;
+        }
+
+        .analyze-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: white;
+            stroke-width: 2.5;
+        }
+
+        /* List Header */
+        .list-header {
+            display: grid;
+            grid-template-columns: 2fr 0.8fr 1fr 0.7fr 0.7fr;
+            gap: 8px;
+            padding: 14px 20px;
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 12px;
+            font-weight: 700;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            position: sticky;
+            top: 56px;
+            z-index: 18;
+        }
+
+        .list-header div {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .sort-arrow {
+            font-size: 10px;
+            color: #00c896;
+        }
+
+        /* Project Row */
+        .project-row {
+            display: grid;
+            grid-template-columns: 2fr 0.8fr 1fr 0.7fr 0.7fr;
+            gap: 8px;
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            align-items: center;
+        }
+
+        .project-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: #1a1a1a;
+        }
+
+        .project-fullname {
+            font-size: 13px;
+            color: #999;
+            display: block;
+            margin-top: 3px;
+        }
+
+        .age, .mcap {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Progress Circle */
+        .progress-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin: 0 auto;
+            cursor: pointer;
+        }
+
+        .circle-fill {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+
+        .circle-inner {
+            position: relative;
+            width: 28px;
+            height: 28px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 800;
+            color: #666;
+            z-index: 1;
+        }
+
+        /* Scrollbar */
+        .phone-screen::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .phone-screen::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .phone-screen::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.2);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CoinAiRank - Final Approved Design</h1>
+
+        <div class="mockup-grid">
+            <!-- Version 1: Default State (Search Collapsed) -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen">
+                        <div class="header">
+                            <div class="logo">Coin<span>Ai</span>Rank</div>
+                            <div class="header-actions">
+                                <div class="icon-btn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <path d="m21 21-4.35-4.35"></path>
+                                    </svg>
+                                </div>
+                                <div class="icon-btn" style="background: linear-gradient(135deg, #ffd93d 0%, #ff9500 100%);">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                                    </svg>
+                                </div>
+                                <div class="icon-btn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                                    </svg>
+                                </div>
+                                <div class="icon-btn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="list-header">
+                            <div>Project</div>
+                            <div>Age</div>
+                            <div>MCap <span class="sort-arrow">↓</span></div>
+                            <div>Web</div>
+                            <div>WP</div>
+                        </div>
+
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">WLD</div>
+                                <span class="project-fullname">Worldcoin</span>
+                            </div>
+                            <div class="age">2.2y</div>
+                            <div class="mcap">$3.2B</div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#00c896 0deg, #00c896 324deg, #f0f0f0 324deg);"></div>
+                                    <div class="circle-inner">α</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#ff9500 0deg, #ff9500 252deg, #f0f0f0 252deg);"></div>
+                                    <div class="circle-inner">S</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">ARB</div>
+                                <span class="project-fullname">Arbitrum</span>
+                            </div>
+                            <div class="age">2.5y</div>
+                            <div class="mcap">$2.7B</div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#00c896 0deg, #00c896 324deg, #f0f0f0 324deg);"></div>
+                                    <div class="circle-inner">α</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#00c896 0deg, #00c896 324deg, #f0f0f0 324deg);"></div>
+                                    <div class="circle-inner">α</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">PENDLE</div>
+                                <span class="project-fullname">Pendle</span>
+                            </div>
+                            <div class="age">4.4y</div>
+                            <div class="mcap">$852M</div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#ff9500 0deg, #ff9500 252deg, #f0f0f0 252deg);"></div>
+                                    <div class="circle-inner">S</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#ff6b35 0deg, #ff6b35 162deg, #f0f0f0 162deg);"></div>
+                                    <div class="circle-inner">B</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">KTA</div>
+                                <span class="project-fullname">Katana</span>
+                            </div>
+                            <div class="age">0.5y</div>
+                            <div class="mcap">$256M</div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#00c896 0deg, #00c896 324deg, #f0f0f0 324deg);"></div>
+                                    <div class="circle-inner">α</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#ff3b30 0deg, #ff3b30 54deg, #f0f0f0 54deg);"></div>
+                                    <div class="circle-inner">T</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">GHIBLI</div>
+                                <span class="project-fullname">Ghibli</span>
+                            </div>
+                            <div class="age">—</div>
+                            <div class="mcap">$1.1M</div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#ff6b35 0deg, #ff6b35 162deg, #f0f0f0 162deg);"></div>
+                                    <div class="circle-inner">B</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#ff6b35 0deg, #ff6b35 162deg, #f0f0f0 162deg);"></div>
+                                    <div class="circle-inner">B</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-label"><strong>Default State</strong><br>Clean interface, sorted by MCap ↓</div>
+            </div>
+
+            <!-- Version 2: Filter Panel Open -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen">
+                        <div class="header">
+                            <div class="logo">Coin<span>Ai</span>Rank</div>
+                            <div class="header-actions">
+                                <div class="icon-btn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <path d="m21 21-4.35-4.35"></path>
+                                    </svg>
+                                </div>
+                                <div class="icon-btn" style="background: linear-gradient(135deg, #ffd93d 0%, #ff9500 100%);">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                                    </svg>
+                                </div>
+                                <div class="icon-btn" style="background: #e6f9f3;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#00c896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                                    </svg>
+                                </div>
+                                <div class="icon-btn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="padding: 20px; background: white; border-bottom: 1px solid #e0e0e0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                <h3 style="font-size: 16px; font-weight: 700; color: #1a1a1a; margin: 0;">Filters</h3>
+                                <div style="font-size: 14px; color: #00c896; font-weight: 600; cursor: pointer;">Reset</div>
+                            </div>
+
+                            <div style="margin-bottom: 16px;">
+                                <div style="font-size: 12px; font-weight: 700; color: #999; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Token Type</div>
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                    <div style="padding: 8px 14px; background: #e6f9f3; color: #00c896; border-radius: 8px; font-size: 13px; font-weight: 600; border: 2px solid #00c896;">All</div>
+                                    <div style="padding: 8px 14px; background: #f5f5f5; color: #666; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">Utility</div>
+                                    <div style="padding: 8px 14px; background: #f5f5f5; color: #666; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">Meme</div>
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 16px;">
+                                <div style="font-size: 12px; font-weight: 700; color: #999; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Website Tier</div>
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                    <div style="padding: 8px 14px; background: #f5f5f5; color: #666; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">ALPHA</div>
+                                    <div style="padding: 8px 14px; background: #f5f5f5; color: #666; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">SOLID</div>
+                                    <div style="padding: 8px 14px; background: #f5f5f5; color: #666; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">BASIC</div>
+                                </div>
+                            </div>
+
+                            <div style="margin-bottom: 16px;">
+                                <div style="font-size: 12px; font-weight: 700; color: #999; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Whitepaper Tier</div>
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                    <div style="padding: 8px 14px; background: #f5f5f5; color: #666; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">ALPHA</div>
+                                    <div style="padding: 8px 14px; background: #f5f5f5; color: #666; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">SOLID</div>
+                                    <div style="padding: 8px 14px; background: #f5f5f5; color: #666; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">BASIC</div>
+                                </div>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <div>
+                                    <div style="font-size: 12px; font-weight: 700; color: #999; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Max Age</div>
+                                    <input type="text" placeholder="e.g. 2y" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                                </div>
+                                <div>
+                                    <div style="font-size: 12px; font-weight: 700; color: #999; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Max MCap</div>
+                                    <input type="text" placeholder="e.g. $1B" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="list-header">
+                            <div>Project</div>
+                            <div>Age</div>
+                            <div>MCap <span class="sort-arrow">↓</span></div>
+                            <div>Web</div>
+                            <div>WP</div>
+                        </div>
+
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">WLD</div>
+                                <span class="project-fullname">Worldcoin</span>
+                            </div>
+                            <div class="age">2.2y</div>
+                            <div class="mcap">$3.2B</div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#00c896 0deg, #00c896 324deg, #f0f0f0 324deg);"></div>
+                                    <div class="circle-inner">α</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#ff9500 0deg, #ff9500 252deg, #f0f0f0 252deg);"></div>
+                                    <div class="circle-inner">S</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">ARB</div>
+                                <span class="project-fullname">Arbitrum</span>
+                            </div>
+                            <div class="age">2.5y</div>
+                            <div class="mcap">$2.7B</div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#00c896 0deg, #00c896 324deg, #f0f0f0 324deg);"></div>
+                                    <div class="circle-inner">α</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#00c896 0deg, #00c896 324deg, #f0f0f0 324deg);"></div>
+                                    <div class="circle-inner">α</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">PENDLE</div>
+                                <span class="project-fullname">Pendle</span>
+                            </div>
+                            <div class="age">4.4y</div>
+                            <div class="mcap">$852M</div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#ff9500 0deg, #ff9500 252deg, #f0f0f0 252deg);"></div>
+                                    <div class="circle-inner">S</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#ff6b35 0deg, #ff6b35 162deg, #f0f0f0 162deg);"></div>
+                                    <div class="circle-inner">B</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-label"><strong>Filter Panel Open</strong><br>Token type, tiers, max age, max mcap</div>
+            </div>
+
+            <!-- Version 3: Hamburger Menu Open -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen">
+                        <div class="header">
+                            <div class="logo">Coin<span>Ai</span>Rank</div>
+                            <div class="header-actions">
+                                <div class="icon-btn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <path d="m21 21-4.35-4.35"></path>
+                                    </svg>
+                                </div>
+                                <div class="icon-btn" style="background: linear-gradient(135deg, #ffd93d 0%, #ff9500 100%);">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                                    </svg>
+                                </div>
+                                <div class="icon-btn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                                    </svg>
+                                </div>
+                                <div class="icon-btn" style="background: #e6f9f3;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="#00c896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="padding: 24px; background: white; border-bottom: 1px solid #e0e0e0;">
+                            <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                                </svg>
+                                <div style="font-size: 15px; font-weight: 600; color: #1a1a1a;">Submit Project</div>
+                            </div>
+
+                            <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid #f0f0f0; cursor: pointer;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                </svg>
+                                <div style="font-size: 15px; font-weight: 600; color: #1a1a1a;">View Whitepaper</div>
+                            </div>
+
+                            <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid #f0f0f0; opacity: 0.5; cursor: not-allowed;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                                </svg>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="font-size: 15px; font-weight: 600; color: #999;">Alerts</div>
+                                    <div style="font-size: 11px; font-weight: 700; color: #999; background: #f5f5f5; padding: 2px 8px; border-radius: 4px;">COMING SOON</div>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; align-items: center; gap: 12px; padding: 14px 0; opacity: 0.5; cursor: not-allowed;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+                                    <path d="M12 20v-6M6 20V10M18 20V4"></path>
+                                </svg>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="font-size: 15px; font-weight: 600; color: #999;">Progress Tracking</div>
+                                    <div style="font-size: 11px; font-weight: 700; color: #999; background: #f5f5f5; padding: 2px 8px; border-radius: 4px;">COMING SOON</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="list-header">
+                            <div>Project</div>
+                            <div>Age</div>
+                            <div>MCap <span class="sort-arrow">↓</span></div>
+                            <div>Web</div>
+                            <div>WP</div>
+                        </div>
+
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">WLD</div>
+                                <span class="project-fullname">Worldcoin</span>
+                            </div>
+                            <div class="age">2.2y</div>
+                            <div class="mcap">$3.2B</div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#00c896 0deg, #00c896 324deg, #f0f0f0 324deg);"></div>
+                                    <div class="circle-inner">α</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#ff9500 0deg, #ff9500 252deg, #f0f0f0 252deg);"></div>
+                                    <div class="circle-inner">S</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">ARB</div>
+                                <span class="project-fullname">Arbitrum</span>
+                            </div>
+                            <div class="age">2.5y</div>
+                            <div class="mcap">$2.7B</div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#00c896 0deg, #00c896 324deg, #f0f0f0 324deg);"></div>
+                                    <div class="circle-inner">α</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#00c896 0deg, #00c896 324deg, #f0f0f0 324deg);"></div>
+                                    <div class="circle-inner">α</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">PENDLE</div>
+                                <span class="project-fullname">Pendle</span>
+                            </div>
+                            <div class="age">4.4y</div>
+                            <div class="mcap">$852M</div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#ff9500 0deg, #ff9500 252deg, #f0f0f0 252deg);"></div>
+                                    <div class="circle-inner">S</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#ff6b35 0deg, #ff6b35 162deg, #f0f0f0 162deg);"></div>
+                                    <div class="circle-inner">B</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-label"><strong>Hamburger Menu Open</strong><br>Submit project, whitepaper, alerts (coming soon)</div>
+            </div>
+
+            <!-- Version 4: Hot Picks Active -->
+            <div>
+                <div class="phone-frame">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen">
+                        <div class="header">
+                            <div class="logo">Coin<span>Ai</span>Rank</div>
+                            <div class="header-actions">
+                                <div class="icon-btn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <path d="m21 21-4.35-4.35"></path>
+                                    </svg>
+                                </div>
+                                <div class="icon-btn" style="background: linear-gradient(135deg, #ffd93d 0%, #ff9500 100%);">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                                    </svg>
+                                </div>
+                                <div class="icon-btn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                                    </svg>
+                                </div>
+                                <div class="icon-btn">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="list-header">
+                            <div>Project</div>
+                            <div>Age</div>
+                            <div>MCap</div>
+                            <div>Web</div>
+                            <div>WP</div>
+                        </div>
+
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">KTA</div>
+                                <span class="project-fullname">Katana</span>
+                            </div>
+                            <div class="age">0.5y</div>
+                            <div class="mcap">$256M</div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#00c896 0deg, #00c896 324deg, #f0f0f0 324deg);"></div>
+                                    <div class="circle-inner">α</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#00c896 0deg, #00c896 324deg, #f0f0f0 324deg);"></div>
+                                    <div class="circle-inner">α</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">GHIBLI</div>
+                                <span class="project-fullname">Ghibli</span>
+                            </div>
+                            <div class="age">—</div>
+                            <div class="mcap">$1.1M</div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#ff6b35 0deg, #ff6b35 162deg, #f0f0f0 162deg);"></div>
+                                    <div class="circle-inner">B</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#00c896 0deg, #00c896 324deg, #f0f0f0 324deg);"></div>
+                                    <div class="circle-inner">α</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">WLD</div>
+                                <span class="project-fullname">Worldcoin</span>
+                            </div>
+                            <div class="age">2.2y</div>
+                            <div class="mcap">$3.2B</div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#00c896 0deg, #00c896 324deg, #f0f0f0 324deg);"></div>
+                                    <div class="circle-inner">α</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#ff9500 0deg, #ff9500 252deg, #f0f0f0 252deg);"></div>
+                                    <div class="circle-inner">S</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="project-row">
+                            <div>
+                                <div class="project-name">ARB</div>
+                                <span class="project-fullname">Arbitrum</span>
+                            </div>
+                            <div class="age">2.5y</div>
+                            <div class="mcap">$2.7B</div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#00c896 0deg, #00c896 324deg, #f0f0f0 324deg);"></div>
+                                    <div class="circle-inner">α</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress-circle">
+                                    <div class="circle-fill" style="background: conic-gradient(#00c896 0deg, #00c896 324deg, #f0f0f0 324deg);"></div>
+                                    <div class="circle-inner">α</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mockup-label"><strong>Hot Picks Active</strong><br>Sorted by young age + low mcap + high quality</div>
+            </div>
+        </div>
+
+        <h2 style="margin-top: 60px; text-align: center; color: #333;">✅ Final Approved Design Elements</h2>
+        <div style="max-width: 600px; margin: 30px auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            <ul style="list-style: none; line-height: 2; color: #666;">
+                <li>✅ <strong>Name:</strong> CoinAiRank</li>
+                <li>✅ <strong>Header Icons:</strong> Search + Hot Picks (zap) + Filter (funnel) + Hamburger menu using Lucide React</li>
+                <li>✅ <strong>Filter Panel:</strong> Token type (all/utility/meme), website tier (α/S/B), whitepaper tier (α/S/B), max age, max mcap</li>
+                <li>✅ <strong>Hamburger Menu:</strong> Submit project, view whitepaper, alerts (coming soon), progress tracking (coming soon)</li>
+                <li>✅ <strong>Sorting:</strong> Arrow indicators (↑/↓) show active column</li>
+                <li>✅ <strong>Tier Display:</strong> Progress rings with letters (α, S, B, T)</li>
+                <li>✅ <strong>Theme:</strong> Clean light theme</li>
+                <li>✅ <strong>Default Sort:</strong> Market Cap descending</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
