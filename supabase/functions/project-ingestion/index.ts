@@ -942,58 +942,135 @@ serve(async (req) => {
 
     console.log(`✅ New project ingested: ${newProject.symbol} (ID: ${newProject.id}) with price and age data`);
 
-    // Trigger website analysis first - it will extract URLs and trigger X/whitepaper analysis
+    // PARALLEL TRIGGERS: Execute all analysis triggers simultaneously
+    const parallelTriggers = [];
+
+    // 1. Website Analysis Trigger
     if (body.trigger_analysis !== false && projectData.website_url && projectData.website_url !== 'pending') {
-      triggerWebsiteAnalysis(
-        newProject.id,
-        body.contract_address,
-        projectData.website_url,
-        newProject.symbol,
-        body.network || 'ethereum'
-      ).catch(error => {
-        console.error('Background website analysis failed:', error);
-      });
+      console.log(`🌐 Preparing website analysis trigger for ${newProject.symbol}`);
+      parallelTriggers.push(
+        triggerWebsiteAnalysis(
+          newProject.id,
+          body.contract_address,
+          projectData.website_url,
+          newProject.symbol,
+          body.network || 'ethereum'
+        ).catch(error => {
+          console.error('Background website analysis failed:', error);
+          return { success: false, type: 'website', error: error.message };
+        })
+      );
     }
 
-    // If whitepaper content was manually provided, trigger analyzer directly (skip fetcher)
+    // 2. Whitepaper Processing - Two paths based on what was provided
     if (body.whitepaper_content && body.whitepaper_content.trim()) {
-      console.log(`🚀 Triggering whitepaper analyzer directly for manually provided content`);
-      console.log(`   Project ID: ${newProject.id}, Symbol: ${newProject.symbol}`);
+      // PATH A: Content provided - trigger analyzer directly
+      console.log(`📄 Preparing whitepaper analyzer trigger (content provided) for ${newProject.symbol}`);
       console.log(`   Content length: ${body.whitepaper_content.length} characters`);
 
-      try {
-        const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-v4-sse`;
-        console.log(`   Calling: ${analyzerUrl}`);
+      parallelTriggers.push(
+        (async () => {
+          try {
+            const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-v4-sse`;
+            console.log(`   Calling analyzer: ${analyzerUrl}`);
 
-        const analysisResponse = await fetch(analyzerUrl, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            projectId: newProject.id,
-            symbol: newProject.symbol
-          })
-        });
+            const analysisResponse = await fetch(analyzerUrl, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                projectId: newProject.id,
+                symbol: newProject.symbol
+              })
+            });
 
-        const responseText = await analysisResponse.text();
-        console.log(`   Response status: ${analysisResponse.status}`);
-        console.log(`   Response body: ${responseText.substring(0, 500)}`);
+            if (analysisResponse.ok) {
+              console.log(`✅ Whitepaper analyzer triggered successfully for ${newProject.symbol}`);
+              return { success: true, type: 'whitepaper-analyzer' };
+            } else {
+              const errorText = await analysisResponse.text();
+              console.error(`❌ Failed to trigger whitepaper analyzer: ${analysisResponse.status}`);
+              console.error(`   Error details: ${errorText.substring(0, 500)}`);
+              return { success: false, type: 'whitepaper-analyzer', error: errorText };
+            }
+          } catch (error) {
+            console.error('❌ Error triggering whitepaper analyzer:', error);
+            return { success: false, type: 'whitepaper-analyzer', error: error.message };
+          }
+        })()
+      );
 
-        if (analysisResponse.ok) {
-          console.log(`✅ Whitepaper analyzer triggered successfully for ${newProject.symbol}`);
-        } else {
-          console.error(`❌ Failed to trigger whitepaper analyzer: ${analysisResponse.status}`);
-          console.error(`   Error details: ${responseText}`);
-        }
-      } catch (error) {
-        console.error('❌ Error triggering whitepaper analyzer:', error);
-        console.error(`   Error details: ${error.message}`);
-      }
+    } else if (projectData.whitepaper_url && projectData.whitepaper_url !== 'MANUALLY_PROVIDED') {
+      // PATH B: URL provided - trigger fetcher which will then trigger analyzer
+      console.log(`📄 Preparing whitepaper fetcher trigger (URL provided) for ${newProject.symbol}`);
+      console.log(`   URL: ${projectData.whitepaper_url}`);
+
+      parallelTriggers.push(
+        (async () => {
+          try {
+            const fetcherUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-fetcher`;
+            console.log(`   Calling fetcher: ${fetcherUrl}`);
+
+            const fetchResponse = await fetch(fetcherUrl, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                projectId: newProject.id,
+                symbol: newProject.symbol,
+                whitepaperUrl: projectData.whitepaper_url
+              })
+            });
+
+            if (fetchResponse.ok) {
+              const result = await fetchResponse.json();
+              console.log(`✅ Whitepaper fetcher triggered successfully for ${newProject.symbol}`);
+              console.log(`   Fetched ${result.contentLength || 0} chars, Analysis triggered: ${result.analysisTriggered}`);
+              return { success: true, type: 'whitepaper-fetcher', contentLength: result.contentLength };
+            } else {
+              const errorText = await fetchResponse.text();
+              console.error(`❌ Failed to trigger whitepaper fetcher: ${fetchResponse.status}`);
+              console.error(`   Error details: ${errorText.substring(0, 500)}`);
+              return { success: false, type: 'whitepaper-fetcher', error: errorText };
+            }
+          } catch (error) {
+            console.error('❌ Error triggering whitepaper fetcher:', error);
+            return { success: false, type: 'whitepaper-fetcher', error: error.message };
+          }
+        })()
+      );
+
     } else {
-      console.log(`⏭️ Skipping whitepaper analyzer - no manual content provided`);
-      console.log(`   Has content: ${!!body.whitepaper_content}, Content length: ${body.whitepaper_content?.length || 0}`);
+      console.log(`⏭️ No whitepaper processing - no content or URL provided`);
+    }
+
+    // Execute all triggers in parallel and wait for results
+    if (parallelTriggers.length > 0) {
+      console.log(`🚀 Executing ${parallelTriggers.length} analysis triggers in parallel...`);
+      const startTime = Date.now();
+
+      const results = await Promise.allSettled(parallelTriggers);
+
+      const elapsed = Date.now() - startTime;
+      console.log(`⏱️ All triggers completed in ${elapsed}ms`);
+
+      // Log results
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled' && result.value) {
+          const val = result.value as any;
+          if (val.success !== false) {
+            console.log(`   ✅ Trigger ${index + 1}: SUCCESS (${val.type || 'unknown'})`);
+          } else {
+            console.log(`   ❌ Trigger ${index + 1}: FAILED (${val.type || 'unknown'}): ${val.error}`);
+          }
+        } else if (result.status === 'rejected') {
+          console.log(`   ❌ Trigger ${index + 1}: REJECTED - ${result.reason}`);
+        }
+      });
     }
 
     return new Response(

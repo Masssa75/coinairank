@@ -112,84 +112,200 @@ async function processIngestion(
     symbol: upsertData.symbol
   });
 
-  // Trigger website analyzer
-  await log('website_analyzer_trigger', {
-    message: 'Triggering website analyzer...'
+  // PARALLEL TRIGGERS: Execute all analysis triggers simultaneously
+  await log('parallel_triggers_start', {
+    message: 'Starting parallel analysis triggers...'
   });
 
-  try {
-    const websiteAnalyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/website-analyzer`;
-    const websiteResponse = await fetch(websiteAnalyzerUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        projectId: projectId,
-        websiteUrl: body.website_url,
-        symbol: upsertData.symbol,
-        source: body.source
-      })
+  const parallelTriggers = [];
+
+  // 1. Website Analyzer Trigger
+  if (body.website_url && body.website_url !== 'pending') {
+    await log('website_analyzer_prepare', {
+      message: 'Preparing website analyzer trigger...',
+      url: body.website_url
     });
 
-    if (websiteResponse.ok) {
-      await log('website_analyzer_triggered', {
-        message: 'Website analyzer triggered successfully',
-        status: websiteResponse.status
-      });
-    } else {
-      await log('website_analyzer_error', {
-        message: 'Website analyzer returned error',
-        status: websiteResponse.status
-      });
-    }
-  } catch (error) {
-    await log('website_analyzer_error', {
-      message: 'Failed to trigger website analyzer',
-      error: error.message
-    });
+    parallelTriggers.push(
+      (async () => {
+        try {
+          const websiteAnalyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/website-analyzer`;
+          const websiteResponse = await fetch(websiteAnalyzerUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              projectId: projectId,
+              websiteUrl: body.website_url,
+              symbol: upsertData.symbol,
+              source: body.source
+            })
+          });
+
+          if (websiteResponse.ok) {
+            await log('website_analyzer_success', {
+              message: 'Website analyzer triggered successfully',
+              status: websiteResponse.status
+            });
+            return { success: true, type: 'website-analyzer' };
+          } else {
+            await log('website_analyzer_error', {
+              message: 'Website analyzer returned error',
+              status: websiteResponse.status
+            });
+            return { success: false, type: 'website-analyzer', status: websiteResponse.status };
+          }
+        } catch (error) {
+          await log('website_analyzer_error', {
+            message: 'Failed to trigger website analyzer',
+            error: error.message
+          });
+          return { success: false, type: 'website-analyzer', error: error.message };
+        }
+      })()
+    );
   }
 
-  // If whitepaper content was provided, trigger analyzer directly
+  // 2. Whitepaper Processing - Two paths
   if (body.whitepaper_content && body.whitepaper_content.trim()) {
-    await log('whitepaper_analyzer_trigger', {
-      message: 'Triggering whitepaper analyzer for manually provided content...',
+    // PATH A: Content provided - trigger analyzer directly
+    await log('whitepaper_analyzer_prepare', {
+      message: 'Preparing whitepaper analyzer trigger (content provided)...',
       contentLength: projectData.whitepaper_content.length
     });
 
-    try {
-      const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-v4-sse`;
-      const analysisResponse = await fetch(analyzerUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          projectId: projectId,
-          symbol: upsertData.symbol
-        })
-      });
+    parallelTriggers.push(
+      (async () => {
+        try {
+          const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-v4-sse`;
+          const analysisResponse = await fetch(analyzerUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              projectId: projectId,
+              symbol: upsertData.symbol
+            })
+          });
 
-      if (analysisResponse.ok) {
-        await log('whitepaper_analyzer_triggered', {
-          message: 'Whitepaper analyzer triggered successfully',
-          status: analysisResponse.status
+          if (analysisResponse.ok) {
+            await log('whitepaper_analyzer_success', {
+              message: 'Whitepaper analyzer triggered successfully',
+              status: analysisResponse.status
+            });
+            return { success: true, type: 'whitepaper-analyzer' };
+          } else {
+            const errorText = await analysisResponse.text();
+            await log('whitepaper_analyzer_error', {
+              message: 'Whitepaper analyzer returned error',
+              status: analysisResponse.status,
+              error: errorText.substring(0, 500)
+            });
+            return { success: false, type: 'whitepaper-analyzer', error: errorText };
+          }
+        } catch (error) {
+          await log('whitepaper_analyzer_error', {
+            message: 'Failed to trigger whitepaper analyzer',
+            error: error.message
+          });
+          return { success: false, type: 'whitepaper-analyzer', error: error.message };
+        }
+      })()
+    );
+
+  } else if (body.whitepaper_url && body.whitepaper_url !== 'MANUALLY_PROVIDED') {
+    // PATH B: URL provided - trigger fetcher which will then trigger analyzer
+    await log('whitepaper_fetcher_prepare', {
+      message: 'Preparing whitepaper fetcher trigger (URL provided)...',
+      url: body.whitepaper_url
+    });
+
+    parallelTriggers.push(
+      (async () => {
+        try {
+          const fetcherUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-fetcher`;
+          const fetchResponse = await fetch(fetcherUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              projectId: projectId,
+              symbol: upsertData.symbol,
+              whitepaperUrl: body.whitepaper_url
+            })
+          });
+
+          if (fetchResponse.ok) {
+            const result = await fetchResponse.json();
+            await log('whitepaper_fetcher_success', {
+              message: 'Whitepaper fetcher triggered successfully',
+              contentLength: result.contentLength,
+              analysisTriggered: result.analysisTriggered
+            });
+            return { success: true, type: 'whitepaper-fetcher', contentLength: result.contentLength };
+          } else {
+            const errorText = await fetchResponse.text();
+            await log('whitepaper_fetcher_error', {
+              message: 'Whitepaper fetcher returned error',
+              status: fetchResponse.status,
+              error: errorText.substring(0, 500)
+            });
+            return { success: false, type: 'whitepaper-fetcher', error: errorText };
+          }
+        } catch (error) {
+          await log('whitepaper_fetcher_error', {
+            message: 'Failed to trigger whitepaper fetcher',
+            error: error.message
+          });
+          return { success: false, type: 'whitepaper-fetcher', error: error.message };
+        }
+      })()
+    );
+  } else {
+    await log('whitepaper_skip', {
+      message: 'No whitepaper processing - no content or URL provided'
+    });
+  }
+
+  // Execute all triggers in parallel
+  if (parallelTriggers.length > 0) {
+    await log('parallel_execution', {
+      message: `Executing ${parallelTriggers.length} triggers in parallel...`
+    });
+
+    const startTime = Date.now();
+    const results = await Promise.allSettled(parallelTriggers);
+    const elapsed = Date.now() - startTime;
+
+    await log('parallel_complete', {
+      message: `All triggers completed in ${elapsed}ms`,
+      count: parallelTriggers.length,
+      duration: elapsed
+    });
+
+    // Log individual results
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
+      if (result.status === 'fulfilled' && result.value) {
+        const val = result.value as any;
+        await log('trigger_result', {
+          index: i + 1,
+          type: val.type,
+          success: val.success !== false,
+          error: val.error || null
         });
-      } else {
-        const errorText = await analysisResponse.text();
-        await log('whitepaper_analyzer_error', {
-          message: 'Whitepaper analyzer returned error',
-          status: analysisResponse.status,
-          error: errorText
+      } else if (result.status === 'rejected') {
+        await log('trigger_rejected', {
+          index: i + 1,
+          reason: result.reason
         });
       }
-    } catch (error) {
-      await log('whitepaper_analyzer_error', {
-        message: 'Failed to trigger whitepaper analyzer',
-        error: error.message
-      });
     }
   }
 
