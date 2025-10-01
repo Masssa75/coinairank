@@ -564,21 +564,21 @@ export function SignalBasedTooltip({
               </div>
             )}
             
-            {websiteAnalysis && extractionStatus !== 'completed' && (
+            {isAdmin && websiteAnalysis && extractionStatus !== 'completed' && (
               <div className="text-[#ef4444] text-sm mb-3 p-2 bg-[#ef4444]/10 rounded">
                 <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 inline mr-1" />
                 Phase 1 extraction missing
               </div>
             )}
-            
-            {extractionStatus === 'completed' && !benchmarkComparison && !websiteAnalysis?.signal_evaluations && (
+
+            {isAdmin && extractionStatus === 'completed' && !benchmarkComparison && !websiteAnalysis?.signal_evaluations && (
               <div className="text-[#ef4444] text-sm mb-3 p-2 bg-[#ef4444]/10 rounded">
                 <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 inline mr-1" />
                 Phase 2 scoring not complete
               </div>
             )}
-            
-            {benchmarkComparison && !benchmarkComparison.signal_evaluations && !websiteAnalysis?.signal_evaluations && (
+
+            {isAdmin && benchmarkComparison && !benchmarkComparison.signal_evaluations && !websiteAnalysis?.signal_evaluations && (
               <div className="text-[#ef4444] text-sm mb-3 p-2 bg-[#ef4444]/10 rounded">
                 <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 inline mr-1" />
                 Signal evaluations not available
