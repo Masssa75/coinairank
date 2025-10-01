@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { Search, Zap, Filter, Menu } from 'lucide-react';
 import ProgressRing from '@/components/rank/ProgressRing';
@@ -29,6 +30,7 @@ type SortColumn = 'name' | 'project_age_years' | 'current_market_cap' | 'website
 type SortDirection = 'asc' | 'desc';
 
 export default function RankPage() {
+  const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortColumn, setSortColumn] = useState<SortColumn>('current_market_cap');
@@ -204,7 +206,8 @@ export default function RankPage() {
           {sortedProjects.map((project) => (
             <div
               key={project.symbol}
-              className="grid grid-cols-[2fr_0.8fr_1fr_0.7fr_0.7fr] gap-2 px-5 py-5 border-b border-gray-100 items-center"
+              className="grid grid-cols-[2fr_0.8fr_1fr_0.7fr_0.7fr] gap-2 px-5 py-5 border-b border-gray-100 items-center hover:bg-gray-50 cursor-pointer transition-colors"
+              onClick={() => router.push(`/rank/${project.symbol}`)}
             >
               <div>
                 <div className="font-bold text-base">{project.symbol}</div>
