@@ -146,31 +146,74 @@ ${content}`;
   });
 
   const aiStartTime = Date.now();
-  const aiResponse = await fetch('https://api.moonshot.ai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: 'kimi-k2-0905-preview',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      temperature: 0.3,
-      max_tokens: 20000
-    }),
-    signal: AbortSignal.timeout(300000) // 5 minute timeout
-  });
-  const aiEndTime = Date.now();
+  let aiResponse;
+  let aiData;
+  let aiContent;
 
-  if (!aiResponse.ok) {
-    throw new Error(`AI API error: ${aiResponse.status}`);
+  try {
+    await sendEvent('story_ai_calling', {
+      message: 'Calling AI API...',
+      model: 'kimi-k2-0905-preview',
+      contentLength: content.length
+    });
+
+    aiResponse = await fetch('https://api.moonshot.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'kimi-k2-0905-preview',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.3,
+        max_tokens: 20000
+      }),
+      signal: AbortSignal.timeout(300000) // 5 minute timeout
+    });
+
+    const aiEndTime = Date.now();
+
+    if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      await sendEvent('story_ai_error', {
+        message: 'AI API returned an error',
+        status: aiResponse.status,
+        error: errorText.substring(0, 500)
+      });
+      throw new Error(`AI API error: ${aiResponse.status} - ${errorText.substring(0, 200)}`);
+    }
+
+    aiData = await aiResponse.json();
+
+    if (!aiData.choices || !aiData.choices[0] || !aiData.choices[0].message) {
+      await sendEvent('story_ai_error', {
+        message: 'Invalid AI response format',
+        responseKeys: Object.keys(aiData)
+      });
+      throw new Error('Invalid AI response format');
+    }
+
+    aiContent = aiData.choices[0].message.content;
+
+    await sendEvent('story_ai_response', {
+      message: 'AI response received',
+      responseLength: aiContent.length,
+      durationMs: aiEndTime - aiStartTime
+    });
+
+  } catch (error) {
+    await sendEvent('story_ai_failed', {
+      message: 'Failed to get AI analysis',
+      error: error.message
+    });
+    throw error;
   }
 
-  const aiData = await aiResponse.json();
-  const aiContent = aiData.choices[0].message.content;
+  const aiEndTime = Date.now();
 
   await sendEvent('story_ai_complete', {
     message: `Story analysis complete in ${Math.round((aiEndTime - aiStartTime) / 1000)}s`,
@@ -216,8 +259,19 @@ ${content}`;
 
   if (updateError) {
     console.error(`Failed to update project: ${updateError.message}`);
+    await sendEvent('story_error', {
+      message: 'Failed to save story analysis',
+      error: updateError.message,
+      projectId: currentProjectId
+    });
     throw updateError;
   }
+
+  await sendEvent('story_saved', {
+    message: 'Story analysis saved successfully',
+    projectId: currentProjectId,
+    sectionsCount: Object.values(storyAnalysis).filter(v => v && v.length > 0).length
+  });
 
   await sendEvent('story_complete', {
     message: 'Story analysis complete!'

@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, accept',
 };
 
 // Add age-related interfaces
@@ -598,6 +598,16 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  // Check if client wants SSE
+  const acceptHeader = req.headers.get('accept');
+  const wantsSSE = acceptHeader?.includes('text/event-stream');
+
+  // Helper function to send SSE events
+  const sendEvent = async (writer: WritableStreamDefaultWriter, event: string, data: any) => {
+    const message = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+    await writer.write(new TextEncoder().encode(message));
+  };
+
   try {
     // Initialize Supabase client with service role for write access
     const supabase = createClient(
@@ -948,8 +958,13 @@ serve(async (req) => {
     // If whitepaper content was manually provided, trigger analyzer directly (skip fetcher)
     if (body.whitepaper_content && body.whitepaper_content.trim()) {
       console.log(`🚀 Triggering whitepaper analyzer directly for manually provided content`);
+      console.log(`   Project ID: ${newProject.id}, Symbol: ${newProject.symbol}`);
+      console.log(`   Content length: ${body.whitepaper_content.length} characters`);
+
       try {
         const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-v4-sse`;
+        console.log(`   Calling: ${analyzerUrl}`);
+
         const analysisResponse = await fetch(analyzerUrl, {
           method: 'POST',
           headers: {
@@ -962,14 +977,23 @@ serve(async (req) => {
           })
         });
 
+        const responseText = await analysisResponse.text();
+        console.log(`   Response status: ${analysisResponse.status}`);
+        console.log(`   Response body: ${responseText.substring(0, 500)}`);
+
         if (analysisResponse.ok) {
-          console.log(`✅ Whitepaper analyzer triggered for ${newProject.symbol}`);
+          console.log(`✅ Whitepaper analyzer triggered successfully for ${newProject.symbol}`);
         } else {
           console.error(`❌ Failed to trigger whitepaper analyzer: ${analysisResponse.status}`);
+          console.error(`   Error details: ${responseText}`);
         }
       } catch (error) {
-        console.error('Error triggering whitepaper analyzer:', error);
+        console.error('❌ Error triggering whitepaper analyzer:', error);
+        console.error(`   Error details: ${error.message}`);
       }
+    } else {
+      console.log(`⏭️ Skipping whitepaper analyzer - no manual content provided`);
+      console.log(`   Has content: ${!!body.whitepaper_content}, Content length: ${body.whitepaper_content?.length || 0}`);
     }
 
     return new Response(

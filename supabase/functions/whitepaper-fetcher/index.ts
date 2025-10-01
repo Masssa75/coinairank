@@ -228,6 +228,75 @@ serve(async (req) => {
     let actualSymbol = symbol;
     let actualProjectId = projectId;
 
+    // SAFEGUARD: Check if content already exists before fetching
+    if (projectId) {
+      console.log(`Checking for existing whitepaper content for project ID: ${projectId}`);
+      const { data: existingProject, error: checkError } = await supabase
+        .from('crypto_projects_rated')
+        .select('symbol, whitepaper_url, website_url, whitepaper_content, whitepaper_extraction_status')
+        .eq('id', projectId)
+        .single();
+
+      if (checkError) {
+        console.error('Error checking existing project:', checkError);
+      } else if (existingProject) {
+        // Check if we already have manually provided content
+        if (existingProject.whitepaper_content &&
+            existingProject.whitepaper_extraction_status === 'extracted' &&
+            existingProject.whitepaper_content.length > 5000) {
+          console.log(`⚠️ SAFEGUARD: Project already has extracted whitepaper content (${existingProject.whitepaper_content.length} chars)`);
+          console.log(`⚠️ Skipping fetch to preserve manually provided content`);
+
+          // Skip fetching but still trigger analysis if needed
+          if (!skipAnalysis) {
+            try {
+              console.log(`Triggering whitepaper-analyzer-v4-sse for existing content`);
+              const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-v4-sse`;
+              const analysisResponse = await fetch(analyzerUrl, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  projectId: projectId,
+                  symbol: existingProject.symbol
+                })
+              });
+
+              if (analysisResponse.ok) {
+                console.log(`✅ Analysis triggered for existing content`);
+              }
+            } catch (error) {
+              console.error('Error triggering analysis:', error);
+            }
+          }
+
+          return new Response(
+            JSON.stringify({
+              success: true,
+              symbol: existingProject.symbol,
+              contentLength: existingProject.whitepaper_content.length,
+              method: 'existing',
+              isComplete: true,
+              reason: 'Content already exists (manually provided)',
+              stored: true,
+              analysisTriggered: !skipAnalysis,
+              skippedFetch: true,
+              message: 'Preserved existing manually provided content'
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // If we need to fetch, get the URL
+        if (!actualWhitepaperUrl) {
+          actualWhitepaperUrl = existingProject.whitepaper_url;
+        }
+        actualSymbol = existingProject.symbol;
+      }
+    }
+
     if (!actualWhitepaperUrl && projectId) {
       console.log(`Fetching whitepaper URL for project ID: ${projectId}`);
       const { data, error } = await supabase

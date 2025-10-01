@@ -68,81 +68,86 @@ serve(async (req) => {
 
     console.log(`📚 Loaded ${benchmarks.length} benchmark projects for comparison`);
 
-    // Step 3: Prepare the comparison prompt
-    const COMPARISON_PROMPT = `You are an expert crypto whitepaper analyst performing a Phase 2 quality comparison.
+    // Step 3: Group benchmarks by tier for pattern matching
+    const tiers = {
+      ALPHA: benchmarks.filter(b => b.tier_name === 'ALPHA'),
+      SOLID: benchmarks.filter(b => b.tier_name === 'SOLID'),
+      BASIC: benchmarks.filter(b => b.tier_name === 'BASIC'),
+      TRASH: benchmarks.filter(b => b.tier_name === 'TRASH')
+    };
 
-## YOUR TASK
-Compare this new project's whitepaper story analysis against our benchmark projects using BOTTOM-UP tier assignment.
+    // Step 4: Prepare the simplified innovation-based comparison prompt
+    const COMPARISON_PROMPT = `Classify this whitepaper into one of four tiers based on innovation level:
 
-## NEW PROJECT TO EVALUATE
-Symbol: ${symbol}
-Analysis: ${JSON.stringify(project.whitepaper_story_analysis, null, 2)}
+TRASH - Copy-paste, no real innovation
+BASIC - Some innovation but unclear application (college student idea level)
+SOLID - Real innovation from competent team
+ALPHA - Breakthrough innovation from world-class team
 
-## BENCHMARK PROJECTS (Ranked 1-11)
-${benchmarks.map(b => `
-### Rank #${b.rank}: ${b.symbol} (${b.tier_name}, Score: ${b.quality_score})
-Full Analysis: ${JSON.stringify(b.full_story_analysis, null, 2)}
-Key Strengths: ${b.key_strengths.join(', ')}
-Key Weaknesses: ${b.key_weaknesses.join(', ')}
-Tier Reasoning: ${b.tier_reasoning}
-`).join('\n')}
+Project: ${symbol}
+Whitepaper Analysis: ${JSON.stringify(project.whitepaper_story_analysis, null, 2)}
 
-## EVALUATION METHODOLOGY
+## IMPORTANT NUDGES FOR CLASSIFICATION
 
-1. **BOTTOM-UP COMPARISON**: Start by assuming the project is TRASH (Tier 4)
+### Automatic ALPHA Indicators (Any ONE of these = ALPHA):
+- Team member(s) with world-class academic credentials
+- First working solution to known theoretical problem
+- Invented protocol that major blockchains adopted or cite
+- Solving mathematically "impossible" problems with working implementation
+- Created paradigm-defining projects or standards
 
-2. **PROGRESSIVE TIER TESTING**:
-   - Is it STRONGER than SKYNET/TAO (ranks 10-11)? → Consider BASIC (Tier 3)
-   - Is it STRONGER than AIX/AERO/KAS (ranks 7-9)? → Consider SOLID (Tier 2)
-   - Is it STRONGER than ALGO/APT/CWEB (ranks 4-6)? → Consider ALPHA (Tier 1)
-   - Is it STRONGER than KTA/WLD/ICP (ranks 1-3)? → Top of ALPHA
+### Automatic SOLID Indicators:
+- PhD team with published papers but not groundbreaking
+- Ex-FAANG engineers without revolutionary innovation
+- Working implementation of known concepts
+- Professional team but incremental improvement
+- First professional implementation of proven model to ride a new wave or trend
 
-3. **COMPARISON DIMENSIONS**:
-   - Vision ambition and clarity
-   - Innovation depth and novelty
-   - Market opportunity size and accessibility
-   - Team credibility and track record
-   - Technical maturity and feasibility
-   - Success probability
-   - Critical flaws severity
-   - Risk profile
+### Automatic BASIC Indicators:
+- Anonymous team with vague claims
+- Buzzword-heavy without technical depth
+- "Revolutionary" claims without proof/implementation
+- College-level implementation of existing ideas
 
-4. **KEY QUESTION FOR EACH COMPARISON**:
-   "Would a rational investor prefer this project over [benchmark] based purely on the whitepaper analysis?"
+### Automatic TRASH Indicators:
+- Copy-paste whitepaper sections
+- Marketing speak without technical content
+- No actual innovation, just repackaging
+- Obvious cash grab on current trends
+
+Which tier and why? Be specific about what in the whitepaper indicates this tier.
 
 ## SCORING GUIDE
-- ALPHA (85-100): Ranks 1-3 level - Revolutionary vision with clear path
-- SOLID (60-84): Ranks 4-6 level - Solid innovation with meaningful differentiation
-- BASIC (35-59): Ranks 7-9 level - Decent project with limited upside
-- TRASH (0-34): Ranks 10-11 level - Weak fundamentals or critical flaws
+- ALPHA (85-100): Breakthrough innovation, world-class team or innovation
+- SOLID (60-84): Real innovation from competent team
+- BASIC (35-59): Some innovation but unclear application
+- TRASH (0-34): Copy-paste, no real innovation
 
-## REQUIRED OUTPUT FORMAT
+## OUTPUT FORMAT
+Provide:
+1. The tier classification (TRASH/BASIC/SOLID/ALPHA)
+2. A quality score (0-100)
+3. Specific reasoning citing what in the whitepaper indicates this tier
+4. Which specific indicators triggered this classification
+
+Return as JSON:
 {
-  "final_tier": 1-4,
   "tier_name": "ALPHA/SOLID/BASIC/TRASH",
   "quality_score": 0-100,
-  "predicted_rank": 1-11,
-  "most_similar_to": "Which benchmark project this most resembles",
-  "stronger_than": ["List of benchmark symbols this project beats"],
-  "weaker_than": ["List of benchmark symbols this project loses to"],
-  "comparison_rationale": {
-    "vs_tier_4": "Why stronger/weaker than SKYNET/TAO",
-    "vs_tier_3": "Why stronger/weaker than AIX/AERO/KAS",
-    "vs_tier_2": "Why stronger/weaker than ALGO/APT/CWEB",
-    "vs_tier_1": "Why stronger/weaker than KTA/WLD/ICP"
-  },
-  "key_differentiators": ["What makes this project unique vs benchmarks"],
-  "placement_confidence": "HIGH/MEDIUM/LOW - How confident in this tier placement",
-  "summary": "2-3 sentences explaining the tier assignment"
+  "reasoning": "Specific evidence from whitepaper",
+  "triggered_indicators": "Which specific nudge indicators applied",
+  "innovation_assessment": "What innovation exists and its quality",
+  "team_assessment": "Evidence of team competence or lack thereof",
+  "summary": "One sentence tier justification"
 }`;
 
-    // Step 4: Call AI for comparison
+    // Step 5: Call AI for comparison
     const apiKey = Deno.env.get('KIMI_K2_API_KEY');
     if (!apiKey) {
       throw new Error('KIMI_K2_API_KEY not configured');
     }
 
-    console.log('🤖 Running Phase 2 comparison with Kimi K2...');
+    console.log('🤖 Running Phase 2 tier-based comparison...');
 
     const aiResponse = await fetch('https://api.moonshot.ai/v1/chat/completions', {
       method: 'POST',
@@ -184,20 +189,14 @@ Tier Reasoning: ${b.tier_reasoning}
       .update({
         whitepaper_tier: comparisonResult.tier_name,
         whitepaper_quality_score: comparisonResult.quality_score,
-        whitepaper_predicted_rank: comparisonResult.predicted_rank,
         whitepaper_phase2_comparison: {
-          final_tier: comparisonResult.final_tier,
           tier_name: comparisonResult.tier_name,
           quality_score: comparisonResult.quality_score,
-          predicted_rank: comparisonResult.predicted_rank,
-          most_similar_to: comparisonResult.most_similar_to,
-          stronger_than: comparisonResult.stronger_than,
-          weaker_than: comparisonResult.weaker_than,
-          comparison_rationale: comparisonResult.comparison_rationale,
-          key_differentiators: comparisonResult.key_differentiators,
-          placement_confidence: comparisonResult.placement_confidence,
+          reasoning: comparisonResult.reasoning,
+          triggered_indicators: comparisonResult.triggered_indicators,
+          innovation_assessment: comparisonResult.innovation_assessment,
+          team_assessment: comparisonResult.team_assessment,
           summary: comparisonResult.summary,
-          compared_against_count: benchmarks.length,
           completed_at: new Date().toISOString()
         },
         whitepaper_phase2_completed_at: new Date().toISOString()
