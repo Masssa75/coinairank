@@ -84,7 +84,7 @@ export function WhitepaperTooltip({
     const tooltipHeight = 400;
     // Use responsive width: smaller on mobile, larger on desktop
     const isMobile = window.innerWidth < 768;
-    const tooltipWidth = isMobile ? Math.min(window.innerWidth - 20, 500) : 650;
+    const tooltipWidth = isMobile ? Math.min(window.innerWidth - 20, 500) : 500;
 
     // Calculate position
     let x = rect.left + rect.width / 2;
@@ -140,7 +140,7 @@ export function WhitepaperTooltip({
     if (!hasAnalysis) {
       return (
         <div className="p-4 w-full">
-          <div className="flex items-center gap-2 text-[#999] text-sm">
+          <div className="flex items-center gap-2 text-gray-400 text-sm">
             <Info className="w-4 h-4" />
             <span>No whitepaper analysis available</span>
           </div>
@@ -156,7 +156,7 @@ export function WhitepaperTooltip({
               setIsPersistent(false);
               setShowTooltip(false);
             }}
-            className="absolute top-2 right-2 text-[#666] hover:text-white transition-colors z-10"
+            className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 transition-colors z-10"
           >
             <X className="w-4 h-4" />
           </button>
@@ -165,8 +165,8 @@ export function WhitepaperTooltip({
         {/* Simple Description */}
         {whitepaperStoryAnalysis?.simple_description && (
           <div className="mb-4">
-            <h4 className="text-[#00ff88] text-sm font-semibold mb-2">What it does:</h4>
-            <div className="text-sm text-[#ddd] leading-relaxed">
+            <h4 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">What it does:</h4>
+            <div className="text-sm text-gray-600 leading-relaxed">
               {whitepaperStoryAnalysis.simple_description}
             </div>
           </div>
@@ -175,8 +175,8 @@ export function WhitepaperTooltip({
         {/* Phase 2 Summary */}
         {whitepaperPhase2Comparison?.summary && (
           <div>
-            <h4 className="text-[#00ff88] text-sm font-semibold mb-2">Quality Assessment:</h4>
-            <div className="text-sm text-[#ccc] leading-relaxed">
+            <h4 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-2">Quality Assessment:</h4>
+            <div className="text-sm text-gray-600 leading-relaxed">
               {whitepaperPhase2Comparison.summary}
             </div>
           </div>
@@ -184,12 +184,12 @@ export function WhitepaperTooltip({
 
         {/* Whitepaper URL Link */}
         {whitepaperUrl && (
-          <div className="mt-4 pt-4 border-t border-[#2a2d31]">
+          <div className="mt-4 pt-4 border-t border-gray-200">
             <a
               href={whitepaperUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-[#00ff88] hover:underline flex items-center gap-1"
+              className="text-xs text-emerald-500 hover:underline flex items-center gap-1"
             >
               <FileText className="w-3 h-3" />
               View Whitepaper
@@ -215,7 +215,7 @@ export function WhitepaperTooltip({
       {showTooltip && tooltipPosition && mounted && createPortal(
         <div
           ref={tooltipRef}
-          className="fixed z-[9999] bg-[#111214] border border-[#2a2d31] rounded-lg shadow-2xl w-[650px] max-w-[95vw] md:max-w-[650px]"
+          className="fixed z-[9999] bg-white border border-gray-200 rounded-lg shadow-2xl w-[500px] max-w-[95vw] md:max-w-[500px]"
           style={{
             left: '50%',
             transform: `translateX(calc(${tooltipPosition.x - window.innerWidth / 2}px - 50%))`,

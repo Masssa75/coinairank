@@ -531,7 +531,7 @@ export function SignalBasedTooltip({
               : 'translate(-50%, 8px)',
           }}
         >
-          <div className="bg-[#1a1c1f] rounded-lg shadow-2xl border border-[#333] p-3 md:p-4
+          <div className="bg-white rounded-lg shadow-2xl border border-gray-200 p-3 md:p-4
             w-[calc(100vw-20px)] max-w-[500px] min-w-[300px] md:min-w-[400px]
             max-h-[60vh] md:max-h-[80vh] overflow-y-auto scrollbar-hide">
             
@@ -587,8 +587,8 @@ export function SignalBasedTooltip({
 
             {/* Project Description - if available */}
             {(tooltip?.one_liner || projectDescription) && (
-              <div className="mb-3 pb-3 border-b border-[#2a2d31]">
-                <div className="text-sm text-[#ddd] leading-relaxed">
+              <div className="mb-3 pb-3 border-b border-gray-200">
+                <div className="text-sm text-gray-700 leading-relaxed">
                   {tooltip?.one_liner || projectDescription}
                 </div>
               </div>
@@ -600,7 +600,7 @@ export function SignalBasedTooltip({
               (websiteAnalysis?.signal_evaluations && websiteAnalysis.signal_evaluations.length > 0)) ? (
               <div className="mb-3">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[#666] text-xs font-bold">KEY SIGNALS</span>
+                  <span className="text-gray-400 text-xs font-bold uppercase tracking-wider">KEY SIGNALS</span>
                 </div>
                 <ul className="space-y-1.5">
                   {(benchmarkComparison?.signal_evaluations || websiteAnalysis?.signal_evaluations || [])
@@ -610,12 +610,12 @@ export function SignalBasedTooltip({
                       const score = tierToScore(evalSignal.assigned_tier);
                       const isExpanded = selectedSignalIdx === idx;
                       return (
-                        <li key={idx} className="text-xs">
+                        <li key={idx} className="text-sm">
                           <div className="flex items-start">
-                            <span className="text-[#666] mr-2">•</span>
+                            <span className="text-gray-400 mr-2">•</span>
                             <div className="flex-1">
-                              <span className="text-[#ddd]">{evalSignal.signal}</span>
-                              <span 
+                              <span className="text-gray-600">{evalSignal.signal}</span>
+                              <span
                                 className={`ml-2 font-bold ${getScoreColor(score)} ${isAdmin ? 'cursor-pointer hover:underline' : ''}`}
                                 onClick={(e) => handleSignalClick(idx, e)}
                                 title={isAdmin ? 'Click to see reasoning' : ''}
@@ -626,8 +626,8 @@ export function SignalBasedTooltip({
                           </div>
                           {/* Show reasoning if admin and signal is selected */}
                           {isAdmin && isExpanded && evalSignal.reasoning && (
-                            <div className="mt-2 ml-4 p-2 bg-[#2a2d31] rounded text-[10px] text-[#999]">
-                              <div className="font-semibold text-[#aaa] mb-1">Tier {evalSignal.assigned_tier} Reasoning:</div>
+                            <div className="mt-2 ml-4 p-2 bg-gray-50 rounded text-xs text-gray-600">
+                              <div className="font-semibold text-gray-700 mb-1">Tier {evalSignal.assigned_tier} Reasoning:</div>
                               <div>{evalSignal.reasoning}</div>
                               {evalSignal.progression && (
                                 <div className="mt-2 text-[9px]">
@@ -649,9 +649,9 @@ export function SignalBasedTooltip({
                                         handleSignalFeedback(evalSignal.signal, 'too_high');
                                       }}
                                       className={`px-2 py-0.5 rounded text-[9px] transition-colors ${
-                                        localFeedback[evalSignal.signal]?.issue === 'too_high' 
-                                          ? 'bg-red-900/50 text-red-400 border border-red-700' 
-                                          : 'bg-[#1a1c1f] text-[#888] border border-[#333] hover:bg-[#222]'
+                                        localFeedback[evalSignal.signal]?.issue === 'too_high'
+                                          ? 'bg-red-100 text-red-600 border border-red-300'
+                                          : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
                                       }`}
                                     >
                                       Too High
@@ -662,9 +662,9 @@ export function SignalBasedTooltip({
                                         handleSignalFeedback(evalSignal.signal, 'too_low');
                                       }}
                                       className={`px-2 py-0.5 rounded text-[9px] transition-colors ${
-                                        localFeedback[evalSignal.signal]?.issue === 'too_low' 
-                                          ? 'bg-blue-900/50 text-blue-400 border border-blue-700' 
-                                          : 'bg-[#1a1c1f] text-[#888] border border-[#333] hover:bg-[#222]'
+                                        localFeedback[evalSignal.signal]?.issue === 'too_low'
+                                          ? 'bg-blue-100 text-blue-600 border border-blue-300'
+                                          : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
                                       }`}
                                     >
                                       Too Low
@@ -675,9 +675,9 @@ export function SignalBasedTooltip({
                                         handleSignalFeedback(evalSignal.signal, 'incorrect');
                                       }}
                                       className={`px-2 py-0.5 rounded text-[9px] transition-colors ${
-                                        localFeedback[evalSignal.signal]?.issue === 'incorrect' 
-                                          ? 'bg-yellow-900/50 text-yellow-400 border border-yellow-700' 
-                                          : 'bg-[#1a1c1f] text-[#888] border border-[#333] hover:bg-[#222]'
+                                        localFeedback[evalSignal.signal]?.issue === 'incorrect'
+                                          ? 'bg-yellow-100 text-yellow-600 border border-yellow-300' 
+                                          : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
                                       }`}
                                     >
                                       Wrong
@@ -688,7 +688,7 @@ export function SignalBasedTooltip({
                                           e.stopPropagation();
                                           handleSignalFeedback(evalSignal.signal, null);
                                         }}
-                                        className="px-2 py-0.5 rounded text-[9px] bg-[#1a1c1f] text-[#666] border border-[#333] hover:bg-[#222]"
+                                        className="px-2 py-0.5 rounded text-[9px] bg-white text-gray-600 border border-gray-300 hover:bg-gray-50"
                                       >
                                         Clear
                                       </button>
@@ -697,12 +697,12 @@ export function SignalBasedTooltip({
                                   
                                   {/* Show saved feedback OR edit mode, not both */}
                                   {localFeedback[evalSignal.signal] && !isEditMode[evalSignal.signal] ? (
-                                    <div className="mt-2 p-2 bg-[#1a1c1f]/50 border border-[#333] rounded">
-                                      <div className="text-[9px] text-[#999]">
-                                        Marked as: <span className="text-[#ff9500]">{localFeedback[evalSignal.signal].issue}</span>
+                                    <div className="mt-2 p-2 bg-gray-50 border border-gray-200 rounded">
+                                      <div className="text-[9px] text-gray-600">
+                                        Marked as: <span className="text-orange-500 font-medium">{localFeedback[evalSignal.signal].issue}</span>
                                       </div>
                                       {localFeedback[evalSignal.signal].note && (
-                                        <div className="mt-1 text-[9px] text-[#aaa]">Note: {localFeedback[evalSignal.signal].note}</div>
+                                        <div className="mt-1 text-[9px] text-gray-500">Note: {localFeedback[evalSignal.signal].note}</div>
                                       )}
                                       <div className="mt-2 flex gap-1">
                                         <button
@@ -711,7 +711,7 @@ export function SignalBasedTooltip({
                                             setIsEditMode({ ...isEditMode, [evalSignal.signal]: true });
                                             setEditingFeedback({ ...editingFeedback, [evalSignal.signal]: localFeedback[evalSignal.signal]?.note || '' });
                                           }}
-                                          className="px-2 py-0.5 bg-[#222] text-[#888] rounded text-[9px] hover:bg-[#333] transition-colors"
+                                          className="px-2 py-0.5 bg-white text-gray-600 rounded text-[9px] border border-gray-300 hover:bg-gray-50 transition-colors"
                                         >
                                           Edit
                                         </button>
@@ -720,7 +720,7 @@ export function SignalBasedTooltip({
                                             e.stopPropagation();
                                             handleSignalFeedback(evalSignal.signal, null);
                                           }}
-                                          className="px-2 py-0.5 bg-[#222] text-red-400 rounded text-[9px] hover:bg-[#333] transition-colors"
+                                          className="px-2 py-0.5 bg-white text-red-500 rounded text-[9px] border border-gray-300 hover:bg-red-50 transition-colors"
                                         >
                                           Delete
                                         </button>
@@ -750,7 +750,7 @@ export function SignalBasedTooltip({
                                           }
                                         }}
                                         onClick={(e) => e.stopPropagation()}
-                                        className="w-full px-2 py-1 bg-[#1a1c1f] border border-[#333] rounded text-[9px] text-[#ddd] placeholder-[#555]"
+                                        className="w-full px-2 py-1 bg-white border border-gray-300 rounded text-[9px] text-gray-700 placeholder-gray-400"
                                       />
                                       {isEditMode[evalSignal.signal] && (
                                         <button
@@ -759,7 +759,7 @@ export function SignalBasedTooltip({
                                             setIsEditMode({ ...isEditMode, [evalSignal.signal]: false });
                                             setEditingFeedback({ ...editingFeedback, [evalSignal.signal]: '' });
                                           }}
-                                          className="mt-1 px-2 py-0.5 bg-[#222] text-[#666] rounded text-[9px] hover:bg-[#333] transition-colors"
+                                          className="mt-1 px-2 py-0.5 bg-white text-gray-600 rounded text-[9px] border border-gray-300 hover:bg-gray-50 transition-colors"
                                         >
                                           Cancel Edit
                                         </button>
@@ -774,7 +774,7 @@ export function SignalBasedTooltip({
                                         e.stopPropagation();
                                         saveFeedback();
                                       }}
-                                      className="mt-2 px-2 py-1 bg-[#ff9500] text-black rounded text-[9px] font-medium hover:bg-[#ffb033] transition-colors"
+                                      className="mt-2 px-2 py-1 bg-emerald-500 text-white rounded text-[9px] font-medium hover:bg-emerald-600 transition-colors"
                                     >
                                       Save All Feedback
                                     </button>
@@ -782,7 +782,7 @@ export function SignalBasedTooltip({
                                   
                                   {/* Success message */}
                                   {saveSuccess && (
-                                    <div className="mt-2 px-2 py-1 bg-green-900/30 text-green-400 rounded text-[9px] font-medium">
+                                    <div className="mt-2 px-2 py-1 bg-green-100 text-green-600 rounded text-[9px] font-medium">
                                       <Check className="w-3 h-3 inline mr-1" />
                                       Feedback saved successfully
                                     </div>
