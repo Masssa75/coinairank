@@ -249,27 +249,23 @@ serve(async (req) => {
 
           // Skip fetching but still trigger analysis if needed
           if (!skipAnalysis) {
-            try {
-              console.log(`Triggering whitepaper-analyzer-v4-sse for existing content`);
-              const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-v4-sse`;
-              const analysisResponse = await fetch(analyzerUrl, {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  projectId: projectId,
-                  symbol: existingProject.symbol
-                })
-              });
-
-              if (analysisResponse.ok) {
-                console.log(`✅ Analysis triggered for existing content`);
-              }
-            } catch (error) {
-              console.error('Error triggering analysis:', error);
-            }
+            // Fire-and-forget trigger (don't await - SSE responses are for clients, not server-to-server)
+            console.log(`🚀 Triggering whitepaper-analyzer-v4-sse for existing content (background)`);
+            const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-v4-sse`;
+            fetch(analyzerUrl, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+                'Content-Type': 'application/json',
+                'Accept': 'text/event-stream',
+              },
+              body: JSON.stringify({
+                projectId: projectId,
+                symbol: existingProject.symbol
+              })
+            }).catch(error => {
+              console.error('Error triggering analysis (fire-and-forget):', error);
+            });
           }
 
           return new Response(
@@ -547,30 +543,24 @@ serve(async (req) => {
     // If content was successfully stored, trigger whitepaper-analyzer-v4-sse (updated from fundamental)
     let analysisTriggered = false;
     if (actualProjectId && fetchResult.content.length > 100 && !skipAnalysis) {
-      try {
-        console.log(`Triggering whitepaper-analyzer-v4-sse for ${symbol}`);
-        const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-v4-sse`;
-        const analysisResponse = await fetch(analyzerUrl, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            projectId: actualProjectId,
-            symbol: actualSymbol
-          })
-        });
-
-        if (analysisResponse.ok) {
-          console.log(`✅ Whitepaper analysis v4-sse triggered successfully for ${symbol}`);
-          analysisTriggered = true;
-        } else {
-          console.error(`❌ Failed to trigger whitepaper analysis: ${analysisResponse.status}`);
-        }
-      } catch (error) {
-        console.error('Error triggering whitepaper analysis:', error);
-      }
+      // Fire-and-forget trigger (don't await - SSE responses are for clients, not server-to-server)
+      console.log(`🚀 Triggering whitepaper-analyzer-v4-sse for ${symbol} (background)`);
+      const analyzerUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/whitepaper-analyzer-v4-sse`;
+      fetch(analyzerUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream',
+        },
+        body: JSON.stringify({
+          projectId: actualProjectId,
+          symbol: actualSymbol
+        })
+      }).catch(error => {
+        console.error('Error triggering whitepaper analysis (fire-and-forget):', error);
+      });
+      analysisTriggered = true; // Mark as triggered (fire-and-forget)
     }
 
     return new Response(

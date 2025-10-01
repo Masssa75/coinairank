@@ -86,24 +86,24 @@ WHITEPAPER ANALYSIS:
 ${JSON.stringify(project.whitepaper_story_analysis, null, 2)}
 
 EVALUATION PROCESS:
-1. Start by assuming all signals are Tier 4 (weakest)
-2. For each signal, progressively test if it's STRONGER than benchmarks:
+1. Start by assuming this project is Tier 4 (weakest)
+2. Progressively test if the project is STRONGER than benchmarks:
    - Stronger than ANY Tier 4 benchmark? → Consider for Tier 3
    - Stronger than ANY Tier 3 benchmark? → Consider for Tier 2
    - Stronger than ANY Tier 2 benchmark? → Consider for Tier 1
-3. Project tier = highest tier achieved by ANY signal
+3. Project tier = highest tier achieved
 
 Return JSON:
 {
   "final_tier": 1-4,
   "tier_name": "ALPHA/SOLID/BASIC/TRASH",
   "final_score": 0-100,
-  "strongest_signal": "exact signal that determined tier",
+  "strongest_signal": "exact aspect that determined tier",
   "signal_evaluations": [
     {
-      "signal": "signal text",
+      "signal": "specific aspect from whitepaper analysis",
       "assigned_tier": 1-4,
-      "reasoning": "why this tier"
+      "reasoning": "why this aspect beats/doesn't beat specific tier benchmarks"
     }
   ],
   "explanation": "2-3 sentences on tier logic"
