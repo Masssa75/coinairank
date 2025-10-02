@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-import { Search, Zap, Filter, Menu } from 'lucide-react';
+import { Search, Zap, Filter, Menu, Plus } from 'lucide-react';
 import ProgressRing from '@/components/rank/ProgressRing';
 import { SignalBasedTooltip } from '@/components/SignalBasedTooltip';
 import { WhitepaperTooltip } from '@/components/WhitepaperTooltip';
+import { RankAddTokenModal } from '@/components/RankAddTokenModal';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,6 +35,7 @@ export default function RankPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [hotPicksActive, setHotPicksActive] = useState(false);
+  const [showAddTokenModal, setShowAddTokenModal] = useState(false);
 
   useEffect(() => {
     fetchProjects();
@@ -175,6 +177,25 @@ export default function RankPage() {
             </button>
           </div>
         </div>
+
+        {/* Menu Dropdown */}
+        {showMenu && (
+          <>
+            <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} />
+            <div className="absolute top-16 right-5 z-40 bg-white border border-gray-200 rounded-lg shadow-lg w-48">
+              <button
+                onClick={() => {
+                  setShowMenu(false);
+                  setShowAddTokenModal(true);
+                }}
+                className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-2 text-gray-900"
+              >
+                <Plus className="w-4 h-4" />
+                Submit Project
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* List Header */}
@@ -235,6 +256,15 @@ export default function RankPage() {
           ))}
         </div>
       )}
+
+      {/* Add Token Modal */}
+      <RankAddTokenModal
+        isOpen={showAddTokenModal}
+        onClose={() => setShowAddTokenModal(false)}
+        onSuccess={() => {
+          fetchProjects();
+        }}
+      />
     </div>
   );
 }
