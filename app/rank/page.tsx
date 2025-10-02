@@ -113,10 +113,10 @@ export default function RankPage() {
     if (!searchQuery.trim()) return true;
 
     const query = searchQuery.toLowerCase();
-    return (
-      project.symbol.toLowerCase().includes(query) ||
-      project.name.toLowerCase().includes(query)
-    );
+    const symbol = project.symbol?.toLowerCase() || '';
+    const name = project.name?.toLowerCase() || '';
+
+    return symbol.includes(query) || name.includes(query);
   });
 
   const sortedProjects = [...filteredProjects].sort((a, b) => {
