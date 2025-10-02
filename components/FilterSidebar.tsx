@@ -5,7 +5,7 @@ import { ChevronRight, ChevronLeft, ChevronDown, Filter, Settings, Bell, User } 
 import { cleanupDeprecatedFilters } from '@/lib/cleanupLocalStorage';
 
 interface FilterState {
-  tokenType: 'all' | 'meme' | 'utility'
+  tokenType: 'all' | 'meme' | 'utility' | 'stablecoin'
   networks: string[]
   includeImposters?: boolean  // true = show imposters, false = hide imposters
   includeUnverified?: boolean  // true = show unverified, false = hide unverified
@@ -91,6 +91,10 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
   const [includeMeme, setIncludeMeme] = useState(() => {
     const initial = getInitialFilterState()
     return initial.tokenType === 'all' || initial.tokenType === 'meme'
+  })
+  const [includeStablecoin, setIncludeStablecoin] = useState(() => {
+    const initial = getInitialFilterState()
+    return initial.tokenType === 'all' || initial.tokenType === 'stablecoin'
   })
   const [includeUnverified, setIncludeUnverified] = useState(() => {
     const initial = getInitialFilterState()
@@ -230,23 +234,30 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
     setFilters(prev => ({ ...prev, minMarketCap, maxMarketCap }))
   }, [minMarketCap, maxMarketCap, setFilters])
 
-  const handleTokenTypeChange = (utilityChecked: boolean, memeChecked: boolean) => {
+  const handleTokenTypeChange = (utilityChecked: boolean, memeChecked: boolean, stablecoinChecked: boolean) => {
     let newType: FilterState['tokenType'] = 'all'
-    
-    if (utilityChecked && memeChecked) {
+
+    const checkedCount = [utilityChecked, memeChecked, stablecoinChecked].filter(Boolean).length
+
+    if (checkedCount === 3) {
       newType = 'all'
-    } else if (utilityChecked && !memeChecked) {
-      newType = 'utility'
-    } else if (!utilityChecked && memeChecked) {
-      newType = 'meme'
-    } else {
-      // Neither selected, default to all - re-check both
+    } else if (checkedCount === 1) {
+      if (utilityChecked) newType = 'utility'
+      else if (memeChecked) newType = 'meme'
+      else if (stablecoinChecked) newType = 'stablecoin'
+    } else if (checkedCount === 0) {
+      // None selected, default to all - re-check all
       setIncludeUtility(true)
       setIncludeMeme(true)
+      setIncludeStablecoin(true)
       newType = 'all'
       return // Don't update filters since we're resetting
+    } else {
+      // Multiple selected but not all - default to 'all' for now
+      // Future enhancement: support multiple type filtering
+      newType = 'all'
     }
-    
+
     setFilters(prev => ({ ...prev, tokenType: newType }))
   }
 
@@ -348,37 +359,55 @@ export default function FilterSidebar({ onFiltersChange, onSidebarToggle }: Filt
               className="flex items-center gap-2.5 cursor-pointer text-sm text-[#ccc] hover:text-white transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
-              <div 
+              <div
                 className={`w-5 h-5 border-2 rounded-[5px] transition-all flex items-center justify-center ${
                   includeUtility ? 'bg-[#00ff88] border-[#00ff88]' : 'border-[#333]'
                 }`}
                 onClick={() => {
                   const newUtilityState = !includeUtility
                   setIncludeUtility(newUtilityState)
-                  handleTokenTypeChange(newUtilityState, includeMeme)
+                  handleTokenTypeChange(newUtilityState, includeMeme, includeStablecoin)
                 }}
               >
                 {includeUtility && <span className="text-black font-bold text-xs">✓</span>}
               </div>
               <span>Utility Tokens</span>
             </label>
-            <label 
+            <label
               className="flex items-center gap-2.5 cursor-pointer text-sm text-[#ccc] hover:text-white transition-colors"
               onClick={(e) => e.stopPropagation()}
             >
-              <div 
+              <div
                 className={`w-5 h-5 border-2 rounded-[5px] transition-all flex items-center justify-center ${
                   includeMeme ? 'bg-[#00ff88] border-[#00ff88]' : 'border-[#333]'
                 }`}
                 onClick={() => {
                   const newMemeState = !includeMeme
                   setIncludeMeme(newMemeState)
-                  handleTokenTypeChange(includeUtility, newMemeState)
+                  handleTokenTypeChange(includeUtility, newMemeState, includeStablecoin)
                 }}
               >
                 {includeMeme && <span className="text-black font-bold text-xs">✓</span>}
               </div>
               <span>Meme Tokens</span>
+            </label>
+            <label
+              className="flex items-center gap-2.5 cursor-pointer text-sm text-[#ccc] hover:text-white transition-colors"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                className={`w-5 h-5 border-2 rounded-[5px] transition-all flex items-center justify-center ${
+                  includeStablecoin ? 'bg-[#00ff88] border-[#00ff88]' : 'border-[#333]'
+                }`}
+                onClick={() => {
+                  const newStablecoinState = !includeStablecoin
+                  setIncludeStablecoin(newStablecoinState)
+                  handleTokenTypeChange(includeUtility, includeMeme, newStablecoinState)
+                }}
+              >
+                {includeStablecoin && <span className="text-black font-bold text-xs">✓</span>}
+              </div>
+              <span>Stablecoins</span>
             </label>
           </div>
         </div>

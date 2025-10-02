@@ -103,7 +103,7 @@ interface CryptoProject {
 }
 
 interface FilterState {
-  tokenType: 'all' | 'meme' | 'utility'
+  tokenType: 'all' | 'meme' | 'utility' | 'stablecoin'
   networks: string[]
   includeImposters?: boolean
   includeUnverified?: boolean
