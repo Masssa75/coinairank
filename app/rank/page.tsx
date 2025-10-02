@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-import { Search, Zap, Filter, Menu, Plus } from 'lucide-react';
+import { Zap, Filter, Menu, Plus } from 'lucide-react';
 import ProgressRing from '@/components/rank/ProgressRing';
 import { SignalBasedTooltip } from '@/components/SignalBasedTooltip';
 import { WhitepaperTooltip } from '@/components/WhitepaperTooltip';
 import { RankAddTokenModal } from '@/components/RankAddTokenModal';
+import RankSearchInput from '@/components/rank/RankSearchInput';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -36,6 +37,7 @@ export default function RankPage() {
   const [showMenu, setShowMenu] = useState(false);
   const [hotPicksActive, setHotPicksActive] = useState(false);
   const [showAddTokenModal, setShowAddTokenModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchProjects();
@@ -107,7 +109,17 @@ export default function RankPage() {
     setHotPicksActive(!hotPicksActive);
   }
 
-  const sortedProjects = [...projects].sort((a, b) => {
+  const filteredProjects = projects.filter((project) => {
+    if (!searchQuery.trim()) return true;
+
+    const query = searchQuery.toLowerCase();
+    return (
+      project.symbol.toLowerCase().includes(query) ||
+      project.name.toLowerCase().includes(query)
+    );
+  });
+
+  const sortedProjects = [...filteredProjects].sort((a, b) => {
     if (hotPicksActive) {
       return calculateHotPicksScore(b) - calculateHotPicksScore(a);
     }
@@ -146,9 +158,7 @@ export default function RankPage() {
             Coin<span className="text-emerald-500">Ai</span>Rank
           </div>
           <div className="flex gap-3">
-            <button className="w-9 h-9 flex items-center justify-center bg-gray-100 rounded-lg hover:bg-gray-200">
-              <Search className="w-5 h-5 text-gray-600" />
-            </button>
+            <RankSearchInput onSearch={setSearchQuery} placeholder="Search symbol or name..." />
             <button
               onClick={toggleHotPicks}
               className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all ${
