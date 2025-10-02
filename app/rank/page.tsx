@@ -3,11 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-import { Search, Zap, Filter, Menu, Plus } from 'lucide-react';
+import { Search, Zap, Filter, Menu } from 'lucide-react';
 import ProgressRing from '@/components/rank/ProgressRing';
 import { SignalBasedTooltip } from '@/components/SignalBasedTooltip';
 import { WhitepaperTooltip } from '@/components/WhitepaperTooltip';
-import { AddTokenModal } from '@/components/AddTokenModal';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -35,7 +34,6 @@ export default function RankPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [hotPicksActive, setHotPicksActive] = useState(false);
-  const [showAddTokenModal, setShowAddTokenModal] = useState(false);
 
   useEffect(() => {
     fetchProjects();
@@ -179,31 +177,6 @@ export default function RankPage() {
         </div>
       </div>
 
-      {/* Hamburger Menu Dropdown */}
-      {showMenu && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-30"
-            onClick={() => setShowMenu(false)}
-          />
-
-          {/* Menu */}
-          <div className="absolute top-16 right-5 z-40 bg-white border border-gray-200 rounded-lg shadow-lg w-48">
-            <button
-              onClick={() => {
-                setShowMenu(false);
-                setShowAddTokenModal(true);
-              }}
-              className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center gap-2 text-gray-700 font-medium"
-            >
-              <Plus className="w-4 h-4" />
-              Submit Project
-            </button>
-          </div>
-        </>
-      )}
-
       {/* List Header */}
       <div className="sticky top-14 z-10 grid grid-cols-[2fr_0.8fr_1fr_0.7fr_0.7fr] gap-2 px-5 py-3.5 bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-400 uppercase tracking-wider">
         <div onClick={() => handleSort('name')} className="cursor-pointer flex items-center gap-1">
@@ -262,16 +235,6 @@ export default function RankPage() {
           ))}
         </div>
       )}
-
-      {/* Add Token Modal */}
-      <AddTokenModal
-        isOpen={showAddTokenModal}
-        onClose={() => setShowAddTokenModal(false)}
-        onSuccess={() => {
-          setShowAddTokenModal(false);
-          fetchProjects();
-        }}
-      />
     </div>
   );
 }

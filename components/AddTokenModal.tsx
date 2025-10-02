@@ -425,15 +425,15 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-      <div className="bg-white border border-gray-200 rounded-lg p-6 max-w-md w-full shadow-xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-[#0d0e10] border border-[#1a1c1f] rounded-lg p-6 max-w-md w-full mx-4">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-gray-900">
+          <h2 className="text-xl font-bold text-white">
             {showProgressTracker ? 'Processing Your Submission' : 'Add Token'}
           </h2>
           <button
             onClick={handleClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+            className="text-gray-400 hover:text-white text-2xl leading-none"
             aria-label="Close"
           >
             ×
@@ -445,18 +445,18 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
           <div className="space-y-6">
             {/* Project Info Header */}
             {submittedProject && (
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div className="bg-[#1a1c1f] rounded-lg p-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
-                    <span className="text-gray-900 font-bold text-sm">
+                  <div className="w-10 h-10 bg-[#00ff88] rounded-full flex items-center justify-center">
+                    <span className="text-black font-bold text-sm">
                       {submittedProject.symbol?.charAt(0) || '?'}
                     </span>
                   </div>
                   <div>
-                    <div className="text-gray-900 font-semibold">
+                    <div className="text-white font-semibold">
                       {submittedProject.symbol || 'Unknown Token'}
                     </div>
-                    <div className="text-gray-500 text-sm">
+                    <div className="text-gray-400 text-sm">
                       {submittedProject.network?.charAt(0).toUpperCase() + submittedProject.network?.slice(1) || 'Unknown Network'}
                     </div>
                   </div>
@@ -468,18 +468,18 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
             {projectStatus && (
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Analysis Progress</span>
-                  <span className="text-sm text-emerald-600 font-semibold">{projectStatus.progress}%</span>
+                  <span className="text-sm text-gray-300">Analysis Progress</span>
+                  <span className="text-sm text-[#00ff88]">{projectStatus.progress}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="w-full bg-[#1a1c1f] rounded-full h-2">
                   <div
                     className={`h-2 rounded-full transition-all duration-500 ${
-                      projectStatus.hasError ? 'bg-red-500' : 'bg-emerald-500'
+                      projectStatus.hasError ? 'bg-red-500' : 'bg-[#00ff88]'
                     }`}
                     style={{ width: `${projectStatus.progress}%` }}
                   />
                 </div>
-                <div className={`text-sm ${projectStatus.hasError ? 'text-red-600' : 'text-gray-700'}`}>
+                <div className={`text-sm ${projectStatus.hasError ? 'text-red-400' : 'text-gray-300'}`}>
                   {projectStatus.message}
                   {projectStatus.estimatedTimeRemaining && !projectStatus.isComplete && !projectStatus.hasError && (
                     <span className="text-gray-500 ml-2">
@@ -492,20 +492,20 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
 
             {/* Debug Info for Admin */}
             {isAdmin && submittedProject && (
-              <div className="bg-blue-50 border border-blue-200 rounded p-2 text-xs space-y-1">
-                <div className="text-blue-700 font-mono font-semibold">Database Fields:</div>
-                <div className="text-yellow-700">website_url: {submittedProject.website_url ? '✓' : '✗'}</div>
-                <div className="text-blue-700">extraction_status: {submittedProject.extraction_status || 'null'}</div>
-                <div className="text-purple-700">comparison_status: {submittedProject.comparison_status || 'null'}</div>
-                <div className="text-green-700">website_stage1_score: {submittedProject.website_stage1_score ?? 'null'}</div>
-                <div className="text-orange-700">website_status: {submittedProject.website_status || 'null'}</div>
+              <div className="bg-gray-800/50 rounded p-2 text-xs space-y-1">
+                <div className="text-gray-400 font-mono">Database Fields:</div>
+                <div className="text-yellow-400">website_url: {submittedProject.website_url ? '✓' : '✗'}</div>
+                <div className="text-blue-400">extraction_status: {submittedProject.extraction_status || 'null'}</div>
+                <div className="text-purple-400">comparison_status: {submittedProject.comparison_status || 'null'}</div>
+                <div className="text-green-400">website_stage1_score: {submittedProject.website_stage1_score ?? 'null'}</div>
+                <div className="text-orange-400">website_status: {submittedProject.website_status || 'null'}</div>
               </div>
             )}
 
             {/* Detailed Stage Progress */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium text-gray-700">Processing Stages</h3>
+                <h3 className="text-sm font-medium text-gray-300">Processing Stages</h3>
                 {isAdmin && (
                   <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
                     Admin View
@@ -516,10 +516,10 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
                 {projectStages.map((stage, index) => (
                   <div key={stage.id} className="flex items-center gap-3">
                     <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                      stage.status === 'complete' ? 'bg-emerald-500 text-gray-900' :
-                      stage.status === 'in_progress' ? 'bg-blue-500 text-gray-900 animate-pulse' :
-                      stage.status === 'failed' ? 'bg-red-500 text-gray-900' :
-                      'bg-gray-200 text-gray-500'
+                      stage.status === 'complete' ? 'bg-[#00ff88] text-black' :
+                      stage.status === 'in_progress' ? 'bg-blue-500 text-white animate-pulse' :
+                      stage.status === 'failed' ? 'bg-red-500 text-white' :
+                      'bg-[#2a2d31] text-gray-500'
                     }`}>
                       {stage.status === 'complete' ? '✓' :
                        stage.status === 'in_progress' ? stage.icon :
@@ -528,10 +528,10 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
                     </div>
                     <div className="flex-1">
                       <div className={`text-sm ${
-                        stage.status === 'complete' ? 'text-emerald-600' :
-                        stage.status === 'in_progress' ? 'text-blue-600' :
-                        stage.status === 'failed' ? 'text-red-600' :
-                        'text-gray-500'
+                        stage.status === 'complete' ? 'text-[#00ff88]' :
+                        stage.status === 'in_progress' ? 'text-blue-400' :
+                        stage.status === 'failed' ? 'text-red-400' :
+                        'text-gray-400'
                       }`}>
                         {stage.name}
                         {stage.status === 'in_progress' && (
@@ -554,26 +554,26 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
                     handleClose();
                     if (onSuccess) onSuccess();
                   }}
-                  className="flex-1 py-2 px-4 rounded-lg font-medium bg-emerald-500 text-gray-900 hover:bg-emerald-600 transition-colors"
+                  className="flex-1 py-2 px-4 rounded-lg font-medium bg-[#00ff88] text-black hover:bg-[#00cc66] transition-colors"
                 >
                   View Project
                 </button>
               ) : projectStatus?.hasError ? (
                 <button
                   onClick={() => setShowProgressTracker(false)}
-                  className="flex-1 py-2 px-4 rounded-lg font-medium bg-blue-600 text-gray-900 hover:bg-blue-700 transition-colors"
+                  className="flex-1 py-2 px-4 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
                 >
                   Try Another Token
                 </button>
               ) : (
-                <div className="flex-1 text-center text-gray-500 text-sm py-2">
+                <div className="flex-1 text-center text-gray-400 text-sm py-2">
                   Keep this window open to track progress...
                 </div>
               )}
               
               <button
                 onClick={handleClose}
-                className="py-2 px-4 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
+                className="py-2 px-4 rounded-lg font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors"
               >
                 Close
               </button>
@@ -601,8 +601,8 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
               }}
               className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                 !searchMode
-                  ? 'bg-blue-600 text-gray-900'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
               }`}
             >
               Manual Entry
@@ -615,8 +615,8 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
               }}
               className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                 searchMode
-                  ? 'bg-blue-600 text-gray-900'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
               }`}
             >
               Search Token
@@ -628,7 +628,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
             <div className="space-y-4">
               {/* Search Input */}
               <div>
-                <label htmlFor="tokenSearch" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="tokenSearch" className="block text-sm font-medium text-gray-300 mb-1">
                   Search for Token
                 </label>
                 <div className="relative">
@@ -638,7 +638,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
                     value={searchQuery}
                     onChange={handleSearchChange}
                     placeholder="Search by name or symbol (e.g., Bitcoin, ETH, TAO)"
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#1a1c1f] border border-[#2a2d31] rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
                     disabled={isSubmitting}
                   />
                   {isSearching && (
@@ -651,13 +651,13 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
 
               {/* Search Results */}
               {searchResults.length > 0 && (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg max-h-60 overflow-y-auto">
+                <div className="bg-[#1a1c1f] border border-[#2a2d31] rounded-lg max-h-60 overflow-y-auto">
                   {searchResults.map((coin) => (
                     <button
                       key={coin.id}
                       type="button"
                       onClick={() => fetchTokenDetails(coin.id)}
-                      className="w-full px-3 py-3 flex items-center gap-3 hover:bg-gray-100 transition-colors border-b border-[#2a2d31] last:border-b-0"
+                      className="w-full px-3 py-3 flex items-center gap-3 hover:bg-[#25272b] transition-colors border-b border-[#2a2d31] last:border-b-0"
                       disabled={isSubmitting}
                     >
                       <img
@@ -669,8 +669,8 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
                         }}
                       />
                       <div className="flex-1 text-left">
-                        <div className="text-gray-900 font-medium">{coin.name}</div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-white font-medium">{coin.name}</div>
+                        <div className="text-xs text-gray-400">
                           {coin.symbol.toUpperCase()}
                           {coin.marketCapRank && ` • Rank #${coin.marketCapRank}`}
                         </div>
@@ -682,7 +682,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
 
               {/* Selected Token Display */}
               {selectedToken && (
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <div className="bg-[#15161a] border border-[#2a2d31] rounded-lg p-4">
                   <div className="flex items-center gap-3 mb-3">
                     {selectedToken.image && (
                       <img
@@ -692,8 +692,8 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
                       />
                     )}
                     <div>
-                      <div className="text-gray-900 font-semibold">{selectedToken.name}</div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-white font-semibold">{selectedToken.name}</div>
+                      <div className="text-sm text-gray-400">
                         {selectedToken.symbol.toUpperCase()}
                         {selectedToken.isNativeToken && (
                           <span className="ml-2 text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded">
@@ -705,14 +705,14 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
                   </div>
 
                   {selectedToken.isNativeToken ? (
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-400">
                       <p className="mb-2">This is a Layer 1 blockchain token (no contract address).</p>
-                      <p>CoinGecko ID: <span className="text-gray-900 font-mono">{selectedToken.id}</span></p>
+                      <p>CoinGecko ID: <span className="text-white font-mono">{selectedToken.id}</span></p>
                     </div>
                   ) : (
-                    <div className="text-sm text-gray-500">
-                      <p className="mb-2">Contract: <span className="text-gray-900 font-mono text-xs">{contractAddress}</span></p>
-                      <p>Network: <span className="text-gray-900">{network}</span></p>
+                    <div className="text-sm text-gray-400">
+                      <p className="mb-2">Contract: <span className="text-white font-mono text-xs">{contractAddress}</span></p>
+                      <p>Network: <span className="text-white">{network}</span></p>
                     </div>
                   )}
                 </div>
@@ -721,7 +721,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
               {/* Website URL for selected token */}
               {selectedToken && (
                 <div>
-                  <label htmlFor="websiteUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="websiteUrl" className="block text-sm font-medium text-gray-300 mb-1">
                     Website URL {selectedToken.isNativeToken && <span className="text-red-400">*</span>}
                   </label>
                   <input
@@ -730,7 +730,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
                     value={manualWebsiteUrl}
                     onChange={(e) => setManualWebsiteUrl(e.target.value)}
                     placeholder={selectedToken.links?.website || "https://example.com"}
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#1a1c1f] border border-[#2a2d31] rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
                     disabled={isSubmitting}
                     required={selectedToken.isNativeToken}
                   />
@@ -747,14 +747,14 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
             <>
               {/* Network Selection */}
           <div>
-            <label htmlFor="network" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="network" className="block text-sm font-medium text-gray-300 mb-1">
               Network
             </label>
             <select
               id="network"
               value={network}
               onChange={(e) => setNetwork(e.target.value as NetworkKey)}
-              className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:border-blue-500"
+              className="w-full bg-[#1a1c1f] border border-[#2a2d31] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
               disabled={isSubmitting}
             >
               {Object.entries(NETWORKS).map(([key, config]) => (
@@ -767,7 +767,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
 
           {/* Contract Address */}
           <div>
-            <label htmlFor="contractAddress" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="contractAddress" className="block text-sm font-medium text-gray-300 mb-1">
               Contract Address
             </label>
             <input
@@ -776,7 +776,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
               value={contractAddress}
               onChange={(e) => setContractAddress(e.target.value)}
               placeholder={network === 'solana' ? 'Enter Solana token address...' : '0x...'}
-              className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500"
+              className="w-full bg-[#1a1c1f] border border-[#2a2d31] rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
               disabled={isSubmitting}
               required
             />
@@ -789,7 +789,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="w-full text-left text-sm text-gray-500 hover:text-gray-700 transition-colors flex items-center justify-between py-2"
+              className="w-full text-left text-sm text-gray-400 hover:text-gray-300 transition-colors flex items-center justify-between py-2"
             >
               <span>Advanced Options</span>
               <span className={`transition-transform ${showAdvanced ? 'rotate-180' : ''}`}>
@@ -798,10 +798,10 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
             </button>
 
             {showAdvanced && (
-              <div className="mt-3 p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-3">
+              <div className="mt-3 p-4 bg-[#15161a] border border-[#2a2d31] rounded-lg space-y-3">
                 {/* Whitepaper URL */}
                 <div>
-                  <label htmlFor="whitepaperUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="whitepaperUrl" className="block text-sm font-medium text-gray-300 mb-1">
                     Whitepaper URL (optional)
                   </label>
                   <input
@@ -810,7 +810,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
                     value={whitepaperUrl}
                     onChange={(e) => setWhitepaperUrl(e.target.value)}
                     placeholder="https://example.com/whitepaper.pdf"
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#1a1c1f] border border-[#2a2d31] rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
                     disabled={isSubmitting}
                   />
                   <p className="mt-1 text-xs text-gray-500">
@@ -820,7 +820,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
 
                 {/* Whitepaper Content */}
                 <div>
-                  <label htmlFor="whitepaperContent" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="whitepaperContent" className="block text-sm font-medium text-gray-300 mb-1">
                     Whitepaper Content (optional)
                   </label>
                   <textarea
@@ -829,7 +829,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
                     onChange={(e) => setWhitepaperContent(e.target.value)}
                     placeholder="Paste the full whitepaper text here if you have it..."
                     rows={6}
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 font-mono text-sm resize-y"
+                    className="w-full bg-[#1a1c1f] border border-[#2a2d31] rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 font-mono text-sm resize-y"
                     disabled={isSubmitting}
                   />
                   <div className="mt-1 flex justify-between items-center">
@@ -883,7 +883,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
               
               {showWebsiteInput && (
                 <div>
-                  <label htmlFor="websiteUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="websiteUrl" className="block text-sm font-medium text-gray-300 mb-1">
                     Website URL (optional)
                   </label>
                   <div className="space-y-2">
@@ -893,7 +893,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
                       value={manualWebsiteUrl}
                       onChange={(e) => setManualWebsiteUrl(e.target.value)}
                       placeholder="https://example.com"
-                      className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-[#1a1c1f] border border-[#2a2d31] rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
                     />
                     <div className="flex gap-2">
                       <button
@@ -904,7 +904,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
                           }
                         }}
                         disabled={!manualWebsiteUrl.trim() || isSubmitting}
-                        className="flex-1 py-2 px-4 rounded-lg font-medium bg-blue-600 text-gray-900 hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-500"
+                        className="flex-1 py-2 px-4 rounded-lg font-medium bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-400"
                       >
                         {isSubmitting ? 'Adding...' : 'Add with Website'}
                       </button>
@@ -920,7 +920,7 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
                           setWhitepaperUrl('');
                           setWhitepaperContent('');
                         }}
-                        className="flex-1 py-2 px-4 rounded-lg font-medium bg-gray-200 text-gray-700 hover:bg-gray-300"
+                        className="flex-1 py-2 px-4 rounded-lg font-medium bg-gray-700 text-gray-300 hover:bg-gray-600"
                       >
                         Cancel
                       </button>
@@ -938,8 +938,8 @@ export function AddTokenModal({ isOpen, onClose, onSuccess }: AddTokenModalProps
               disabled={isSubmitting || !contractAddress.trim()}
               className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
                 isSubmitting || !contractAddress.trim()
-                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-600 text-gray-900 hover:bg-blue-700'
+                  ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
             >
               {isSubmitting ? 'Checking Token...' : 'Add Token'}
