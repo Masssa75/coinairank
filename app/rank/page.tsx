@@ -46,7 +46,6 @@ export default function RankPage() {
       const { data, error } = await supabase
         .from('crypto_projects_rated')
         .select('symbol, name, project_age_years, current_market_cap, website_stage1_tier, whitepaper_tier')
-        .eq('show_in_mcap_view', true)
         .order('current_market_cap', { ascending: false, nullsFirst: false });
 
       if (error) throw error;
